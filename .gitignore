@@ -48,3 +48,5 @@ Thumbs.db
 *.mov
 *.wmv
 
+# Golang vendor
+vendor
