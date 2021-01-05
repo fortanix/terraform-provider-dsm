@@ -131,3 +131,33 @@ func (obj *api_client) APICall(method string, url string) (map[string]interface{
 
 	return resp, nil
 }
+
+// [-]: call api without body - return as array
+func (obj *api_client) APICallList(method string, url string) ([]interface{}, error) {
+	client := &http.Client{Timeout: 10 * time.Second}
+
+	req, err := http.NewRequest(method, fmt.Sprintf("%s/%s", obj.endpoint, url), nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add("Authorization", "Bearer "+obj.authtoken)
+
+	r, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer r.Body.Close()
+
+	// FIXME: DELETE does not have any output
+	if method == "DELETE" {
+		return nil, nil
+	}
+	
+	resp := make([]interface{},0)
+	err = json.NewDecoder(r.Body).Decode(&resp)
+	if err != nil {
+		return nil, err
+	}	
+
+	return resp, nil
+}

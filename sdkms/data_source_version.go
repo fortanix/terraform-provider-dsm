@@ -1,8 +1,8 @@
 // **********
-// Terraform Provider - SDKMS: data source: cluster related
+// Terraform Provider - SDKMS: data source: cluster version
 // **********
 //       - Author:    fyoo at fortanix dot com
-//       - Version:   1.0.0
+//       - Version:   0.1
 //       - Date:      27/11/2020
 // **********
 

@@ -48,6 +48,7 @@ func Provider() *schema.Provider {
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"sdkms_version": dataSourceVersion(),
+			"sdkms_group":   dataSourceGroup(),
 		},
 		ConfigureContextFunc: configureProvider,
 	}
