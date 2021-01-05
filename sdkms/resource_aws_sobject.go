@@ -193,13 +193,28 @@ func resourceUpdateAWSSobject(ctx context.Context, d *schema.ResourceData, m int
 // [D]: Delete AWS Security Object
 func resourceDeleteAWSSobject(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	
+	// FIXME: Need to schedule deletion then delete the key - default is set to 7 days for now
+	delete_object := map[string]interface{}{
+		"pending_window_in_days": 7,
+	}
+
+	_, err := m.(*api_client).APICallBody("POST", fmt.Sprintf("crypto/v1/keys/%s/schedule_deletion", d.Id(), delete_object))
+	if err != nil {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Unable to call SDKMS provider API client",
+			Detail:   fmt.Sprintf("[E]: API: DELETE crypto/v1/keys: %s", err),
+		})
+		return diags
+	}
 
 	_, err := m.(*api_client).APICall("DELETE", fmt.Sprintf("crypto/v1/keys/%s", d.Id()))
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to call SDKMS provider API client",
-			Detail:   fmt.Sprintf("[E]: API: DELETE crypto/v1/keyss: %s", err),
+			Detail:   fmt.Sprintf("[E]: API: DELETE crypto/v1/keys: %s", err),
 		})
 		return diags
 	}
