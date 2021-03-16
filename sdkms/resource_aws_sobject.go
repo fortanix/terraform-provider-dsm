@@ -199,7 +199,7 @@ func resourceDeleteAWSSobject(ctx context.Context, d *schema.ResourceData, m int
 		"pending_window_in_days": 7,
 	}
 
-	_, err := m.(*api_client).APICallBody("POST", fmt.Sprintf("crypto/v1/keys/%s/schedule_deletion", d.Id(), delete_object))
+	_, err := m.(*api_client).APICallBody("POST", fmt.Sprintf("crypto/v1/keys/%s/schedule_deletion", d.Id()), delete_object)
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
@@ -209,7 +209,7 @@ func resourceDeleteAWSSobject(ctx context.Context, d *schema.ResourceData, m int
 		return diags
 	}
 
-	_, err := m.(*api_client).APICall("DELETE", fmt.Sprintf("crypto/v1/keys/%s", d.Id()))
+	_, err = m.(*api_client).APICall("DELETE", fmt.Sprintf("crypto/v1/keys/%s", d.Id()))
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
