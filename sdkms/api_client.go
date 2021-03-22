@@ -2,7 +2,7 @@
 // Terraform Provider - SDKMS: api client
 // **********
 //       - Author:    fyoo at fortanix dot com
-//       - Version:   0.1
+//       - Version:   0.1.2
 //       - Date:      27/11/2020
 // **********
 

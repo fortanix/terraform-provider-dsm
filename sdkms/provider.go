@@ -2,7 +2,7 @@
 // Terraform Provider - SDKMS: provider
 // **********
 //       - Author:    fyoo at fortanix dot com
-//       - Version:   0.1
+//       - Version:   0.1.2
 //       - Date:      27/11/2020
 // **********
 
@@ -45,6 +45,7 @@ func Provider() *schema.Provider {
 			"sdkms_sobject":     resourceSobject(),
 			"sdkms_aws_sobject": resourceAWSSobject(),
 			"sdkms_group":       resourceGroup(),
+			"sdkms_app":         resourceApp(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"sdkms_aws_group": dataSourceAWSGroup(),

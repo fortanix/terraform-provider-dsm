@@ -1,5 +1,5 @@
 // **********
-// Terraform Provider - SDKMS: resource: group
+// Terraform Provider - SDKMS: resource: app
 // **********
 //       - Author:    fyoo at fortanix dot com
 //       - Version:   0.1.2
@@ -16,21 +16,25 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// [-] Define Group
-func resourceGroup() *schema.Resource {
+// [-] Define App
+func resourceApp() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceCreateGroup,
-		ReadContext:   resourceReadGroup,
-		UpdateContext: resourceUpdateGroup,
-		DeleteContext: resourceDeleteGroup,
+		CreateContext: resourceCreateApp,
+		ReadContext:   resourceReadApp,
+		UpdateContext: resourceUpdateApp,
+		DeleteContext: resourceDeleteApp,
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"group_id": {
+			"app_id": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"default_group": {
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			"acct_id": {
 				Type:     schema.TypeString,
@@ -55,39 +59,44 @@ func resourceGroup() *schema.Resource {
 	}
 }
 
-// [C]: Create Group
-func resourceCreateGroup(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+// [C]: Create App
+func resourceCreateApp(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	group_object := map[string]interface{}{
+	app_object := map[string]interface{}{
 		"name":        d.Get("name").(string),
+		"default_group": d.Get("default_group").(string),
+		"add_groups": map[string]interface{}{
+			d.Get("default_group").(string): []string{"SIGN", "VERIFY", "ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "DERIVEKEY", "MACGENERATE", "MACVERIFY", "EXPORT", "MANAGE", "AGREEKEY", "AUDIT"},
+		},
+		"app_Type": "default",
 		"description": d.Get("description").(string),
 	}
 
-	req, err := m.(*api_client).APICallBody("POST", "sys/v1/groups", group_object)
+	req, err := m.(*api_client).APICallBody("POST", "sys/v1/apps", app_object)
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to call SDKMS provider API client",
-			Detail:   fmt.Sprintf("[E]: API: POST sys/v1/groups: %s", err),
+			Detail:   fmt.Sprintf("[E]: API: POST sys/v1/apps: %s", err),
 		})
 		return diags
 	}
 
-	d.SetId(req["group_id"].(string))
-	return resourceReadGroup(ctx, d, m)
+	d.SetId(req["app_id"].(string))
+	return resourceReadApp(ctx, d, m)
 }
 
-// [R]: Read Group
-func resourceReadGroup(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+// [R]: Read App
+func resourceReadApp(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	req, err := m.(*api_client).APICall("GET", fmt.Sprintf("sys/v1/groups/%s", d.Id()))
+	req, err := m.(*api_client).APICall("GET", fmt.Sprintf("sys/v1/apps/%s", d.Id()))
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to call SDKMS provider API client",
-			Detail:   fmt.Sprintf("[E]: API: GET sys/v1/groups: %s", err),
+			Detail:   fmt.Sprintf("[E]: API: GET sys/v1/apps: %s", err),
 		})
 		return diags
 	}
@@ -95,7 +104,10 @@ func resourceReadGroup(ctx context.Context, d *schema.ResourceData, m interface{
 	if err := d.Set("name", req["name"].(string)); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("group_id", req["group_id"].(string)); err != nil {
+	if err := d.Set("app_id", req["app_id"].(string)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("default_group", req["default_group"].(string)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("acct_id", req["acct_id"].(string)); err != nil {
@@ -112,21 +124,21 @@ func resourceReadGroup(ctx context.Context, d *schema.ResourceData, m interface{
 	return diags
 }
 
-// [U]: Update Group
-func resourceUpdateGroup(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+// [U]: Update App
+func resourceUpdateApp(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	return nil
 }
 
-// [D]: Delete Group
-func resourceDeleteGroup(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+// [D]: Delete App
+func resourceDeleteApp(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	_, err := m.(*api_client).APICall("DELETE", fmt.Sprintf("sys/v1/groups/%s", d.Id()))
+	_, err := m.(*api_client).APICall("DELETE", fmt.Sprintf("sys/v1/apps/%s", d.Id()))
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to call SDKMS provider API client",
-			Detail:   fmt.Sprintf("[E]: API: DELETE sys/v1/groups: %s", err),
+			Detail:   fmt.Sprintf("[E]: API: DELETE sys/v1/apps: %s", err),
 		})
 		return diags
 	}

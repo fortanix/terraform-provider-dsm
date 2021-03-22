@@ -2,7 +2,7 @@
 // Terraform Provider - SDKMS: resource: security object
 // **********
 //       - Author:    fyoo at fortanix dot com
-//       - Version:   0.1
+//       - Version:   0.1.2
 //       - Date:      27/11/2020
 // **********
 
@@ -66,7 +66,6 @@ func resourceSobject() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-
 			"key_ops": {
 				Type:     schema.TypeList,
 				Optional: true,
