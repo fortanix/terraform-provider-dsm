@@ -29,3 +29,15 @@ resource "sdkms_sobject" "sobject" {
   key_size = 256
   obj_type = "AES" 
 }
+
+resource "sdkms_sobject" "tokenis" {
+  name     = "test-fyoo-tokenis"
+  group_id = sdkms_group.group.id
+  key_size = 256
+  obj_type = "AES"
+  key_ops  =  [
+    "ENCRYPT",
+    "DECRYPT",
+    "APPMANAGEABLE" ]
+  fpe_radix = 10 
+}

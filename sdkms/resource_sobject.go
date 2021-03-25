@@ -66,6 +66,10 @@ func resourceSobject() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"fpe_radix": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
 			"key_ops": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -107,6 +111,12 @@ func resourceCreateSobject(ctx context.Context, d *schema.ResourceData, m interf
 
 	if err := d.Get("key_ops").([]interface{}); len(err) > 0 {
 		security_object["key_ops"] = d.Get("key_ops")
+	}
+
+	if err := d.Get("fpe_radix"); err != 0 {
+		security_object["fpe"] = map[string]interface{}{
+			"radix":	d.Get("fpe_radix").(int),
+		}
 	}
 
 	req, err := m.(*api_client).APICallBody("POST", "crypto/v1/keys", security_object)
@@ -164,6 +174,12 @@ func resourceReadSobject(ctx context.Context, d *schema.ResourceData, m interfac
 	if err := d.Set("custom_metadata", req["custom_metadata"]); err != nil {
 		return diag.FromErr(err)
 	}
+	if err := req["fpe"]; err != nil {
+		if err := d.Set("fpe_radix", int(req["fpe"].(map[string]interface{})["radix"].(float64))); err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
 	if err := d.Set("key_ops", req["key_ops"]); err != nil {
 		return diag.FromErr(err)
 	}
