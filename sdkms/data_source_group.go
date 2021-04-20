@@ -58,9 +58,9 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, m interfac
 			Detail:   fmt.Sprintf("[E]: API: GET sys/v1/groups: %s", err),
 		})
 		return diags
-	} 
-		//	Detail:   fmt.Sprintf("%s", req[0].(map[string]interface{})["group_id"]),
-	
+	}
+	//	Detail:   fmt.Sprintf("%s", req[0].(map[string]interface{})["group_id"]),
+
 	for _, data := range req {
 		if data.(map[string]interface{})["name"].(string) == d.Get("name").(string) {
 			if err := d.Set("name", data.(map[string]interface{})["name"].(string)); err != nil {

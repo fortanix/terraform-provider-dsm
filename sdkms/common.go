@@ -29,7 +29,7 @@ func parseHmg(d *schema.ResourceData, hmg map[string]interface{}) interface{} {
 		}
 		rawHmg[counter].(map[string]interface{})["hmg_id"] = rk
 		for sk, sv := range rv.(map[string]interface{}) {
-			if sk == "kind" || sk == "url" || sk == "access_key"{
+			if sk == "kind" || sk == "url" || sk == "access_key" {
 				rawHmg[counter].(map[string]interface{})[sk] = sv
 			} else if sk == "tls" {
 				converted, err := json.Marshal(sv)
@@ -45,7 +45,7 @@ func parseHmg(d *schema.ResourceData, hmg map[string]interface{}) interface{} {
 			}
 		}
 		counter++
-    }
+	}
 
 	return rawHmg
 }

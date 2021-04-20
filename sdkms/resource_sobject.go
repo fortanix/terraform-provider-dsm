@@ -115,7 +115,7 @@ func resourceCreateSobject(ctx context.Context, d *schema.ResourceData, m interf
 
 	if err := d.Get("fpe_radix"); err != 0 {
 		security_object["fpe"] = map[string]interface{}{
-			"radix":	d.Get("fpe_radix").(int),
+			"radix": d.Get("fpe_radix").(int),
 		}
 	}
 

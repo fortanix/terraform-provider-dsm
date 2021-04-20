@@ -193,7 +193,7 @@ func resourceUpdateAWSSobject(ctx context.Context, d *schema.ResourceData, m int
 // [D]: Delete AWS Security Object
 func resourceDeleteAWSSobject(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	
+
 	// FIXME: Need to schedule deletion then delete the key - default is set to 7 days for now
 	delete_object := map[string]interface{}{
 		"pending_window_in_days": 7,

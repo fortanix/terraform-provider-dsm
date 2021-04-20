@@ -44,6 +44,7 @@ func Provider() *schema.Provider {
 		ResourcesMap: map[string]*schema.Resource{
 			"sdkms_sobject":     resourceSobject(),
 			"sdkms_aws_sobject": resourceAWSSobject(),
+			"sdkms_aws_group":   resourceAWSGroup(),
 			"sdkms_group":       resourceGroup(),
 			"sdkms_app":         resourceApp(),
 		},

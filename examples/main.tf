@@ -7,6 +7,15 @@ terraform {
   }
 }
 
+data "external" "aws-sts-generator" {
+  //program = ["bash", "-c" "aws", "sts", "assume-role", "--role-arn", "arn:aws:iam::513076507034:role/aws-kms-power-user", "--role-session-name", "terraform-access", "--output", "json", "|", "jq", ".Credentials"]
+  program = ["bash", "-c", "aws sts assume-role --role-arn arn:aws:iam::513076507034:role/aws-kms-power-user --role-session-name terraform-test --output json | jq .Credentials"]
+}
+
+output "something" {
+  value = data.external.aws-sts-generator.result.AccessKeyId
+}
+
 provider "sdkms" {
   endpoint = "https://sdkms.fortanix.com"
   username = ""
@@ -16,6 +25,13 @@ provider "sdkms" {
 
 resource "sdkms_group" "group" {
   name     = "test-fyoo-group"
+}
+
+resource "sdkms_aws_group" "awsgroup" {
+  name     = "test-fyoo-awsgroup"
+  url      = "kms.us-east-2.amazonaws.com"
+  access_key = data.external.aws-sts-generator.result.AccessKeyId
+  secret_key = data.external.aws-sts-generator.result.SecretAccessKey
 }
 
 resource "sdkms_app" "app" {

@@ -29,28 +29,28 @@ func dataSourceAWSGroup() *schema.Resource {
 				Computed: true,
 			},
 			"hmg": {
-				Type:	schema.TypeList,
+				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"access_key": {
-							Type:	schema.TypeString,
+							Type:     schema.TypeString,
 							Computed: true,
 						},
 						"hmg_id": {
-							Type:	schema.TypeString,
+							Type:     schema.TypeString,
 							Computed: true,
 						},
 						"kind": {
-							Type:	schema.TypeString,
+							Type:     schema.TypeString,
 							Computed: true,
 						},
 						"tls": {
-							Type:	schema.TypeString,
+							Type:     schema.TypeString,
 							Computed: true,
 						},
 						"url": {
-							Type:	schema.TypeString,
+							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
@@ -86,9 +86,9 @@ func dataSourceAWSGroupRead(ctx context.Context, d *schema.ResourceData, m inter
 			Detail:   fmt.Sprintf("[E]: API: GET sys/v1/groups: %s", err),
 		})
 		return diags
-	} 
-		//	Detail:   fmt.Sprintf("%s", req[0].(map[string]interface{})["group_id"]),
-	
+	}
+	//	Detail:   fmt.Sprintf("%s", req[0].(map[string]interface{})["group_id"]),
+
 	for _, data := range req {
 		if data.(map[string]interface{})["name"].(string) == d.Get("name").(string) {
 			if err := d.Set("name", data.(map[string]interface{})["name"].(string)); err != nil {
@@ -97,12 +97,12 @@ func dataSourceAWSGroupRead(ctx context.Context, d *schema.ResourceData, m inter
 			if err := d.Set("group_id", data.(map[string]interface{})["group_id"].(string)); err != nil {
 				return diag.FromErr(err)
 			}
-				//diags = append(diags, diag.Diagnostic{
-				//	Severity: diag.Error,
-				//	Summary:  "Unable to call SDKMS provider API client",
-				//	Detail:   fmt.Sprintf("[E]: API: GET sys/v1/groups: %s", parseHmg(d, data.(map[string]interface{})["hmg"].(map[string]interface{}))),
-				//})
-				//return diags
+			//diags = append(diags, diag.Diagnostic{
+			//	Severity: diag.Error,
+			//	Summary:  "Unable to call SDKMS provider API client",
+			//	Detail:   fmt.Sprintf("[E]: API: GET sys/v1/groups: %s", parseHmg(d, data.(map[string]interface{})["hmg"].(map[string]interface{}))),
+			//})
+			//return diags
 			if err := d.Set("hmg", parseHmg(d, data.(map[string]interface{})["hmg"].(map[string]interface{}))); err != nil {
 				return diag.FromErr(err)
 			}

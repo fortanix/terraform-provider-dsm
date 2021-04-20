@@ -152,12 +152,12 @@ func (obj *api_client) APICallList(method string, url string) ([]interface{}, er
 	if method == "DELETE" {
 		return nil, nil
 	}
-	
-	resp := make([]interface{},0)
+
+	resp := make([]interface{}, 0)
 	err = json.NewDecoder(r.Body).Decode(&resp)
 	if err != nil {
 		return nil, err
-	}	
+	}
 
 	return resp, nil
 }

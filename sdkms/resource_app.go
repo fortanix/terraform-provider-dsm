@@ -64,12 +64,12 @@ func resourceCreateApp(ctx context.Context, d *schema.ResourceData, m interface{
 	var diags diag.Diagnostics
 
 	app_object := map[string]interface{}{
-		"name":        d.Get("name").(string),
+		"name":          d.Get("name").(string),
 		"default_group": d.Get("default_group").(string),
 		"add_groups": map[string]interface{}{
 			d.Get("default_group").(string): []string{"SIGN", "VERIFY", "ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "DERIVEKEY", "MACGENERATE", "MACVERIFY", "EXPORT", "MANAGE", "AGREEKEY", "AUDIT"},
 		},
-		"app_Type": "default",
+		"app_Type":    "default",
 		"description": d.Get("description").(string),
 	}
 
