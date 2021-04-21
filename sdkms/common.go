@@ -2,7 +2,7 @@
 // Terraform Provider - SDKMS: common functions
 // **********
 //       - Author:    fyoo at fortanix dot com
-//       - Version:   0.1.2
+//       - Version:   0.1.3
 //       - Date:      05/01/2021
 // **********
 

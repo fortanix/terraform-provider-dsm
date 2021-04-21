@@ -2,7 +2,7 @@
 // Terraform Provider - SDKMS: data source: aws kms group
 // **********
 //       - Author:    fyoo at fortanix dot com
-//       - Version:   0.1.2
+//       - Version:   0.1.3
 //       - Date:      05/01/2021
 // **********
 
@@ -11,6 +11,10 @@ package sdkms
 import (
 	"context"
 	"fmt"
+
+	//"github.com/aws/aws-sdk-go/aws"
+	//"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/session"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -23,6 +27,10 @@ func dataSourceAWSGroup() *schema.Resource {
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
+			},
+			"profile": {
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"group_id": {
 				Type:     schema.TypeString,
@@ -78,6 +86,33 @@ func dataSourceAWSGroup() *schema.Resource {
 func dataSourceAWSGroupRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
+	if d.Get("profile") != nil {
+		// Specify profile to load for the session's config
+		sess, err := session.NewSessionWithOptions(session.Options{
+    		Profile: d.Get("profile").(string),
+		})
+		if sess != nil {
+			output, err := sess.Config.Credentials.Get()
+			if err != nil {
+				diags = append(diags, diag.Diagnostic{
+					Severity: diag.Error,
+					Summary:  "Unable to call SDKMS provider API client",
+					Detail:   fmt.Sprintf("[E]: API: GET sys/v1/groups: %s", err),
+				})
+			}
+			if err := d.Set("acct_id", output.AccessKeyID); err != nil {
+				return diag.FromErr(err)
+			}
+		} else {
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "Unable to call SDKMS provider API client",
+				Detail:   fmt.Sprintf("[E]: API: GET sys/v1/groups: %s", err),
+			})
+		}
+		
+	}
+
 	req, err := m.(*api_client).APICallList("GET", "sys/v1/groups")
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
@@ -106,9 +141,9 @@ func dataSourceAWSGroupRead(ctx context.Context, d *schema.ResourceData, m inter
 			if err := d.Set("hmg", parseHmg(d, data.(map[string]interface{})["hmg"].(map[string]interface{}))); err != nil {
 				return diag.FromErr(err)
 			}
-			if err := d.Set("acct_id", data.(map[string]interface{})["acct_id"].(string)); err != nil {
-				return diag.FromErr(err)
-			}
+			//if err := d.Set("acct_id", data.(map[string]interface{})["acct_id"].(string)); err != nil {
+			//	return diag.FromErr(err)
+			//}
 			if err := d.Set("creator", data.(map[string]interface{})["creator"]); err != nil {
 				return diag.FromErr(err)
 			}

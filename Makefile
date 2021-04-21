@@ -4,7 +4,7 @@ HOSTNAME=fortanix.com
 NAMESPACE=fyoo
 NAME=sdkms
 BINARY=terraform-provider-${NAME}
-VERSION=0.1.2
+VERSION=0.1.3
 OS_ARCH=linux_amd64
 
 default: install
