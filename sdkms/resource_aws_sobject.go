@@ -12,6 +12,9 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -68,6 +71,10 @@ func resourceAWSSobject() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"profile": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"obj_type": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -107,6 +114,46 @@ func resourceAWSSobject() *schema.Resource {
 func resourceCreateAWSSobject(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
+	if d.Get("profile") != nil {
+		// Specify profile to load for the session's config
+		sess, err := session.NewSessionWithOptions(session.Options{
+			Profile: d.Get("profile").(string),
+			Config: aws.Config{
+				CredentialsChainVerboseErrors: aws.Bool(true),
+			},
+			// Force enable Shared Config support
+			SharedConfigState: session.SharedConfigEnable,
+		})
+		if sess != nil {
+			output, err := sess.Config.Credentials.Get()
+			if err != nil {
+				diags = append(diags, diag.Diagnostic{
+					Severity: diag.Error,
+					Summary:  "[AWS SDK]: Unable to retrieve IAM or STS creds",
+					Detail:   fmt.Sprintf("[E]: SDK: AWS credentials access failure: %s", err),
+				})
+				return diags
+			} else {
+				aws_temporary_credentials := map[string]interface{}{
+					"access_key":    output.AccessKeyID,
+					"secret_key":    output.SecretAccessKey,
+					"session_token": output.SessionToken,
+				}
+				_, err := m.(*api_client).APICallBody("POST", "sys/v1/session/aws_temporary_credentials", aws_temporary_credentials)
+				if err != nil {
+					return err
+				}
+			}
+		} else {
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "[AWS SDK]: Unable to setup session",
+				Detail:   fmt.Sprintf("[E]: SDK: AWS session failure: %s", err),
+			})
+			return diags
+		}
+	}
+
 	security_object := map[string]interface{}{
 		"name":        d.Get("name").(string),
 		"group_id":    d.Get("group_id").(string),
@@ -120,12 +167,7 @@ func resourceCreateAWSSobject(ctx context.Context, d *schema.ResourceData, m int
 
 	req, err := m.(*api_client).APICallBody("POST", "crypto/v1/keys/copy", security_object)
 	if err != nil {
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Unable to call SDKMS provider API client",
-			Detail:   fmt.Sprintf("[E]: API: POST crypto/v1/keys: %s", err),
-		})
-		return diags
+		return err
 	}
 
 	d.SetId(req["kid"].(string))
@@ -211,12 +253,7 @@ func resourceDeleteAWSSobject(ctx context.Context, d *schema.ResourceData, m int
 
 	_, err = m.(*api_client).APICall("DELETE", fmt.Sprintf("crypto/v1/keys/%s", d.Id()))
 	if err != nil {
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Unable to call SDKMS provider API client",
-			Detail:   fmt.Sprintf("[E]: API: DELETE crypto/v1/keys: %s", err),
-		})
-		return diags
+		return err
 	}
 
 	d.SetId("")

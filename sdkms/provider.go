@@ -45,8 +45,8 @@ func Provider() *schema.Provider {
 			"sdkms_sobject":     resourceSobject(),
 			"sdkms_aws_sobject": resourceAWSSobject(),
 			//"sdkms_aws_group":   resourceAWSGroup(),
-			"sdkms_group":       resourceGroup(),
-			"sdkms_app":         resourceApp(),
+			"sdkms_group": resourceGroup(),
+			"sdkms_app":   resourceApp(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"sdkms_aws_group": dataSourceAWSGroup(),
@@ -64,8 +64,8 @@ func configureProvider(ctx context.Context, d *schema.ResourceData) (interface{}
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Unable to configure SDKMS provider",
-			Detail:   "[E]: SDKMS API Client Failed to Create",
+			Summary:  "[DSM SDK]: Unable to configure DSM provider",
+			Detail:   "[E]: API: Failed to create client",
 		})
 		return nil, diags
 	}
