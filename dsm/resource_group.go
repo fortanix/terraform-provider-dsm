@@ -1,12 +1,12 @@
 // **********
-// Terraform Provider - SDKMS: resource: group
+// Terraform Provider - DSM: resource: group
 // **********
 //       - Author:    fyoo at fortanix dot com
-//       - Version:   0.1.3
+//       - Version:   0.1.5
 //       - Date:      27/11/2020
 // **********
 
-package sdkms
+package dsm
 
 import (
 	"context"
@@ -57,6 +57,7 @@ func resourceGroup() *schema.Resource {
 
 // [C]: Create Group
 func resourceCreateGroup(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	group_object := map[string]interface{}{
 		"name":        d.Get("name").(string),
 		"description": d.Get("description").(string),
@@ -64,7 +65,12 @@ func resourceCreateGroup(ctx context.Context, d *schema.ResourceData, m interfac
 
 	req, err := m.(*api_client).APICallBody("POST", "sys/v1/groups", group_object)
 	if err != nil {
-		return err
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "[DSM SDK] Unable to call DSM provider API client",
+			Detail:   fmt.Sprintf("[E]: API: POST sys/v1/groups: %s", err),
+		})
+		return diags
 	}
 
 	d.SetId(req["group_id"].(string))
@@ -79,7 +85,7 @@ func resourceReadGroup(ctx context.Context, d *schema.ResourceData, m interface{
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Unable to call SDKMS provider API client",
+			Summary:  "[DSM SDK] Unable to call DSM provider API client",
 			Detail:   fmt.Sprintf("[E]: API: GET sys/v1/groups: %s", err),
 		})
 		return diags
@@ -118,7 +124,7 @@ func resourceDeleteGroup(ctx context.Context, d *schema.ResourceData, m interfac
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Unable to call SDKMS provider API client",
+			Summary:  "[DSM SDK] Unable to call DSM provider API client",
 			Detail:   fmt.Sprintf("[E]: API: DELETE sys/v1/groups: %s", err),
 		})
 		return diags

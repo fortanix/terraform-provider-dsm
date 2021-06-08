@@ -1,12 +1,12 @@
 // **********
-// Terraform Provider - SDKMS: resource: aws security object
+// Terraform Provider - DSM: resource: aws security object
 // **********
 //       - Author:    fyoo at fortanix dot com
-//       - Version:   0.1.3
+//       - Version:   0.1.5
 //       - Date:      27/11/2020
 // **********
 
-package sdkms
+package dsm
 
 import (
 	"context"
@@ -156,6 +156,7 @@ func loadAWSProfileCreds(profile_name string, m interface{}) diag.Diagnostics {
 
 // [C]: Create AWS Security Object
 func resourceCreateAWSSobject(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	// Check if AWS Profile is set and use it
 	if d.Get("profile") != nil {
 		err := loadAWSProfileCreds(d.Get("profile").(string), m)
@@ -177,7 +178,12 @@ func resourceCreateAWSSobject(ctx context.Context, d *schema.ResourceData, m int
 
 	req, err := m.(*api_client).APICallBody("POST", "crypto/v1/keys/copy", security_object)
 	if err != nil {
-		return err
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "[DSM SDK] Unable to call DSM provider API client",
+			Detail:   fmt.Sprintf("[E]: API: POST crypto/v1/keys/copy: %s", err),
+		})
+		return diags
 	}
 
 	d.SetId(req["kid"].(string))
@@ -186,6 +192,7 @@ func resourceCreateAWSSobject(ctx context.Context, d *schema.ResourceData, m int
 
 // [R]: Read AWS Security Object
 func resourceReadAWSSobject(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	// Check if AWS Profile is set and use it
 	if d.Get("profile") != nil {
 		err := loadAWSProfileCreds(d.Get("profile").(string), m)
@@ -198,17 +205,32 @@ func resourceReadAWSSobject(ctx context.Context, d *schema.ResourceData, m inter
 	// Scan the AWS Group first before
 	req, err := m.(*api_client).APICallBody("POST", fmt.Sprintf("sys/v1/groups/%s/hmg/check", d.Get("group_id").(string)), check_hmg_req)
 	if err != nil {
-		return err
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "[DSM SDK] Unable to call DSM provider API client",
+			Detail:   fmt.Sprintf("[E]: API: POST sys/v1/groups/-/hmg/check: %s", err),
+		})
+		return diags
 	}
 
 	req, err = m.(*api_client).APICallBody("POST", fmt.Sprintf("sys/v1/groups/%s/hmg/scan", d.Get("group_id").(string)), check_hmg_req)
 	if err != nil {
-		return err
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "[DSM SDK] Unable to call DSM provider API client",
+			Detail:   fmt.Sprintf("[E]: API: POST sys/v1/groups/-/hmg/scan: %s", err),
+		})
+		return diags
 	}
 
 	req, err = m.(*api_client).APICall("GET", fmt.Sprintf("crypto/v1/keys/%s", d.Id()))
 	if err != nil {
-		return err
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "[DSM SDK] Unable to call DSM provider API client",
+			Detail:   fmt.Sprintf("[E]: API: GET crypto/v1/keys: %s", err),
+		})
+		return diags
 	}
 
 	if err := d.Set("name", req["name"].(string)); err != nil {
@@ -257,6 +279,7 @@ func resourceUpdateAWSSobject(ctx context.Context, d *schema.ResourceData, m int
 
 // [D]: Delete AWS Security Object
 func resourceDeleteAWSSobject(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	// Check if AWS Profile is set and use it
 	if d.Get("profile") != nil {
 		err := loadAWSProfileCreds(d.Get("profile").(string), m)
@@ -287,13 +310,23 @@ func resourceDeleteAWSSobject(ctx context.Context, d *schema.ResourceData, m int
 		}
 		_, err := m.(*api_client).APICallBody("PATCH", fmt.Sprintf("crypto/v1/keys/%s", d.Id()), remove_aws_alias)
 		if err != nil {
-			return err
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "[DSM SDK] Unable to call DSM provider API client",
+				Detail:   fmt.Sprintf("[E]: API: PATCH crypto/v1/keys: %s", err),
+			})
+			return diags
 		}
 	}
 
 	_, err := m.(*api_client).APICall("DELETE", fmt.Sprintf("crypto/v1/keys/%s", d.Id()))
 	if err != nil {
-		return err
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "[DSM SDK] Unable to call DSM provider API client",
+			Detail:   fmt.Sprintf("[E]: API: DELETE crypto/v1/keys: %s", err),
+		})
+		return diags
 	}
 
 	d.SetId("")

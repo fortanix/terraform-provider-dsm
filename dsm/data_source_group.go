@@ -1,12 +1,12 @@
 // **********
-// Terraform Provider - SDKMS: data source: group
+// Terraform Provider - DSM: data source: group
 // **********
 //       - Author:    fyoo at fortanix dot com
-//       - Version:   0.1.3
+//       - Version:   0.1.5
 //       - Date:      05/01/2021
 // **********
 
-package sdkms
+package dsm
 
 import (
 	"context"
@@ -54,7 +54,7 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, m interfac
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Unable to call SDKMS provider API client",
+			Summary:  "[DSM SDK] Unable to call DSM provider API client",
 			Detail:   fmt.Sprintf("[E]: API: GET sys/v1/groups: %s", err),
 		})
 		return diags

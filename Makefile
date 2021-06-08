@@ -2,9 +2,9 @@ TEST?=$$(go list ./... | grep -v 'vendor')
 GOFMT_FILES?=$$(find . -name '*.go' |grep -v vendor)
 HOSTNAME=fortanix.com
 NAMESPACE=fyoo
-NAME=sdkms
+NAME=dsm
 BINARY=terraform-provider-${NAME}
-VERSION=0.1.4
+VERSION=0.1.5
 OS_ARCH=linux_amd64
 
 default: install

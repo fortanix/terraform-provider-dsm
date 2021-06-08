@@ -1,8 +1,8 @@
 // **********
-// Terraform Provider - SDKMS: main provider program
+// Terraform Provider - DSM: main provider program
 // **********
 //       - Author:    fyoo at fortanix dot com
-//       - Version:   0.1.3
+//       - Version:   0.1.5
 //       - Date:      27/11/2020
 // **********
 
@@ -12,13 +12,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/plugin"
 
-	"terraform-provider-sdkms/sdkms"
+	"terraform-provider-dsm/dsm"
 )
 
 func main() {
 	plugin.Serve(&plugin.ServeOpts{
 		ProviderFunc: func() *schema.Provider {
-			return sdkms.Provider()
+			return dsm.Provider()
 		},
 	})
 }

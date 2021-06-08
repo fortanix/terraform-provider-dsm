@@ -1,17 +1,16 @@
 // **********
-// Terraform Provider - SDKMS: common functions
+// Terraform Provider - DSM: common functions
 // **********
 //       - Author:    fyoo at fortanix dot com
-//       - Version:   0.1.3
+//       - Version:   0.1.5
 //       - Date:      05/01/2021
 // **********
 
-package sdkms
+package dsm
 
 import (
 	"encoding/json"
 	"fmt"
-	//"reflect"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -36,7 +35,7 @@ func parseHmg(d *schema.ResourceData, hmg map[string]interface{}) interface{} {
 				if err != nil {
 					diags = append(diags, diag.Diagnostic{
 						Severity: diag.Error,
-						Summary:  "Unable to call SDKMS provider API client",
+						Summary:  "[DSM SDK] Unable to call DSM provider API client",
 						Detail:   fmt.Sprintf("[E]: COMMON: Parse HMG from Group: %s", err),
 					})
 					return diags

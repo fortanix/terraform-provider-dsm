@@ -2,11 +2,11 @@
 // Terraform Provider - SDKMS: resource: security object
 // **********
 //       - Author:    fyoo at fortanix dot com
-//       - Version:   0.1.3
+//       - Version:   0.1.5
 //       - Date:      27/11/2020
 // **********
 
-package sdkms
+package dsm
 
 import (
 	"context"
@@ -123,7 +123,7 @@ func resourceCreateSobject(ctx context.Context, d *schema.ResourceData, m interf
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Unable to call SDKMS provider API client",
+			Summary:  "[DSM SDK] Unable to call DSM provider API client",
 			Detail:   fmt.Sprintf("[E]: API: POST crypto/v1/keys: %s", err),
 		})
 		return diags
@@ -141,7 +141,7 @@ func resourceReadSobject(ctx context.Context, d *schema.ResourceData, m interfac
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Unable to call SDKMS provider API client",
+			Summary:  "[DSM SDK] Unable to call DSM provider API client",
 			Detail:   fmt.Sprintf("[E]: API: GET crypto/v1/keys: %s", err),
 		})
 		return diags
@@ -211,8 +211,8 @@ func resourceDeleteSobject(ctx context.Context, d *schema.ResourceData, m interf
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Unable to call SDKMS provider API client",
-			Detail:   fmt.Sprintf("[E]: API: DELETE crypto/v1/keyss: %s", err),
+			Summary:  "[DSM SDK] Unable to call DSM provider API client",
+			Detail:   fmt.Sprintf("[E]: API: DELETE crypto/v1/keys: %s", err),
 		})
 		return diags
 	}

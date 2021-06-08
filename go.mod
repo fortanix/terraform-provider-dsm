@@ -1,4 +1,4 @@
-module terraform-provider-sdkms
+module terraform-provider-dsm
 
 go 1.15
 

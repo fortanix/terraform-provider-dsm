@@ -1,12 +1,12 @@
 // **********
-// Terraform Provider - SDKMS: provider
+// Terraform Provider - DSM: provider
 // **********
 //       - Author:    fyoo at fortanix dot com
-//       - Version:   0.1.3
+//       - Version:   0.1.5
 //       - Date:      27/11/2020
 // **********
 
-package sdkms
+package dsm
 
 import (
 	"context"
@@ -42,16 +42,18 @@ func Provider() *schema.Provider {
 			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
-			"sdkms_sobject":     resourceSobject(),
-			"sdkms_aws_sobject": resourceAWSSobject(),
+			"dsm_sobject":     resourceSobject(),
+			"dsm_aws_sobject": resourceAWSSobject(),
 			//"sdkms_aws_group":   resourceAWSGroup(),
-			"sdkms_group": resourceGroup(),
-			"sdkms_app":   resourceApp(),
+			"dsm_secret": resourceSecret(),
+			"dsm_group":  resourceGroup(),
+			"dsm_app":    resourceApp(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
-			"sdkms_aws_group": dataSourceAWSGroup(),
-			"sdkms_group":     dataSourceGroup(),
-			"sdkms_version":   dataSourceVersion(),
+			"dsm_aws_group": dataSourceAWSGroup(),
+			"dsm_secret":    dataSourceSecret(),
+			"dsm_group":     dataSourceGroup(),
+			"dsm_version":   dataSourceVersion(),
 		},
 		ConfigureContextFunc: configureProvider,
 	}

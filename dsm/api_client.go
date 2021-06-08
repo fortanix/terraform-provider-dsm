@@ -1,12 +1,12 @@
 // **********
-// Terraform Provider - SDKMS: api client
+// Terraform Provider - DSM: api client
 // **********
 //       - Author:    fyoo at fortanix dot com
-//       - Version:   0.1.3
+//       - Version:   0.1.5
 //       - Date:      27/11/2020
 // **********
 
-package sdkms
+package dsm
 
 import (
 	"bytes"
