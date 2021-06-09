@@ -2,7 +2,7 @@
 // Terraform Provider - DSM: api client
 // **********
 //       - Author:    fyoo at fortanix dot com
-//       - Version:   0.1.5
+//       - Version:   0.1.7
 //       - Date:      27/11/2020
 // **********
 
@@ -24,6 +24,11 @@ type api_client struct {
 	port      int
 	authtoken string
 	acct_id   string
+}
+
+type dsm_plugin struct {
+	Id   string `json:"plugin_id"`
+	Name string `json:"name"`
 }
 
 // [-]: set api_client state
@@ -240,7 +245,6 @@ func (obj *api_client) APICallList(method string, url string) ([]interface{}, di
 				Detail:   fmt.Sprintf("[E]: API: %s %s: %s", method, url, err),
 			})
 		} else {
-
 			defer r.Body.Close()
 
 			// FIXME: DELETE does not have any output
@@ -258,6 +262,63 @@ func (obj *api_client) APICallList(method string, url string) ([]interface{}, di
 				})
 			} else {
 				return resp, nil
+			}
+		}
+	}
+	return nil, diags
+}
+
+// [-]: find plugin - "Terraform Plugin" - return as array
+func (obj *api_client) FindPluginId(plugin_name string) ([]byte, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	client := &http.Client{Timeout: 600 * time.Second}
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s/sys/v1/plugins", obj.endpoint), nil)
+	if err != nil {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "[DSM SDK]: Unable to prepare DSM provider API client",
+			Detail:   fmt.Sprintf("[E]: API: %s %s: %s", "GET", "sys/v1/plugins", err),
+		})
+	} else {
+		req.Header.Add("Authorization", "Bearer "+obj.authtoken)
+
+		r, err := client.Do(req)
+		if err != nil {
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "[DSM SDK]: Unable to call DSM provider API client",
+				Detail:   fmt.Sprintf("[E]: API: %s %s: %s", "GET", "sys/v1/plugins", err),
+			})
+		} else {
+			defer r.Body.Close()
+
+			bodyBytes, err := io.ReadAll(r.Body)
+			if err != nil {
+				diags = append(diags, diag.Diagnostic{
+					Severity: diag.Error,
+					Summary:  "[DSM SDK]: Unable to read DSM provider API response",
+					Detail:   fmt.Sprintf("[E]: API: %s %s: %s", "GET", "sys/v1/plugins", err),
+				})
+			} else {
+				var allPlugins []dsm_plugin
+				err = json.Unmarshal(bodyBytes, &allPlugins)
+				resp := ""
+				for i := range allPlugins {
+					if allPlugins[i].Name == plugin_name {
+						resp = allPlugins[i].Id
+						break
+					}
+				}
+				if resp == "" {
+					diags = append(diags, diag.Diagnostic{
+						Severity: diag.Error,
+						Summary:  "[DSM SDK]: Unable to find Terraform Plugin through DSM provider",
+						Detail:   fmt.Sprintf("[E]: API: %s %s", "GET", "sys/v1/plugins"),
+					})
+				} else {
+					return []byte(resp), nil
+				}
 			}
 		}
 	}

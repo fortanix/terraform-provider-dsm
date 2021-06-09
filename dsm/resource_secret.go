@@ -2,7 +2,7 @@
 // Terraform Provider - SDKMS: resource: secret
 // **********
 //       - Author:    fyoo at fortanix dot com
-//       - Version:   0.1.5
+//       - Version:   0.1.7
 //       - Date:      27/11/2020
 // **********
 
@@ -10,7 +10,6 @@ package dsm
 
 import (
 	"context"
-	"encoding/base64"
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -30,10 +29,6 @@ func resourceSecret() *schema.Resource {
 				Required: true,
 			},
 			"group_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"value": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -65,7 +60,7 @@ func resourceSecret() *schema.Resource {
 			},
 			"key_ops": {
 				Type:     schema.TypeList,
-				Optional: true,
+				Computed: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
@@ -94,24 +89,29 @@ func resourceSecret() *schema.Resource {
 func resourceCreateSecret(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	security_object := map[string]interface{}{
+	plugin_object := map[string]interface{}{
+		"operation":   "create",
 		"name":        d.Get("name").(string),
-		"obj_type":    "SECRET",
-		"value":       base64.StdEncoding.EncodeToString([]byte(d.Get("value").(string))),
 		"group_id":    d.Get("group_id").(string),
 		"description": d.Get("description").(string),
 	}
 
-	if err := d.Get("key_ops").([]interface{}); len(err) > 0 {
-		security_object["key_ops"] = d.Get("key_ops")
-	}
-
-	req, err := m.(*api_client).APICallBody("PUT", "crypto/v1/keys", security_object)
+	reqfpi, err := m.(*api_client).FindPluginId("Terraform Plugin")
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "[DSM SDK] Unable to call DSM provider API client",
-			Detail:   fmt.Sprintf("[E]: API: PUT crypto/v1/keys: %s", err),
+			Detail:   fmt.Sprintf("[E]: API: GET sys/v1/plugins: %s", err),
+		})
+		return diags
+	}
+
+	req, err := m.(*api_client).APICallBody("POST", fmt.Sprintf("sys/v1/plugins/%s", string(reqfpi)), plugin_object)
+	if err != nil {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "[DSM SDK] Unable to call DSM provider API client",
+			Detail:   fmt.Sprintf("[E]: API: POST sys/v1/plugins: %s", err),
 		})
 		return diags
 	}
