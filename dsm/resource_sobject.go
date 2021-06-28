@@ -48,16 +48,20 @@ func resourceSobject() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"kcv": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+			//"kcv": {
+			//	Type:     schema.TypeString,
+			//	Computed: true,
+			//},
 			"creator": {
 				Type:     schema.TypeMap,
 				Computed: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
+			},
+			"ssh_pub_key": {
+				Type: schema.TypeString,
+				Computed: true,
 			},
 			"custom_metadata": {
 				Type:     schema.TypeMap,
@@ -165,9 +169,12 @@ func resourceReadSobject(ctx context.Context, d *schema.ResourceData, m interfac
 	if err := d.Set("acct_id", req["acct_id"].(string)); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("kcv", req["kcv"].(string)); err != nil {
-		return diag.FromErr(err)
-	}
+	//if err := d.Set("kcv", req["kcv"].(string)); err != nil {
+		// RSA keys don't have KCV
+	//	if d.Get("kcv") != nil {
+	//		return diag.FromErr(err)
+	//	}
+	//}
 	if err := d.Set("creator", req["creator"]); err != nil {
 		return diag.FromErr(err)
 	}
@@ -193,6 +200,17 @@ func resourceReadSobject(ctx context.Context, d *schema.ResourceData, m interfac
 	}
 	if err := d.Set("state", req["state"].(string)); err != nil {
 		return diag.FromErr(err)
+	}
+
+	if err := req["obj_type"].(string); err == "RSA" {
+		openssh_pub_key, err := PublicPEMtoOpenSSH([]byte(req["pub_key"].(string)))
+		if err != nil {
+			return err
+		} else {
+			if err := d.Set("ssh_pub_key", openssh_pub_key); err != nil {
+				return diag.FromErr(err)
+			}
+		}
 	}
 
 	return diags
