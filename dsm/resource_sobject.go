@@ -60,7 +60,7 @@ func resourceSobject() *schema.Resource {
 				},
 			},
 			"ssh_pub_key": {
-				Type: schema.TypeString,
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"custom_metadata": {
@@ -170,7 +170,7 @@ func resourceReadSobject(ctx context.Context, d *schema.ResourceData, m interfac
 		return diag.FromErr(err)
 	}
 	//if err := d.Set("kcv", req["kcv"].(string)); err != nil {
-		// RSA keys don't have KCV
+	// RSA keys don't have KCV
 	//	if d.Get("kcv") != nil {
 	//		return diag.FromErr(err)
 	//	}
