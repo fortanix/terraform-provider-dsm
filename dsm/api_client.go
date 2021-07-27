@@ -98,7 +98,7 @@ func (obj *api_client) APICallBody(method string, url string, body map[string]in
 			Detail:   fmt.Sprintf("[E]: API: %s %s: %s", method, url, err),
 		})
 	} else {
-		req.Header.Add("Authorization", "Bearer " + obj.authtoken)
+		req.Header.Add("Authorization", "Bearer "+obj.authtoken)
 
 		r, err := client.Do(req)
 		if err != nil {

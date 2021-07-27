@@ -2,8 +2,8 @@
 // Terraform Provider - DSM: provider
 // **********
 //       - Author:    fyoo at fortanix dot com
-//       - Version:   0.1.5
-//       - Date:      27/11/2020
+//       - Version:   0.2.0
+//       - Date:      27/07/2021
 // **********
 
 package dsm
@@ -45,9 +45,10 @@ func Provider() *schema.Provider {
 			"dsm_sobject":     resourceSobject(),
 			"dsm_aws_sobject": resourceAWSSobject(),
 			//"sdkms_aws_group":   resourceAWSGroup(),
-			"dsm_secret": resourceSecret(),
-			"dsm_group":  resourceGroup(),
-			"dsm_app":    resourceApp(),
+			"dsm_secret":     resourceSecret(),
+			"dsm_group":      resourceGroup(),
+			"dsm_app":        resourceApp(),
+			"dsm_gcp_ekm_sa": resourceGcpEkmSa(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"dsm_aws_group": dataSourceAWSGroup(),

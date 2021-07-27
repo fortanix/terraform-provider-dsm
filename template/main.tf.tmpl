@@ -1,0 +1,123 @@
+terraform {
+  required_providers {
+    dsm = {
+      version = "0.2.0"
+      source  = "fortanix.com/fyoo/dsm"
+    }
+  }
+}
+
+
+
+// SETTINGS: DSM Provider Settings
+provider "dsm" {
+  endpoint = var.endpoint
+  username = var.user
+  password = var.pass
+  acct_id  = var.acct_id
+}
+
+
+
+// RESOURCE BLOCK: DSM specific blocks
+/*
+  Group
+*/
+// Local Group
+data "dsm_group" "" {
+  name = ""
+}
+resource "dsm_group" "" {
+  name = ""
+}
+// AWS Group 
+data "dsm_aws_group" "" {
+  name = ""
+}
+
+/*
+  Security Object
+*/
+// Local Key
+resource "dsm_sobject" "" {
+  name     = ""
+  group_id = ""
+  key_size = 256
+  key_ops = [
+    "ENCRYPT",
+    "DECRYPT",
+    "WRAPKEY",
+    "UNWRAPKEY",
+    "DERIVEKEY",
+    "MACGENERATE",
+    "MACVERIFY",
+    "APPMANAGEABLE"
+  ]
+  obj_type = "AES"
+}
+// Local Secret
+resource "dsm_secret" "" {
+  name     = ""
+  group_id = ""
+}
+// AWS BYOK
+resource "dsm_aws_sobject" "" {
+  name     = ""
+  group_id = ""
+  key = {
+    kid = ""
+  }
+  custom_metadata = {
+    aws-aliases = ""
+  }
+  profile = ""
+}
+
+/*
+  App
+*/
+// GCP EKM App
+resource "dsm_gcp_ekm_sa" "" {
+    name = ""
+}
+
+
+
+// RESOURCE BLOCK: hashicorp/google: GCP specific blocks
+/*
+  Key Ring
+*/
+data "google_kms_key_ring" "" {
+  name     = ""
+  location = ""
+}
+resource "google_kms_key_ring" "" {
+  name     = ""
+  location = ""
+}
+
+/*
+  Key
+*/
+data "google_kms_crypto_key" "" {
+  name     = ""
+  key_ring = ""
+}
+resource "google_kms_crypto_key" "" {
+  name     = ""
+  key_ring = ""
+  purpose  = "ENCRYPT_DECRYPT"
+  skip_initial_version_creation = true
+
+  version_template {
+    algorithm = "EXTERNAL_SYMMETRIC_ENCRYPTION"
+    protection_level = "EXTERNAL"                // filed as enhancement (https://github.com/hashicorp/terraform-provider-google/issues/9646)
+  }
+}
+
+/*
+  Key Version
+*/
+data "google_kms_crypto_key_version" "" {
+  crypto_key = ""
+}

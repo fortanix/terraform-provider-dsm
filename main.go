@@ -2,8 +2,8 @@
 // Terraform Provider - DSM: main provider program
 // **********
 //       - Author:    fyoo at fortanix dot com
-//       - Version:   0.1.9
-//       - Date:      27/11/2020
+//       - Version:   0.2.0
+//       - Date:      27/07/2021
 // **********
 
 package main
