@@ -2,8 +2,8 @@
 // Terraform Provider - DSM: data source: secret
 // **********
 //       - Author:    fyoo at fortanix dot com
-//       - Version:   0.1.5
-//       - Date:      05/01/2021
+//       - Version:   0.2.1
+//       - Date:      28/07/2021
 // **********
 
 package dsm
@@ -43,6 +43,16 @@ func dataSourceSecret() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"export": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"value": {
+				Type:      schema.TypeString,
+				Computed:  true,
+				Sensitive: true,
+			},
 		},
 	}
 }
@@ -50,37 +60,51 @@ func dataSourceSecret() *schema.Resource {
 func dataSourceSecretRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	req, err := m.(*api_client).APICallList("GET", "crypto/v1/keys")
+	security_object := map[string]interface{}{
+		"name": d.Get("name").(string),
+	}
+
+	req, err := m.(*api_client).APICallBody("POST", "crypto/v1/keys/export", security_object)
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "[DSM SDK] Unable to call DSM provider API client",
-			Detail:   fmt.Sprintf("[E]: API: GET crypto/v1/keys: %s", err),
+			Detail:   fmt.Sprintf("[E]: API: POST crypto/v1/keys/export: %s", err),
 		})
 		return diags
 	}
+
+	//req, err := m.(*api_client).APICallList("GET", "crypto/v1/keys")
+	//if err != nil {
+	//	diags = append(diags, diag.Diagnostic{
+	//		Severity: diag.Error,
+	//		Summary:  "[DSM SDK] Unable to call DSM provider API client",
+	//		Detail:   fmt.Sprintf("[E]: API: GET crypto/v1/keys: %s", err),
+	//	})
+	//	return diags
+	//}
 	//	Detail:   fmt.Sprintf("%s", req[0].(map[string]interface{})["group_id"]),
 
-	for _, data := range req {
-		// FIX-fyoo: maybe set the secret here too
-		if data.(map[string]interface{})["name"].(string) == d.Get("name").(string) {
-			if err := d.Set("name", data.(map[string]interface{})["name"].(string)); err != nil {
-				return diag.FromErr(err)
-			}
-			if err := d.Set("kid", data.(map[string]interface{})["kid"].(string)); err != nil {
-				return diag.FromErr(err)
-			}
-			if err := d.Set("acct_id", data.(map[string]interface{})["acct_id"].(string)); err != nil {
-				return diag.FromErr(err)
-			}
-			if err := d.Set("creator", data.(map[string]interface{})["creator"]); err != nil {
-				return diag.FromErr(err)
-			}
-			if _, ok := data.(map[string]interface{})["description"]; ok {
-				if err := d.Set("description", data.(map[string]interface{})["description"].(string)); err != nil {
-					return diag.FromErr(err)
-				}
-			}
+	if err := d.Set("name", req["name"].(string)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("kid", req["kid"].(string)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("acct_id", req["acct_id"].(string)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("creator", req["creator"]); err != nil {
+		return diag.FromErr(err)
+	}
+	if _, ok := req["description"]; ok {
+		if err := d.Set("description", req["description"].(string)); err != nil {
+			return diag.FromErr(err)
+		}
+	}
+	if d.Get("export").(bool) {
+		if err := d.Set("value", req["value"].(string)); err != nil {
+			return diag.FromErr(err)
 		}
 	}
 

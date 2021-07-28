@@ -1,4 +1,6 @@
 ChangeLog:
+0.2.1:
+Support secrets allowed to be exported into TF Provider
 0.2.0:
 GCP EKM support
 0.1.9:
