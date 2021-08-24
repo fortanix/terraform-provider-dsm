@@ -7,8 +7,15 @@
 --
 --{
 --     "operation":"create",
---     "name":"something"
+--     "name":"something",
 --     "group_id":"some group id"
+--}
+--
+--{
+--     "operation":"create",
+--     "name":"something",
+--     "group_id":"some group id",
+--     "value":"some value"
 --}
 --
 --{
@@ -71,12 +78,17 @@ function get_date_from_unix(unix_time)
   
 function run(input)
 	if input.operation == "create" then
-	    local new_secret = generate_secret()
-    	local new_sobject = assert(Sobject.import { name = input.name, group_id = input.group_id, obj_type = "SECRET", value = Blob.from_bytes(new_secret)})
-        local resp_payload = {
-            kid      = new_sobject.kid,
-            name     = new_sobject.name,
-            group_id = new_sobject.group_id
+    local new_secret = ""
+    if input.value ~= nil then
+      new_secret = input.value
+    else
+	    new_secret = generate_secret()
+    end
+    local new_sobject = assert(Sobject.import { name = input.name, group_id = input.group_id, obj_type = "SECRET", value = Blob.from_bytes(new_secret)})
+    local resp_payload = {
+      kid      = new_sobject.kid,
+      name     = new_sobject.name,
+      group_id = new_sobject.group_id
 		}
 		return resp_payload
     elseif input.operation == "drop" then

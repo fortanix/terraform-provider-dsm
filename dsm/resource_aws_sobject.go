@@ -2,7 +2,7 @@
 // Terraform Provider - DSM: resource: aws security object
 // **********
 //       - Author:    fyoo at fortanix dot com
-//       - Version:   0.1.9
+//       - Version:   0.2.4
 //       - Date:      27/11/2020
 // **********
 
@@ -158,7 +158,7 @@ func loadAWSProfileCreds(profile_name string, m interface{}) diag.Diagnostics {
 func resourceCreateAWSSobject(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	// Check if AWS Profile is set and use it
-	if d.Get("profile") != nil {
+	if err := d.Get("profile").(string); len(err) > 0 {
 		err := loadAWSProfileCreds(d.Get("profile").(string), m)
 		if err != nil {
 			return err
@@ -176,29 +176,29 @@ func resourceCreateAWSSobject(ctx context.Context, d *schema.ResourceData, m int
 		security_object["custom_metadata"] = d.Get("custom_metadata")
 	}
 
-	check_hmg_req := map[string]interface{}{}
+	//check_hmg_req := map[string]interface{}{}
 	// Scan the AWS Group first before
-	req, err := m.(*api_client).APICallBody("POST", fmt.Sprintf("sys/v1/groups/%s/hmg/check", d.Get("group_id").(string)), check_hmg_req)
-	if err != nil {
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "[DSM SDK] Unable to call DSM provider API client",
-			Detail:   fmt.Sprintf("[E]: API: POST sys/v1/groups/-/hmg/check: %s", err),
-		})
-		return diags
-	}
+	//req, err := m.(*api_client).APICallBody("POST", fmt.Sprintf("sys/v1/groups/%s/hmg/check", d.Get("group_id").(string)), check_hmg_req)
+	//if err != nil {
+	//	diags = append(diags, diag.Diagnostic{
+	//		Severity: diag.Error,
+	//		Summary:  "[DSM SDK] Unable to call DSM provider API client",
+	//		Detail:   fmt.Sprintf("[E]: API: POST sys/v1/groups/-/hmg/check: %s", err),
+	//	})
+	//	return diags
+	//}
 
-	req, err = m.(*api_client).APICallBody("POST", fmt.Sprintf("sys/v1/groups/%s/hmg/scan", d.Get("group_id").(string)), check_hmg_req)
-	if err != nil {
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "[DSM SDK] Unable to call DSM provider API client",
-			Detail:   fmt.Sprintf("[E]: API: POST sys/v1/groups/-/hmg/scan: %s", err),
-		})
-		return diags
-	}
+	//req, err = m.(*api_client).APICallBody("POST", fmt.Sprintf("sys/v1/groups/%s/hmg/scan", d.Get("group_id").(string)), check_hmg_req)
+	//if err != nil {
+	//	diags = append(diags, diag.Diagnostic{
+	//		Severity: diag.Error,
+	//		Summary:  "[DSM SDK] Unable to call DSM provider API client",
+	//		Detail:   fmt.Sprintf("[E]: API: POST sys/v1/groups/-/hmg/scan: %s", err),
+	//	})
+	//	return diags
+	//}
 
-	req, err = m.(*api_client).APICallBody("POST", "crypto/v1/keys/copy", security_object)
+	req, err := m.(*api_client).APICallBody("POST", "crypto/v1/keys/copy", security_object)
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
@@ -216,7 +216,7 @@ func resourceCreateAWSSobject(ctx context.Context, d *schema.ResourceData, m int
 func resourceReadAWSSobject(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	// Check if AWS Profile is set and use it
-	if d.Get("profile") != nil {
+	if err := d.Get("profile").(string); len(err) > 0 {
 		err := loadAWSProfileCreds(d.Get("profile").(string), m)
 		if err != nil {
 			return err
@@ -281,7 +281,7 @@ func resourceUpdateAWSSobject(ctx context.Context, d *schema.ResourceData, m int
 func resourceDeleteAWSSobject(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	// Check if AWS Profile is set and use it
-	if d.Get("profile") != nil {
+	if err := d.Get("profile").(string); len(err) > 0 {
 		err := loadAWSProfileCreds(d.Get("profile").(string), m)
 		if err != nil {
 			return err

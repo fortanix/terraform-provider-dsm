@@ -2,7 +2,7 @@
 // Terraform Provider - DSM: api client
 // **********
 //       - Author:    fyoo at fortanix dot com
-//       - Version:   0.1.7
+//       - Version:   0.2.4
 //       - Date:      27/11/2020
 // **********
 
@@ -10,6 +10,7 @@ package dsm
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -24,6 +25,7 @@ type api_client struct {
 	port      int
 	authtoken string
 	acct_id   string
+	insecure  bool
 }
 
 type dsm_plugin struct {
@@ -32,9 +34,13 @@ type dsm_plugin struct {
 }
 
 // [-]: set api_client state
-func NewAPIClient(endpoint string, port int, username string, password string, acct_id string) (*api_client, error) {
+func NewAPIClient(endpoint string, port int, username string, password string, acct_id string, insecure bool) (*api_client, error) {
 	// FIXME: clunky way of creating api_client session
-	client := &http.Client{Timeout: 10 * time.Second}
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: insecure},
+	}
+
+	client := &http.Client{Timeout: 600 * time.Second, Transport: tr}
 
 	req, err := http.NewRequest("POST", fmt.Sprintf("%s/sys/v1/session/auth", endpoint), nil)
 	if err != nil {
@@ -80,6 +86,7 @@ func NewAPIClient(endpoint string, port int, username string, password string, a
 		port:      port,
 		authtoken: resp["access_token"].(string),
 		acct_id:   acct_id,
+		insecure:  insecure,
 	}
 	return &newclient, nil
 }
@@ -87,8 +94,11 @@ func NewAPIClient(endpoint string, port int, username string, password string, a
 // [-]: call api with body
 func (obj *api_client) APICallBody(method string, url string, body map[string]interface{}) (map[string]interface{}, diag.Diagnostics) {
 	var diags diag.Diagnostics
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: obj.insecure},
+	}
 
-	client := &http.Client{Timeout: 600 * time.Second}
+	client := &http.Client{Timeout: 600 * time.Second, Transport: tr}
 	reqBody, _ := json.Marshal(body)
 	req, err := http.NewRequest(method, fmt.Sprintf("%s/%s", obj.endpoint, url), bytes.NewBuffer(reqBody))
 	if err != nil {
@@ -153,8 +163,11 @@ func (obj *api_client) APICallBody(method string, url string, body map[string]in
 // [-]: call api without body
 func (obj *api_client) APICall(method string, url string) (map[string]interface{}, diag.Diagnostics) {
 	var diags diag.Diagnostics
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: obj.insecure},
+	}
 
-	client := &http.Client{Timeout: 600 * time.Second}
+	client := &http.Client{Timeout: 600 * time.Second, Transport: tr}
 
 	req, err := http.NewRequest(method, fmt.Sprintf("%s/%s", obj.endpoint, url), nil)
 	if err != nil {
@@ -225,8 +238,11 @@ func (obj *api_client) APICall(method string, url string) (map[string]interface{
 // [-]: call api without body - return as array
 func (obj *api_client) APICallList(method string, url string) ([]interface{}, diag.Diagnostics) {
 	var diags diag.Diagnostics
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: obj.insecure},
+	}
 
-	client := &http.Client{Timeout: 600 * time.Second}
+	client := &http.Client{Timeout: 600 * time.Second, Transport: tr}
 	req, err := http.NewRequest(method, fmt.Sprintf("%s/%s", obj.endpoint, url), nil)
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
@@ -271,8 +287,11 @@ func (obj *api_client) APICallList(method string, url string) ([]interface{}, di
 // [-]: find plugin - "Terraform Plugin" - return as array
 func (obj *api_client) FindPluginId(plugin_name string) ([]byte, diag.Diagnostics) {
 	var diags diag.Diagnostics
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: obj.insecure},
+	}
 
-	client := &http.Client{Timeout: 600 * time.Second}
+	client := &http.Client{Timeout: 60 * time.Second, Transport: tr}
 	req, err := http.NewRequest("GET", fmt.Sprintf("%s/sys/v1/plugins", obj.endpoint), nil)
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{

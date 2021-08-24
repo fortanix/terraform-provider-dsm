@@ -1,4 +1,7 @@
 ChangeLog:
+0.2.4: allow specific secret
+0.2.3:
+Allow insecure SSL communication
 0.2.1:
 Support secrets allowed to be exported into TF Provider
 0.2.0:

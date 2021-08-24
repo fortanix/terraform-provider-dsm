@@ -2,7 +2,7 @@
 // Terraform Provider - DSM: provider
 // **********
 //       - Author:    fyoo at fortanix dot com
-//       - Version:   0.2.0
+//       - Version:   0.2.4
 //       - Date:      27/07/2021
 // **********
 
@@ -26,6 +26,11 @@ func Provider() *schema.Provider {
 			"port": {
 				Type:     schema.TypeInt,
 				Optional: true,
+			},
+			"insecure": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
 			},
 			"username": {
 				Type:     schema.TypeString,
@@ -63,7 +68,7 @@ func Provider() *schema.Provider {
 func configureProvider(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
-	newclient, err := NewAPIClient(d.Get("endpoint").(string), d.Get("port").(int), d.Get("username").(string), d.Get("password").(string), d.Get("acct_id").(string))
+	newclient, err := NewAPIClient(d.Get("endpoint").(string), d.Get("port").(int), d.Get("username").(string), d.Get("password").(string), d.Get("acct_id").(string), d.Get("insecure").(bool))
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,

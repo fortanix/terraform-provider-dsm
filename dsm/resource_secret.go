@@ -2,7 +2,7 @@
 // Terraform Provider - SDKMS: resource: secret
 // **********
 //       - Author:    fyoo at fortanix dot com
-//       - Version:   0.1.7
+//       - Version:   0.2.4
 //       - Date:      27/11/2020
 // **********
 
@@ -74,6 +74,11 @@ func resourceSecret() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
+			"value": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Sensitive: true,
+			},
 			"state": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -94,6 +99,10 @@ func resourceCreateSecret(ctx context.Context, d *schema.ResourceData, m interfa
 		"name":        d.Get("name").(string),
 		"group_id":    d.Get("group_id").(string),
 		"description": d.Get("description").(string),
+	}
+
+	if err := d.Get("value"); err != nil {
+		plugin_object["value"] = d.Get("value").(string)
 	}
 
 	reqfpi, err := m.(*api_client).FindPluginId("Terraform Plugin")
