@@ -103,6 +103,11 @@ func resourceAWSSobject() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"pending_window_in_days": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Default:  7,
+			},
 		},
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -175,28 +180,6 @@ func resourceCreateAWSSobject(ctx context.Context, d *schema.ResourceData, m int
 	if err := d.Get("custom_metadata").(map[string]interface{}); len(err) > 0 {
 		security_object["custom_metadata"] = d.Get("custom_metadata")
 	}
-
-	//check_hmg_req := map[string]interface{}{}
-	// Scan the AWS Group first before
-	//req, err := m.(*api_client).APICallBody("POST", fmt.Sprintf("sys/v1/groups/%s/hmg/check", d.Get("group_id").(string)), check_hmg_req)
-	//if err != nil {
-	//	diags = append(diags, diag.Diagnostic{
-	//		Severity: diag.Error,
-	//		Summary:  "[DSM SDK] Unable to call DSM provider API client",
-	//		Detail:   fmt.Sprintf("[E]: API: POST sys/v1/groups/-/hmg/check: %s", err),
-	//	})
-	//	return diags
-	//}
-
-	//req, err = m.(*api_client).APICallBody("POST", fmt.Sprintf("sys/v1/groups/%s/hmg/scan", d.Get("group_id").(string)), check_hmg_req)
-	//if err != nil {
-	//	diags = append(diags, diag.Diagnostic{
-	//		Severity: diag.Error,
-	//		Summary:  "[DSM SDK] Unable to call DSM provider API client",
-	//		Detail:   fmt.Sprintf("[E]: API: POST sys/v1/groups/-/hmg/scan: %s", err),
-	//	})
-	//	return diags
-	//}
 
 	req, err := m.(*api_client).APICallBody("POST", "crypto/v1/keys/copy", security_object)
 	if err != nil {
@@ -310,7 +293,7 @@ func resourceDeleteAWSSobject(ctx context.Context, d *schema.ResourceData, m int
 
 	// FIXME: Need to schedule deletion then delete the key - default is set to 7 days for now
 	delete_object := map[string]interface{}{
-		"pending_window_in_days": 7,
+		"pending_window_in_days": d.Get("pending_window_in_days").(int),
 	}
 	if d.Get("custom_metadata").(map[string]interface{})["aws-key-state"] != "PendingDeletion" {
 		_, err := m.(*api_client).APICallBody("POST", fmt.Sprintf("crypto/v1/keys/%s/schedule_deletion", d.Id()), delete_object)

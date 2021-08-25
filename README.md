@@ -1,4 +1,14 @@
 ChangeLog:
+0.3.0:
+- Removed any AWS KMS group synchronization operations during the BYOK operation
+- Created new resource type called "dsm_aws_group" that allows you to dynamically create a group for a specific region
+    - attribute "region" should be in short form (such as us-east-1) and is not sanity checked at this very moment - we look to make sure the check is done when v0.3.1 is released
+    - access_key / secret_key can be provided at the group creation or can be omitted (this is optional)
+- Additional attributes for data block "dsm_aws_group"
+    - attribute "scan" is now introduced as a boolean value to scan the AWS KMS group if needed
+    - default is "false" for this operation
+- Some errors have been updated
+    - Not all errors have been meaningful today as the DSM provider relays the error message from the DSM API as-is. This will be continued to fixed as we continue to release the next version
 0.2.4: allow specific secret
 0.2.3:
 Allow insecure SSL communication

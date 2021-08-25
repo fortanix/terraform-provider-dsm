@@ -71,6 +71,15 @@ func dataSourceAWSGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"scan": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"profile": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -120,5 +129,38 @@ func dataSourceAWSGroupRead(ctx context.Context, d *schema.ResourceData, m inter
 	}
 
 	d.SetId(d.Get("group_id").(string))
+
+	// If Scan is set, then move to scanning for data source
+	if d.Get("scan").(bool) {
+		// Check if AWS Profile is set and use it
+		if err := d.Get("profile").(string); len(err) > 0 {
+			err := loadAWSProfileCreds(d.Get("profile").(string), m)
+			if err != nil {
+				return err
+			}
+		}
+
+		check_hmg_req := map[string]interface{}{}
+		// Scan the AWS Group first before
+		_, err := m.(*api_client).APICallBody("POST", fmt.Sprintf("sys/v1/groups/%s/hmg/check", d.Get("group_id").(string)), check_hmg_req)
+		if err != nil {
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "[DSM SDK] Unable to call DSM provider API client",
+				Detail:   fmt.Sprintf("[E]: API: POST sys/v1/groups/-/hmg/check: %s", err),
+			})
+			return diags
+		}
+
+		_, err = m.(*api_client).APICallBody("POST", fmt.Sprintf("sys/v1/groups/%s/hmg/scan", d.Get("group_id").(string)), check_hmg_req)
+		if err != nil {
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "[DSM SDK] Unable to call DSM provider API client",
+				Detail:   fmt.Sprintf("[E]: API: POST sys/v1/groups/-/hmg/scan: %s", err),
+			})
+			return diags
+		}
+	}
 	return nil
 }
