@@ -21,11 +21,12 @@ import (
 )
 
 type api_client struct {
-	endpoint  string
-	port      int
-	authtoken string
-	acct_id   string
-	insecure  bool
+	endpoint   string
+	port       int
+	authtoken  string
+	acct_id    string
+	aws_region string
+	insecure   bool
 }
 
 type dsm_plugin struct {
@@ -34,7 +35,7 @@ type dsm_plugin struct {
 }
 
 // [-]: set api_client state
-func NewAPIClient(endpoint string, port int, username string, password string, acct_id string, insecure bool) (*api_client, error) {
+func NewAPIClient(endpoint string, port int, username string, password string, acct_id string, aws_region string, insecure bool) (*api_client, error) {
 	// FIXME: clunky way of creating api_client session
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: insecure},
@@ -82,11 +83,12 @@ func NewAPIClient(endpoint string, port int, username string, password string, a
 	defer r.Body.Close()
 
 	newclient := api_client{
-		endpoint:  endpoint,
-		port:      port,
-		authtoken: resp["access_token"].(string),
-		acct_id:   acct_id,
-		insecure:  insecure,
+		endpoint:   endpoint,
+		port:       port,
+		authtoken:  resp["access_token"].(string),
+		acct_id:    acct_id,
+		aws_region: aws_region,
+		insecure:   insecure,
 	}
 	return &newclient, nil
 }
@@ -135,13 +137,13 @@ func (obj *api_client) APICallBody(method string, url string, body map[string]in
 						diags = append(diags, diag.Diagnostic{
 							Severity: diag.Error,
 							Summary:  "[DSM SDK]: Call DSM provider API returned non-JSON",
-							Detail:   fmt.Sprintf("[E]: API: %s %s: %s", method, url, bodyString),
+							Detail:   fmt.Sprintf("[E]: API: %s %s %s: %s", method, url, r.StatusCode, bodyString),
 						})
 					} else {
 						diags = append(diags, diag.Diagnostic{
 							Severity: diag.Error,
 							Summary:  "[DSM SDK]: Call DSM provider API returned error",
-							Detail:   fmt.Sprintf("[E]: API: %s %s: %s", method, url, resp),
+							Detail:   fmt.Sprintf("[E]: API: %s %s %s: %s", method, url, r.StatusCode, resp),
 						})
 					}
 				} else {

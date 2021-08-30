@@ -1,4 +1,6 @@
 ChangeLog:
+0.3.1:
+- Moved AWS profile support
 0.3.0:
 - Removed any AWS KMS group synchronization operations during the BYOK operation
 - Created new resource type called "dsm_aws_group" that allows you to dynamically create a group for a specific region

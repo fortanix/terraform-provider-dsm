@@ -2,7 +2,7 @@
 // Terraform Provider - DSM: provider
 // **********
 //       - Author:    fyoo at fortanix dot com
-//       - Version:   0.2.4
+//       - Version:   0.3.1
 //       - Date:      27/07/2021
 // **********
 
@@ -10,6 +10,7 @@ package dsm
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -45,6 +46,15 @@ func Provider() *schema.Provider {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"aws_profile": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"aws_region": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "us-east-1",
+			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"dsm_sobject":     resourceSobject(),
@@ -68,14 +78,28 @@ func Provider() *schema.Provider {
 func configureProvider(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
-	newclient, err := NewAPIClient(d.Get("endpoint").(string), d.Get("port").(int), d.Get("username").(string), d.Get("password").(string), d.Get("acct_id").(string), d.Get("insecure").(bool))
+	// Create new API client
+	newclient, err := NewAPIClient(d.Get("endpoint").(string), d.Get("port").(int), d.Get("username").(string), d.Get("password").(string), d.Get("acct_id").(string), d.Get("aws_region").(string), d.Get("insecure").(bool))
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "[DSM SDK]: Unable to configure DSM provider",
-			Detail:   "[E]: API: Failed to create client",
+			Detail:   fmt.Sprintf("[E]: SDK: Terraform: %s", err),
 		})
 		return nil, diags
+	}
+
+	// Check if AWS profile is set and use it within API client
+	if err := d.Get("aws_profile").(string); len(err) > 0 {
+		err := loadAWSProfileCreds(d.Get("aws_profile").(string), newclient)
+		if err != nil {
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "[DSM SDK]: Unable to configure DSM provider",
+				Detail:   fmt.Sprintf("[E]: SDK: AWS: %s", err),
+			})
+			return nil, diags
+		}
 	}
 	return newclient, nil
 }

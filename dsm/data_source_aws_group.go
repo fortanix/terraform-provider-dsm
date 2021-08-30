@@ -76,10 +76,6 @@ func dataSourceAWSGroup() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"profile": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
 		},
 	}
 }
@@ -132,14 +128,6 @@ func dataSourceAWSGroupRead(ctx context.Context, d *schema.ResourceData, m inter
 
 	// If Scan is set, then move to scanning for data source
 	if d.Get("scan").(bool) {
-		// Check if AWS Profile is set and use it
-		if err := d.Get("profile").(string); len(err) > 0 {
-			err := loadAWSProfileCreds(d.Get("profile").(string), m)
-			if err != nil {
-				return err
-			}
-		}
-
 		check_hmg_req := map[string]interface{}{}
 		// Scan the AWS Group first before
 		_, err := m.(*api_client).APICallBody("POST", fmt.Sprintf("sys/v1/groups/%s/hmg/check", d.Get("group_id").(string)), check_hmg_req)

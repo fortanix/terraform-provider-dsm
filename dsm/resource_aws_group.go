@@ -28,10 +28,6 @@ func resourceAWSGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"region": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
 			"group_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -82,7 +78,7 @@ func resourceCreateAWSGroup(ctx context.Context, d *schema.ResourceData, m inter
 
 	group_object["add_hmg"] = []map[string]interface{}{
 		{
-			"url":        fmt.Sprintf("kms.%s.amazonaws.com", d.Get("region").(string)),
+			"url":        fmt.Sprintf("kms.%s.amazonaws.com", m.(*api_client).aws_region),
 			"kind":       "AWSKMS",
 			"access_key": d.Get("access_key").(string),
 			"secret_key": d.Get("secret_key").(string),

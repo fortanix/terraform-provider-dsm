@@ -12,9 +12,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -71,10 +68,6 @@ func resourceAWSSobject() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"profile": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
 			"obj_type": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -115,60 +108,9 @@ func resourceAWSSobject() *schema.Resource {
 	}
 }
 
-// [-]: AWS - Load Profile Credentials
-func loadAWSProfileCreds(profile_name string, m interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	// Specify profile to load for the session's config
-	sess, err := session.NewSessionWithOptions(session.Options{
-		Profile: profile_name,
-		Config: aws.Config{
-			CredentialsChainVerboseErrors: aws.Bool(true),
-		},
-		// Force enable Shared Config support
-		SharedConfigState: session.SharedConfigEnable,
-	})
-	if sess != nil {
-		output, err := sess.Config.Credentials.Get()
-		if err != nil {
-			diags = append(diags, diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  "[AWS SDK]: Unable to retrieve IAM or STS creds",
-				Detail:   fmt.Sprintf("[E]: SDK: AWS credentials access failure: %s", err),
-			})
-			return diags
-		} else {
-			aws_temporary_credentials := map[string]interface{}{
-				"access_key":    output.AccessKeyID,
-				"secret_key":    output.SecretAccessKey,
-				"session_token": output.SessionToken,
-			}
-			_, err := m.(*api_client).APICallBody("POST", "sys/v1/session/aws_temporary_credentials", aws_temporary_credentials)
-			if err != nil {
-				return err
-			}
-		}
-	} else {
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "[AWS SDK]: Unable to setup session",
-			Detail:   fmt.Sprintf("[E]: SDK: AWS session failure: %s", err),
-		})
-		return diags
-	}
-	return nil
-}
-
 // [C]: Create AWS Security Object
 func resourceCreateAWSSobject(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	// Check if AWS Profile is set and use it
-	if err := d.Get("profile").(string); len(err) > 0 {
-		err := loadAWSProfileCreds(d.Get("profile").(string), m)
-		if err != nil {
-			return err
-		}
-	}
 
 	security_object := map[string]interface{}{
 		"name":        d.Get("name").(string),
@@ -198,13 +140,6 @@ func resourceCreateAWSSobject(ctx context.Context, d *schema.ResourceData, m int
 // [R]: Read AWS Security Object
 func resourceReadAWSSobject(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	// Check if AWS Profile is set and use it
-	if err := d.Get("profile").(string); len(err) > 0 {
-		err := loadAWSProfileCreds(d.Get("profile").(string), m)
-		if err != nil {
-			return err
-		}
-	}
 
 	req, err := m.(*api_client).APICall("GET", fmt.Sprintf("crypto/v1/keys/%s", d.Id()))
 	if err != nil {
@@ -263,13 +198,6 @@ func resourceUpdateAWSSobject(ctx context.Context, d *schema.ResourceData, m int
 // [D]: Delete AWS Security Object
 func resourceDeleteAWSSobject(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	// Check if AWS Profile is set and use it
-	if err := d.Get("profile").(string); len(err) > 0 {
-		err := loadAWSProfileCreds(d.Get("profile").(string), m)
-		if err != nil {
-			return err
-		}
-	}
 
 	// FIXME: Since deleting, might as well remove the alias
 	if d.Get("custom_metadata").(map[string]interface{})["aws-aliases"] != "" {
