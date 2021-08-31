@@ -2,7 +2,7 @@
 // Terraform Provider - DSM: common functions
 // **********
 //       - Author:    fyoo at fortanix dot com
-//       - Version:   0.3.1
+//       - Version:   0.3.2
 //       - Date:      05/01/2021
 // **********
 
@@ -104,6 +104,7 @@ func loadAWSProfileCreds(profile_name string, m interface{}) diag.Diagnostics {
 	sess, err := session.NewSessionWithOptions(session.Options{
 		Profile: profile_name,
 		Config: aws.Config{
+			Region:                        aws.String(m.(*api_client).aws_region),
 			CredentialsChainVerboseErrors: aws.Bool(true),
 		},
 		// Force enable Shared Config support

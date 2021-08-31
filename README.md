@@ -1,4 +1,7 @@
 ChangeLog:
+0.3.2:
+- Clean up at the provider settings level
+- Region is now also set at the provider level that is also applied at the AWS credentials support level
 0.3.1:
 - Moved AWS profile support
 0.3.0:
