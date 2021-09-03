@@ -199,8 +199,8 @@ func resourceUpdateAWSSobject(ctx context.Context, d *schema.ResourceData, m int
 func resourceDeleteAWSSobject(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	// FIXME: Since deleting, might as well remove the alias
-	if d.Get("custom_metadata").(map[string]interface{})["aws-aliases"] != "" {
+	// FIXME: Since deleting, might as well remove the alias if exists
+	if _, ok := d.Get("custom_metadata").(map[string]interface{})["aws-aliases"]; ok {
 		remove_aws_alias := map[string]interface{}{
 			"kid": d.Id(),
 		}

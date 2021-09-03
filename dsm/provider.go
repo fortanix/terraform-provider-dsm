@@ -49,6 +49,7 @@ func Provider() *schema.Provider {
 			"aws_profile": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Default:  "",
 			},
 			"aws_region": {
 				Type:     schema.TypeString,
@@ -79,7 +80,7 @@ func configureProvider(ctx context.Context, d *schema.ResourceData) (interface{}
 	var diags diag.Diagnostics
 
 	// Create new API client
-	newclient, err := NewAPIClient(d.Get("endpoint").(string), d.Get("port").(int), d.Get("username").(string), d.Get("password").(string), d.Get("acct_id").(string), d.Get("aws_region").(string), d.Get("insecure").(bool))
+	newclient, err := NewAPIClient(d.Get("endpoint").(string), d.Get("port").(int), d.Get("username").(string), d.Get("password").(string), d.Get("acct_id").(string), d.Get("aws_profile").(string), d.Get("aws_region").(string), d.Get("insecure").(bool))
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
@@ -90,16 +91,16 @@ func configureProvider(ctx context.Context, d *schema.ResourceData) (interface{}
 	}
 
 	// Check if AWS profile is set and use it within API client
-	if err := d.Get("aws_profile").(string); len(err) > 0 {
-		err := loadAWSProfileCreds(d.Get("aws_profile").(string), newclient)
-		if err != nil {
-			diags = append(diags, diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  "[DSM SDK]: Unable to configure DSM provider",
-				Detail:   fmt.Sprintf("[E]: SDK: AWS: %s", err),
-			})
-			return nil, diags
-		}
-	}
+	//if err := d.Get("aws_profile").(string); len(err) > 0 {
+	//	err := loadAWSProfileCreds(d.Get("aws_profile").(string), newclient)
+	//	if err != nil {
+	//		diags = append(diags, diag.Diagnostic{
+	//			Severity: diag.Error,
+	//			Summary:  "[DSM SDK]: Unable to configure DSM provider",
+	//			Detail:   fmt.Sprintf("[E]: SDK: AWS: %s", err),
+	//		})
+	//		return nil, diags
+	//	}
+	//}
 	return newclient, nil
 }

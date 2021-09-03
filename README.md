@@ -1,4 +1,8 @@
 ChangeLog:
+0.3.5:
+- Moved the /aws_temporary_credential call directly into the NewAPIClient code (seems to be some GPRC issues)
+- Fixed issue where alias removal was failing as there was no alias for the CMK
+0.3.3: r.statuscode for all APICallBody
 0.3.2:
 - Clean up at the provider settings level
 - Region is now also set at the provider level that is also applied at the AWS credentials support level

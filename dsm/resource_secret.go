@@ -101,7 +101,7 @@ func resourceCreateSecret(ctx context.Context, d *schema.ResourceData, m interfa
 		"description": d.Get("description").(string),
 	}
 
-	if err := d.Get("value"); err != nil {
+	if err := d.Get("value").(string); len(err) > 0 {
 		plugin_object["value"] = d.Get("value").(string)
 	}
 

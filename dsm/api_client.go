@@ -17,16 +17,20 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 )
 
 type api_client struct {
-	endpoint   string
-	port       int
-	authtoken  string
-	acct_id    string
-	aws_region string
-	insecure   bool
+	endpoint    string
+	port        int
+	authtoken   string
+	acct_id     string
+	aws_profile string
+	aws_region  string
+	insecure    bool
 }
 
 type dsm_plugin struct {
@@ -35,7 +39,7 @@ type dsm_plugin struct {
 }
 
 // [-]: set api_client state
-func NewAPIClient(endpoint string, port int, username string, password string, acct_id string, aws_region string, insecure bool) (*api_client, error) {
+func NewAPIClient(endpoint string, port int, username string, password string, acct_id string, aws_profile string, aws_region string, insecure bool) (*api_client, error) {
 	// FIXME: clunky way of creating api_client session
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: insecure},
@@ -82,13 +86,57 @@ func NewAPIClient(endpoint string, port int, username string, password string, a
 	}
 	defer r.Body.Close()
 
+	// Check if AWS profile is set and use it within API client
+	if len(aws_profile) > 0 {
+		// Specify profile to load for the session's config
+		sess, err := session.NewSessionWithOptions(session.Options{
+			Profile: aws_profile,
+			Config: aws.Config{
+				CredentialsChainVerboseErrors: aws.Bool(true),
+			},
+			// Force enable Shared Config support
+			SharedConfigState: session.SharedConfigEnable,
+		})
+		if sess != nil {
+			output, err := sess.Config.Credentials.Get()
+			if err != nil {
+				return nil, err
+			} else {
+				aws_temporary_credentials := map[string]interface{}{
+					"access_key":    output.AccessKeyID,
+					"secret_key":    output.SecretAccessKey,
+					"session_token": output.SessionToken,
+				}
+				reqBody, err := json.Marshal(aws_temporary_credentials)
+				if err != nil {
+					return nil, err
+				}
+
+				req, err = http.NewRequest("POST", fmt.Sprintf("%s/sys/v1/session/aws_temporary_credentials", endpoint), bytes.NewBuffer(reqBody))
+				if err != nil {
+					return nil, err
+				}
+				req.Header.Add("Authorization", "Bearer "+resp["access_token"].(string))
+
+				r, err = client.Do(req)
+				if err != nil {
+					return nil, err
+				}
+				defer r.Body.Close()
+			}
+		} else {
+			return nil, err
+		}
+	}
+
 	newclient := api_client{
-		endpoint:   endpoint,
-		port:       port,
-		authtoken:  resp["access_token"].(string),
-		acct_id:    acct_id,
-		aws_region: aws_region,
-		insecure:   insecure,
+		endpoint:    endpoint,
+		port:        port,
+		authtoken:   resp["access_token"].(string),
+		acct_id:     acct_id,
+		aws_profile: aws_profile,
+		aws_region:  aws_region,
+		insecure:    insecure,
 	}
 	return &newclient, nil
 }
@@ -117,7 +165,7 @@ func (obj *api_client) APICallBody(method string, url string, body map[string]in
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "[DSM SDK]: Unable to call DSM provider API client",
-				Detail:   fmt.Sprintf("[E]: API: %s %s: %s", method, url, err),
+				Detail:   fmt.Sprintf("[E]: API: %s %s %s: %s", method, url, r.StatusCode, err),
 			})
 		} else {
 			defer r.Body.Close()
@@ -126,7 +174,7 @@ func (obj *api_client) APICallBody(method string, url string, body map[string]in
 				diags = append(diags, diag.Diagnostic{
 					Severity: diag.Error,
 					Summary:  "[DSM SDK]: Unable to read DSM provider API response",
-					Detail:   fmt.Sprintf("[E]: API: %s %s: %s", method, url, err),
+					Detail:   fmt.Sprintf("[E]: API: %s %s %s: %s", method, url, r.StatusCode, err),
 				})
 			} else {
 				resp := make(map[string]interface{})
