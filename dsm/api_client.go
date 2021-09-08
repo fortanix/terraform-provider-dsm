@@ -52,6 +52,7 @@ func NewAPIClient(endpoint string, port int, username string, password string, a
 		return nil, err
 	}
 	req.SetBasicAuth(username, password)
+	req.Close = true
 
 	r, err := client.Do(req)
 	if err != nil {
@@ -79,12 +80,19 @@ func NewAPIClient(endpoint string, port int, username string, password string, a
 		return nil, err
 	}
 	req.Header.Add("Authorization", "Bearer "+resp["access_token"].(string))
+	req.Close = true
 
 	r, err = client.Do(req)
 	if err != nil {
 		return nil, err
 	}
 	defer r.Body.Close()
+
+	// EOF error: select_acccount has no return
+	_, err = io.ReadAll(r.Body)
+	if err != nil {
+		return nil, err
+	}
 
 	// Check if AWS profile is set and use it within API client
 	if len(aws_profile) > 0 {
@@ -117,12 +125,19 @@ func NewAPIClient(endpoint string, port int, username string, password string, a
 					return nil, err
 				}
 				req.Header.Add("Authorization", "Bearer "+resp["access_token"].(string))
+				req.Close = true
 
 				r, err = client.Do(req)
 				if err != nil {
 					return nil, err
 				}
 				defer r.Body.Close()
+
+				// EOF error: aws_temporary_credentials has no return
+				_, err = io.ReadAll(r.Body)
+				if err != nil {
+					return nil, err
+				}
 			}
 		} else {
 			return nil, err
@@ -151,6 +166,7 @@ func (obj *api_client) APICallBody(method string, url string, body map[string]in
 	client := &http.Client{Timeout: 600 * time.Second, Transport: tr}
 	reqBody, _ := json.Marshal(body)
 	req, err := http.NewRequest(method, fmt.Sprintf("%s/%s", obj.endpoint, url), bytes.NewBuffer(reqBody))
+	req.Close = true
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
@@ -220,6 +236,7 @@ func (obj *api_client) APICall(method string, url string) (map[string]interface{
 	client := &http.Client{Timeout: 600 * time.Second, Transport: tr}
 
 	req, err := http.NewRequest(method, fmt.Sprintf("%s/%s", obj.endpoint, url), nil)
+	req.Close = true
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
