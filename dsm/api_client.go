@@ -2,7 +2,7 @@
 // Terraform Provider - DSM: api client
 // **********
 //       - Author:    fyoo at fortanix dot com
-//       - Version:   0.2.4
+//       - Version:   0.3.6
 //       - Date:      27/11/2020
 // **********
 
@@ -241,7 +241,17 @@ func (obj *api_client) APICall(method string, url string) (map[string]interface{
 
 			// FIXME: DELETE does not have any output
 			if method == "DELETE" {
-				return nil, nil
+				// Only check status
+				if r.StatusCode == 204 {
+					return nil, nil
+				} else {
+					diags = append(diags, diag.Diagnostic{
+						Severity: diag.Error,
+						Summary:  "[DSM SDK]: DSM provider API call failed",
+						Detail:   fmt.Sprintf("[E]: API: %s %s: %s", method, url),
+					})
+					return nil, diags
+				}
 			}
 
 			bodyBytes, err := io.ReadAll(r.Body)
