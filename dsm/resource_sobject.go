@@ -2,7 +2,7 @@
 // Terraform Provider - SDKMS: resource: security object
 // **********
 //       - Author:    fyoo at fortanix dot com
-//       - Version:   0.1.5
+//       - Version:   0.3.7
 //       - Date:      27/11/2020
 // **********
 
@@ -141,78 +141,81 @@ func resourceCreateSobject(ctx context.Context, d *schema.ResourceData, m interf
 func resourceReadSobject(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	req, err := m.(*api_client).APICall("GET", fmt.Sprintf("crypto/v1/keys/%s", d.Id()))
-	if err != nil {
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "[DSM SDK] Unable to call DSM provider API client",
-			Detail:   fmt.Sprintf("[E]: API: GET crypto/v1/keys: %s", err),
-		})
-		return diags
-	}
-
-	if err := d.Set("name", req["name"].(string)); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("group_id", req["group_id"].(string)); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("obj_type", req["obj_type"].(string)); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("key_size", int(req["key_size"].(float64))); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("kid", req["kid"].(string)); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("acct_id", req["acct_id"].(string)); err != nil {
-		return diag.FromErr(err)
-	}
-	//if err := d.Set("kcv", req["kcv"].(string)); err != nil {
-	// RSA keys don't have KCV
-	//	if d.Get("kcv") != nil {
-	//		return diag.FromErr(err)
-	//	}
-	//}
-	if err := d.Set("creator", req["creator"]); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("custom_metadata", req["custom_metadata"]); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := req["fpe"]; err != nil {
-		if err := d.Set("fpe_radix", int(req["fpe"].(map[string]interface{})["radix"].(float64))); err != nil {
-			return diag.FromErr(err)
-		}
-	}
-
-	if err := d.Set("key_ops", req["key_ops"]); err != nil {
-		return diag.FromErr(err)
-	}
-	if _, ok := req["description"]; ok {
-		if err := d.Set("description", req["description"].(string)); err != nil {
-			return diag.FromErr(err)
-		}
-	}
-	if err := d.Set("enabled", req["enabled"].(bool)); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("state", req["state"].(string)); err != nil {
-		return diag.FromErr(err)
-	}
-
-	if err := req["obj_type"].(string); err == "RSA" {
-		openssh_pub_key, err := PublicPEMtoOpenSSH([]byte(req["pub_key"].(string)))
+	req, statuscode, err := m.(*api_client).APICall("GET", fmt.Sprintf("crypto/v1/keys/%s", d.Id()))
+	if statuscode == 404 {
+		d.SetId("")
+	} else {
 		if err != nil {
-			return err
-		} else {
-			if err := d.Set("ssh_pub_key", openssh_pub_key); err != nil {
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "[DSM SDK] Unable to call DSM provider API client",
+				Detail:   fmt.Sprintf("[E]: API: GET crypto/v1/keys: %s", err),
+			})
+			return diags
+		}
+
+		if err := d.Set("name", req["name"].(string)); err != nil {
+			return diag.FromErr(err)
+		}
+		if err := d.Set("group_id", req["group_id"].(string)); err != nil {
+			return diag.FromErr(err)
+		}
+		if err := d.Set("obj_type", req["obj_type"].(string)); err != nil {
+			return diag.FromErr(err)
+		}
+		if err := d.Set("key_size", int(req["key_size"].(float64))); err != nil {
+			return diag.FromErr(err)
+		}
+		if err := d.Set("kid", req["kid"].(string)); err != nil {
+			return diag.FromErr(err)
+		}
+		if err := d.Set("acct_id", req["acct_id"].(string)); err != nil {
+			return diag.FromErr(err)
+		}
+		//if err := d.Set("kcv", req["kcv"].(string)); err != nil {
+		// RSA keys don't have KCV
+		//	if d.Get("kcv") != nil {
+		//		return diag.FromErr(err)
+		//	}
+		//}
+		if err := d.Set("creator", req["creator"]); err != nil {
+			return diag.FromErr(err)
+		}
+		if err := d.Set("custom_metadata", req["custom_metadata"]); err != nil {
+			return diag.FromErr(err)
+		}
+		if err := req["fpe"]; err != nil {
+			if err := d.Set("fpe_radix", int(req["fpe"].(map[string]interface{})["radix"].(float64))); err != nil {
 				return diag.FromErr(err)
 			}
 		}
-	}
 
+		if err := d.Set("key_ops", req["key_ops"]); err != nil {
+			return diag.FromErr(err)
+		}
+		if _, ok := req["description"]; ok {
+			if err := d.Set("description", req["description"].(string)); err != nil {
+				return diag.FromErr(err)
+			}
+		}
+		if err := d.Set("enabled", req["enabled"].(bool)); err != nil {
+			return diag.FromErr(err)
+		}
+		if err := d.Set("state", req["state"].(string)); err != nil {
+			return diag.FromErr(err)
+		}
+
+		if err := req["obj_type"].(string); err == "RSA" {
+			openssh_pub_key, err := PublicPEMtoOpenSSH([]byte(req["pub_key"].(string)))
+			if err != nil {
+				return err
+			} else {
+				if err := d.Set("ssh_pub_key", openssh_pub_key); err != nil {
+					return diag.FromErr(err)
+				}
+			}
+		}
+	}
 	return diags
 }
 
@@ -225,8 +228,9 @@ func resourceUpdateSobject(ctx context.Context, d *schema.ResourceData, m interf
 func resourceDeleteSobject(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	_, err := m.(*api_client).APICall("DELETE", fmt.Sprintf("crypto/v1/keys/%s", d.Id()))
-	if err != nil {
+	_, statuscode, err := m.(*api_client).APICall("DELETE", fmt.Sprintf("crypto/v1/keys/%s", d.Id()))
+
+	if (err != nil) && (statuscode != 404) {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "[DSM SDK] Unable to call DSM provider API client",

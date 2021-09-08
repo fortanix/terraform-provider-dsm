@@ -2,7 +2,7 @@
 // Terraform Provider - DSM: common functions
 // **********
 //       - Author:    fyoo at fortanix dot com
-//       - Version:   0.3.2
+//       - Version:   0.3.7
 //       - Date:      05/01/2021
 // **********
 

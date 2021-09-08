@@ -2,7 +2,7 @@
 // Terraform Provider - DSM: data source: cluster version
 // **********
 //       - Author:    fyoo at fortanix dot com
-//       - Version:   0.1.5
+//       - Version:   0.3.7
 //       - Date:      27/11/2020
 // **********
 
@@ -40,7 +40,7 @@ func dataSourceVersion() *schema.Resource {
 func dataSourceVersionRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	req, err := m.(*api_client).APICall("GET", "sys/v1/version")
+	req, _, err := m.(*api_client).APICall("GET", "sys/v1/version")
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,

@@ -2,7 +2,7 @@
 // Terraform Provider - DSM: api client
 // **********
 //       - Author:    fyoo at fortanix dot com
-//       - Version:   0.3.6
+//       - Version:   0.3.7
 //       - Date:      27/11/2020
 // **********
 
@@ -211,7 +211,7 @@ func (obj *api_client) APICallBody(method string, url string, body map[string]in
 }
 
 // [-]: call api without body
-func (obj *api_client) APICall(method string, url string) (map[string]interface{}, diag.Diagnostics) {
+func (obj *api_client) APICall(method string, url string) (map[string]interface{}, int, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: obj.insecure},
@@ -243,14 +243,14 @@ func (obj *api_client) APICall(method string, url string) (map[string]interface{
 			if method == "DELETE" {
 				// Only check status
 				if r.StatusCode == 204 {
-					return nil, nil
+					return nil, r.StatusCode, nil
 				} else {
 					diags = append(diags, diag.Diagnostic{
 						Severity: diag.Error,
 						Summary:  "[DSM SDK]: DSM provider API call failed",
-						Detail:   fmt.Sprintf("[E]: API: %s %s: %s", method, url),
+						Detail:   fmt.Sprintf("[E]: API: %s %s: %s", method, url, r.StatusCode),
 					})
-					return nil, diags
+					return nil, r.StatusCode, diags
 				}
 			}
 
@@ -259,7 +259,7 @@ func (obj *api_client) APICall(method string, url string) (map[string]interface{
 				diags = append(diags, diag.Diagnostic{
 					Severity: diag.Error,
 					Summary:  "[DSM SDK]: Unable to read DSM provider API response",
-					Detail:   fmt.Sprintf("[E]: API: %s %s: %s", method, url, err),
+					Detail:   fmt.Sprintf("[E]: API: %s %s %s: %s", method, url, r.StatusCode, err),
 				})
 			} else {
 				resp := make(map[string]interface{})
@@ -270,7 +270,7 @@ func (obj *api_client) APICall(method string, url string) (map[string]interface{
 						diags = append(diags, diag.Diagnostic{
 							Severity: diag.Error,
 							Summary:  "[DSM SDK]: Call DSM provider API returned non-JSON",
-							Detail:   fmt.Sprintf("[E]: API: %s %s: %s", method, url, bodyString),
+							Detail:   fmt.Sprintf("[E]: API: %s %s %s: %s", method, url, r.StatusCode, bodyString),
 						})
 					} else {
 						diags = append(diags, diag.Diagnostic{
@@ -287,12 +287,12 @@ func (obj *api_client) APICall(method string, url string) (map[string]interface{
 							"msg": bodyString,
 						}
 					}
-					return resp, nil
+					return resp, r.StatusCode, nil
 				}
 			}
 		}
 	}
-	return nil, diags
+	return nil, 500, diags
 }
 
 // [-]: call api without body - return as array

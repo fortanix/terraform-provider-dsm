@@ -2,7 +2,7 @@
 // Terraform Provider - DSM: resource: group
 // **********
 //       - Author:    fyoo at fortanix dot com
-//       - Version:   0.1.5
+//       - Version:   0.3.7
 //       - Date:      27/11/2020
 // **********
 
@@ -81,31 +81,35 @@ func resourceCreateGroup(ctx context.Context, d *schema.ResourceData, m interfac
 func resourceReadGroup(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	req, err := m.(*api_client).APICall("GET", fmt.Sprintf("sys/v1/groups/%s", d.Id()))
-	if err != nil {
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "[DSM SDK] Unable to call DSM provider API client",
-			Detail:   fmt.Sprintf("[E]: API: GET sys/v1/groups: %s", err),
-		})
-		return diags
-	}
+	req, statuscode, err := m.(*api_client).APICall("GET", fmt.Sprintf("sys/v1/groups/%s", d.Id()))
+	if statuscode == 404 {
+		d.SetId("")
+	} else {
+		if err != nil {
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "[DSM SDK] Unable to call DSM provider API client",
+				Detail:   fmt.Sprintf("[E]: API: GET sys/v1/groups: %s", err),
+			})
+			return diags
+		}
 
-	if err := d.Set("name", req["name"].(string)); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("group_id", req["group_id"].(string)); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("acct_id", req["acct_id"].(string)); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("creator", req["creator"]); err != nil {
-		return diag.FromErr(err)
-	}
-	if _, ok := req["description"]; ok {
-		if err := d.Set("description", req["description"].(string)); err != nil {
+		if err := d.Set("name", req["name"].(string)); err != nil {
 			return diag.FromErr(err)
+		}
+		if err := d.Set("group_id", req["group_id"].(string)); err != nil {
+			return diag.FromErr(err)
+		}
+		if err := d.Set("acct_id", req["acct_id"].(string)); err != nil {
+			return diag.FromErr(err)
+		}
+		if err := d.Set("creator", req["creator"]); err != nil {
+			return diag.FromErr(err)
+		}
+		if _, ok := req["description"]; ok {
+			if err := d.Set("description", req["description"].(string)); err != nil {
+				return diag.FromErr(err)
+			}
 		}
 	}
 	return diags
@@ -120,14 +124,23 @@ func resourceUpdateGroup(ctx context.Context, d *schema.ResourceData, m interfac
 func resourceDeleteGroup(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	_, err := m.(*api_client).APICall("DELETE", fmt.Sprintf("sys/v1/groups/%s", d.Id()))
-	if err != nil {
+	_, statuscode, err := m.(*api_client).APICall("DELETE", fmt.Sprintf("sys/v1/groups/%s", d.Id()))
+	if (err != nil) && (statuscode != 404) && (statuscode != 400) {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "[DSM SDK] Unable to call DSM provider API client",
 			Detail:   fmt.Sprintf("[E]: API: DELETE sys/v1/groups: %s", err),
 		})
 		return diags
+	} else {
+		if statuscode == 400 {
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "[DSM SDK] Call to DSM provider API client failed",
+				Detail:   fmt.Sprintf("[E]: API: DELETE sys/v1/groups: %s", "Group Not Empty"),
+			})
+			return diags
+		}
 	}
 
 	d.SetId("")

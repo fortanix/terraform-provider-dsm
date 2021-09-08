@@ -2,7 +2,7 @@
 // Terraform Provider - DSM: resource: app
 // **********
 //       - Author:    fyoo at fortanix dot com
-//       - Version:   0.1.5
+//       - Version:   0.3.7
 //       - Date:      27/11/2020
 // **********
 
@@ -91,7 +91,7 @@ func resourceCreateApp(ctx context.Context, d *schema.ResourceData, m interface{
 func resourceReadApp(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	req, err := m.(*api_client).APICall("GET", fmt.Sprintf("sys/v1/apps/%s", d.Id()))
+	req, _, err := m.(*api_client).APICall("GET", fmt.Sprintf("sys/v1/apps/%s", d.Id()))
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
@@ -133,8 +133,8 @@ func resourceUpdateApp(ctx context.Context, d *schema.ResourceData, m interface{
 func resourceDeleteApp(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	_, err := m.(*api_client).APICall("DELETE", fmt.Sprintf("sys/v1/apps/%s", d.Id()))
-	if err != nil {
+	_, statuscode, err := m.(*api_client).APICall("DELETE", fmt.Sprintf("sys/v1/apps/%s", d.Id()))
+	if (err != nil) && (statuscode != 404) {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "[DSM SDK] Unable to call DSM provider API client",

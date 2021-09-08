@@ -2,7 +2,7 @@
 // Terraform Provider - DSM: data source: group
 // **********
 //       - Author:    fyoo at fortanix dot com
-//       - Version:   0.1.5
+//       - Version:   0.3.7
 //       - Date:      05/01/2021
 // **********
 
