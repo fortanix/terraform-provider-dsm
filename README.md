@@ -1,4 +1,6 @@
 ChangeLog:
+0.3.8:
+- Support Administrative App API Key as alternative to credentials
 0.3.5:
 - Moved the /aws_temporary_credential call directly into the NewAPIClient code (seems to be some GPRC issues)
 - Fixed issue where alias removal was failing as there was no alias for the CMK

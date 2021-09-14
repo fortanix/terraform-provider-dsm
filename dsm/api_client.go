@@ -27,6 +27,7 @@ type api_client struct {
 	endpoint    string
 	port        int
 	authtoken   string
+	authtype    string
 	acct_id     string
 	aws_profile string
 	aws_region  string
@@ -39,7 +40,7 @@ type dsm_plugin struct {
 }
 
 // [-]: set api_client state
-func NewAPIClient(endpoint string, port int, username string, password string, acct_id string, aws_profile string, aws_region string, insecure bool) (*api_client, error) {
+func NewAPIClient(endpoint string, port int, username string, password string, api_key string, bearer bool, acct_id string, aws_profile string, aws_region string, insecure bool) (*api_client, error) {
 	// FIXME: clunky way of creating api_client session
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: insecure},
@@ -47,51 +48,62 @@ func NewAPIClient(endpoint string, port int, username string, password string, a
 
 	client := &http.Client{Timeout: 600 * time.Second, Transport: tr}
 
-	req, err := http.NewRequest("POST", fmt.Sprintf("%s/sys/v1/session/auth", endpoint), nil)
-	if err != nil {
-		return nil, err
-	}
-	req.SetBasicAuth(username, password)
-	req.Close = true
-
-	r, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer r.Body.Close()
-
 	resp := make(map[string]interface{})
-	err = json.NewDecoder(r.Body).Decode(&resp)
-	if err != nil {
-		return nil, err
-	}
+	var authtype string
+	var authtoken string
 
-	account_object := map[string]interface{}{
-		"acct_id": acct_id,
-	}
+	if bearer {
+		req, err := http.NewRequest("POST", fmt.Sprintf("%s/sys/v1/session/auth", endpoint), nil)
+		if err != nil {
+			return nil, err
+		}
+		req.SetBasicAuth(username, password)
+		req.Close = true
 
-	reqBody, err := json.Marshal(account_object)
-	if err != nil {
-		return nil, err
-	}
+		r, err := client.Do(req)
+		if err != nil {
+			return nil, err
+		}
+		defer r.Body.Close()
 
-	req, err = http.NewRequest("POST", fmt.Sprintf("%s/sys/v1/session/select_account", endpoint), bytes.NewBuffer(reqBody))
-	if err != nil {
-		return nil, err
-	}
-	req.Header.Add("Authorization", "Bearer "+resp["access_token"].(string))
-	req.Close = true
+		err = json.NewDecoder(r.Body).Decode(&resp)
+		if err != nil {
+			return nil, err
+		}
 
-	r, err = client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer r.Body.Close()
+		account_object := map[string]interface{}{
+			"acct_id": acct_id,
+		}
 
-	// EOF error: select_acccount has no return
-	_, err = io.ReadAll(r.Body)
-	if err != nil {
-		return nil, err
+		reqBody, err := json.Marshal(account_object)
+		if err != nil {
+			return nil, err
+		}
+
+		req, err = http.NewRequest("POST", fmt.Sprintf("%s/sys/v1/session/select_account", endpoint), bytes.NewBuffer(reqBody))
+		if err != nil {
+			return nil, err
+		}
+
+		authtype = "Bearer "
+		authtoken = resp["access_token"].(string)
+		req.Header.Add("Authorization", authtype+authtoken)
+		req.Close = true
+
+		r, err = client.Do(req)
+		if err != nil {
+			return nil, err
+		}
+		defer r.Body.Close()
+
+		// EOF error: select_acccount has no return
+		_, err = io.ReadAll(r.Body)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		authtype = "Basic "
+		authtoken = api_key
 	}
 
 	// Check if AWS profile is set and use it within API client
@@ -120,14 +132,14 @@ func NewAPIClient(endpoint string, port int, username string, password string, a
 					return nil, err
 				}
 
-				req, err = http.NewRequest("POST", fmt.Sprintf("%s/sys/v1/session/aws_temporary_credentials", endpoint), bytes.NewBuffer(reqBody))
+				req, err := http.NewRequest("POST", fmt.Sprintf("%s/sys/v1/session/aws_temporary_credentials", endpoint), bytes.NewBuffer(reqBody))
 				if err != nil {
 					return nil, err
 				}
 				req.Header.Add("Authorization", "Bearer "+resp["access_token"].(string))
 				req.Close = true
 
-				r, err = client.Do(req)
+				r, err := client.Do(req)
 				if err != nil {
 					return nil, err
 				}
@@ -147,7 +159,8 @@ func NewAPIClient(endpoint string, port int, username string, password string, a
 	newclient := api_client{
 		endpoint:    endpoint,
 		port:        port,
-		authtoken:   resp["access_token"].(string),
+		authtoken:   authtoken,
+		authtype:    authtype,
 		acct_id:     acct_id,
 		aws_profile: aws_profile,
 		aws_region:  aws_region,
@@ -174,7 +187,7 @@ func (obj *api_client) APICallBody(method string, url string, body map[string]in
 			Detail:   fmt.Sprintf("[E]: API: %s %s: %s", method, url, err),
 		})
 	} else {
-		req.Header.Add("Authorization", "Bearer "+obj.authtoken)
+		req.Header.Add("Authorization", obj.authtype+obj.authtoken)
 
 		r, err := client.Do(req)
 		if err != nil {
@@ -244,7 +257,7 @@ func (obj *api_client) APICall(method string, url string) (map[string]interface{
 			Detail:   fmt.Sprintf("[E]: API: %s %s: %s", method, url, err),
 		})
 	} else {
-		req.Header.Add("Authorization", "Bearer "+obj.authtoken)
+		req.Header.Add("Authorization", obj.authtype+obj.authtoken)
 
 		r, err := client.Do(req)
 		if err != nil {
@@ -328,7 +341,7 @@ func (obj *api_client) APICallList(method string, url string) ([]interface{}, di
 			Detail:   fmt.Sprintf("[E]: API: %s %s: %s", method, url, err),
 		})
 	} else {
-		req.Header.Add("Authorization", "Bearer "+obj.authtoken)
+		req.Header.Add("Authorization", obj.authtype+obj.authtoken)
 
 		r, err := client.Do(req)
 		if err != nil {
@@ -377,7 +390,7 @@ func (obj *api_client) FindPluginId(plugin_name string) ([]byte, diag.Diagnostic
 			Detail:   fmt.Sprintf("[E]: API: %s %s: %s", "GET", "sys/v1/plugins", err),
 		})
 	} else {
-		req.Header.Add("Authorization", "Bearer "+obj.authtoken)
+		req.Header.Add("Authorization", obj.authtype+obj.authtoken)
 
 		r, err := client.Do(req)
 		if err != nil {
