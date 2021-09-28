@@ -11,6 +11,7 @@ package dsm
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -101,6 +102,10 @@ func resourceAWSSobject() *schema.Resource {
 				Optional: true,
 				Default:  7,
 			},
+			"expiry_date": {
+				Type:	schema.TypeString,
+				Optional: true,
+			},
 		},
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -117,6 +122,16 @@ func resourceCreateAWSSobject(ctx context.Context, d *schema.ResourceData, m int
 		"group_id":    d.Get("group_id").(string),
 		"key":         d.Get("key"),
 		"description": d.Get("description").(string),
+	}
+
+	if rfcdate := d.Get("expiry_date").(string); len(rfcdate) > 0 {
+		layoutRFC := "2006-01-02T15:04:05Z"
+		layoutDSM := "20060102T150405Z"
+		ddate, newerr := time.Parse(layoutRFC, rfcdate)
+		if newerr != nil {
+			return diag.FromErr(newerr)
+		}
+		security_object["deactivation_date"] = ddate.Format(layoutDSM)
 	}
 
 	if err := d.Get("custom_metadata").(map[string]interface{}); len(err) > 0 {
@@ -188,6 +203,18 @@ func resourceReadAWSSobject(ctx context.Context, d *schema.ResourceData, m inter
 		}
 		if err := d.Set("state", req["state"].(string)); err != nil {
 			return diag.FromErr(err)
+		}
+		if rfcdate, ok := req["deactivation_date"]; ok {
+			// FYOO: once it's set, you can't remove deactivation date
+			layoutRFC := "2006-01-02T15:04:05Z"
+			layoutDSM := "20060102T150405Z"
+			ddate, newerr := time.Parse(layoutDSM, rfcdate.(string))
+			if newerr != nil {
+				return diag.FromErr(newerr)
+			}
+			if newerr = d.Set("expiry_date", ddate.Format(layoutRFC)); newerr != nil {
+				return diag.FromErr(newerr)
+			}
 		}
 	}
 

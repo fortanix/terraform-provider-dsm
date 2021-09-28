@@ -11,6 +11,7 @@ package dsm
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -94,6 +95,10 @@ func resourceSobject() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"expiry_date": {
+				Type:	schema.TypeString,
+				Optional: true,
+			},
 		},
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -111,6 +116,16 @@ func resourceCreateSobject(ctx context.Context, d *schema.ResourceData, m interf
 		"key_size":    d.Get("key_size").(int),
 		"group_id":    d.Get("group_id").(string),
 		"description": d.Get("description").(string),
+	}
+
+	if rfcdate := d.Get("expiry_date").(string); len(rfcdate) > 0 {
+		layoutRFC := "2006-01-02T15:04:05Z"
+		layoutDSM := "20060102T150405Z"
+		ddate, newerr := time.Parse(layoutRFC, rfcdate)
+		if newerr != nil {
+			return diag.FromErr(newerr)
+		}
+		security_object["deactivation_date"] = ddate.Format(layoutDSM)
 	}
 
 	if err := d.Get("key_ops").([]interface{}); len(err) > 0 {
@@ -203,6 +218,18 @@ func resourceReadSobject(ctx context.Context, d *schema.ResourceData, m interfac
 		}
 		if err := d.Set("state", req["state"].(string)); err != nil {
 			return diag.FromErr(err)
+		}
+		if rfcdate, ok := req["deactivation_date"]; ok {
+			// FYOO: once it's set, you can't remove deactivation date
+			layoutRFC := "2006-01-02T15:04:05Z"
+			layoutDSM := "20060102T150405Z"
+			ddate, newerr := time.Parse(layoutDSM, rfcdate.(string))
+			if newerr != nil {
+				return diag.FromErr(newerr)
+			}
+			if newerr = d.Set("expiry_date", ddate.Format(layoutRFC)); newerr != nil {
+				return diag.FromErr(newerr)
+			}
 		}
 
 		if err := req["obj_type"].(string); err == "RSA" {

@@ -10,6 +10,7 @@ package dsm
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -51,6 +52,15 @@ func resourceApp() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "",
+			},
+			"credential": {
+				Type:     schema.TypeString,
+				Computed: true,
+				Sensitive: true,
+			},
+			"new_credential": {
+				Type:     schema.TypeBool,
+				Optional: true,
 			},
 		},
 		Importer: &schema.ResourceImporter{
@@ -121,11 +131,43 @@ func resourceReadApp(ctx context.Context, d *schema.ResourceData, m interface{})
 			return diag.FromErr(err)
 		}
 	}
+
+	req, _, err = m.(*api_client).APICall("GET", fmt.Sprintf("sys/v1/apps/%s/credential", d.Id()))
+	if err != nil {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "[DSM SDK] Unable to call DSM provider API client",
+			Detail:   fmt.Sprintf("[E]: API: GET sys/v1/apps/-/credential: %s", err),
+		})
+		return diags
+	}
+
+	if err := d.Set("credential", base64.StdEncoding.EncodeToString([]byte(d.Id() + ":" + req["credential"].(map[string]interface{})["secret"].(string)))); err != nil {
+		return diag.FromErr(err)
+	}
 	return diags
 }
 
 // [U]: Update App
 func resourceUpdateApp(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if d.Get("new_credential").(bool) {
+		reset_secret := map[string]interface{}{
+			"credential_migration_period": nil,
+		}
+
+		_, err := m.(*api_client).APICallBody("POST", fmt.Sprintf("sys/v1/apps/%s/reset_secret", d.Id()), reset_secret)
+		if err != nil {
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "[DSM SDK] Unable to call DSM provider API client",
+				Detail:   fmt.Sprintf("[E]: API: GET sys/v1/apps/-/credential: %s", err),
+			})
+			return diags
+		}
+		return resourceReadApp(ctx, d, m)
+	}
 	return nil
 }
 

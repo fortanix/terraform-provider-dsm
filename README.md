@@ -1,4 +1,9 @@
 ChangeLog:
+0.4.0:
+- Support for App creation and also get credentials
+- Add support for deactivation date
+0.3.8:
+- Azure BYOK support
 0.3.8:
 - Support Administrative App API Key as alternative to credentials
 0.3.5:
