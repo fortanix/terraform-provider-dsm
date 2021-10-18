@@ -54,8 +54,8 @@ func resourceApp() *schema.Resource {
 				Default:  "",
 			},
 			"credential": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:      schema.TypeString,
+				Computed:  true,
 				Sensitive: true,
 			},
 			"new_credential": {
@@ -142,7 +142,7 @@ func resourceReadApp(ctx context.Context, d *schema.ResourceData, m interface{})
 		return diags
 	}
 
-	if err := d.Set("credential", base64.StdEncoding.EncodeToString([]byte(d.Id() + ":" + req["credential"].(map[string]interface{})["secret"].(string)))); err != nil {
+	if err := d.Set("credential", base64.StdEncoding.EncodeToString([]byte(d.Id()+":"+req["credential"].(map[string]interface{})["secret"].(string)))); err != nil {
 		return diag.FromErr(err)
 	}
 	return diags

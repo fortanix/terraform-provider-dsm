@@ -96,7 +96,7 @@ func resourceSobject() *schema.Resource {
 				Optional: true,
 			},
 			"expiry_date": {
-				Type:	schema.TypeString,
+				Type:     schema.TypeString,
 				Optional: true,
 			},
 		},

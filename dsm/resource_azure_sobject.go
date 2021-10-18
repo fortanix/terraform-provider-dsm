@@ -1,5 +1,5 @@
 // **********
-// Terraform Provider - DSM: resource: aws security object
+// Terraform Provider - DSM: resource: azure security object
 // **********
 //       - Author:    fyoo at fortanix dot com
 //       - Version:   0.5.0
@@ -18,22 +18,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// [-] Structs to define Terraform AWS Security Object
-type TFAWSSobjectExternal struct {
-	Key_arn           string
-	Key_id            string
-	Key_state         string
-	Key_aliases       string
-	Key_deletion_date string
-}
-
-// [-] Define AWS Security Object in Terraform
-func resourceAWSSobject() *schema.Resource {
+// [-] Define Azure Security Object in Terraform
+func resourceAzureSobject() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceCreateAWSSobject,
-		ReadContext:   resourceReadAWSSobject,
-		UpdateContext: resourceUpdateAWSSobject,
-		DeleteContext: resourceDeleteAWSSobject,
+		CreateContext: resourceCreateAzureSobject,
+		ReadContext:   resourceReadAzureSobject,
+		UpdateContext: resourceUpdateAzureSobject,
+		DeleteContext: resourceDeleteAzureSobject,
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
@@ -114,11 +105,6 @@ func resourceAWSSobject() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"pending_window_in_days": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  7,
-			},
 			"expiry_date": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -130,8 +116,8 @@ func resourceAWSSobject() *schema.Resource {
 	}
 }
 
-// [C]: Create AWS Security Object
-func resourceCreateAWSSobject(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+// [C]: Create Azure Security Object
+func resourceCreateAzureSobject(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	security_object := map[string]interface{}{
@@ -166,11 +152,11 @@ func resourceCreateAWSSobject(ctx context.Context, d *schema.ResourceData, m int
 	}
 
 	d.SetId(req["kid"].(string))
-	return resourceReadAWSSobject(ctx, d, m)
+	return resourceReadAzureSobject(ctx, d, m)
 }
 
-// [R]: Read AWS Security Object
-func resourceReadAWSSobject(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+// [R]: Read Azure Security Object
+func resourceReadAzureSobject(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	req, statuscode, err := m.(*api_client).APICall("GET", fmt.Sprintf("crypto/v1/keys/%s", d.Id()))
@@ -197,8 +183,8 @@ func resourceReadAWSSobject(ctx context.Context, d *schema.ResourceData, m inter
 			return diags
 		}
 
-		awssobject := AWSSobject{}
-		if err := json.Unmarshal(jsonbody, &awssobject); err != nil {
+		azuresobject := AzureSobject{}
+		if err := json.Unmarshal(jsonbody, &azuresobject); err != nil {
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "[DSM SDK] Unable to parse DSM provider API client output",
@@ -208,7 +194,7 @@ func resourceReadAWSSobject(ctx context.Context, d *schema.ResourceData, m inter
 		}
 
 		// Sync DSM and Terraform attributes
-		if err := d.Set("name", awssobject.Name); err != nil {
+		if err := d.Set("name", azuresobject.Name); err != nil {
 			return diag.FromErr(err)
 		}
 		if err := d.Set("group_id", req["group_id"].(string)); err != nil {
@@ -229,19 +215,19 @@ func resourceReadAWSSobject(ctx context.Context, d *schema.ResourceData, m inter
 		if err := d.Set("custom_metadata", req["custom_metadata"]); err != nil {
 			return diag.FromErr(err)
 		}
-		external := &TFAWSSobjectExternal{
-			Key_arn:           awssobject.External.Id.Key_arn,
-			Key_id:            awssobject.External.Id.Key_id,
-			Key_state:         awssobject.Custom_metadata.Aws_key_state,
-			Key_aliases:       awssobject.Custom_metadata.Aws_aliases,
-			Key_deletion_date: awssobject.Custom_metadata.Aws_deletion_date,
-		}
-		var externalInt map[string]interface{}
-		externalRec, _ := json.Marshal(external)
-		json.Unmarshal(externalRec, &externalInt)
-		if err := d.Set("external", externalInt); err != nil {
-			return diag.FromErr(err)
-		}
+		//external := &TFAWSSobjectExternal{
+		//	Key_arn:           awssobject.External.Id.Key_arn,
+		//	Key_id:            awssobject.External.Id.Key_id,
+		//	Key_state:         awssobject.Custom_metadata.Aws_key_state,
+		//	Key_aliases:       awssobject.Custom_metadata.Aws_aliases,
+		//	Key_deletion_date: awssobject.Custom_metadata.Aws_deletion_date,
+		//}
+		//var externalInt map[string]interface{}
+		//externalRec, _ := json.Marshal(external)
+		//json.Unmarshal(externalRec, &externalInt)
+		//if err := d.Set("external", externalInt); err != nil {
+		//	return diag.FromErr(err)
+		//}
 		if err := d.Set("key_ops", req["key_ops"]); err != nil {
 			return diag.FromErr(err)
 		}
@@ -273,40 +259,38 @@ func resourceReadAWSSobject(ctx context.Context, d *schema.ResourceData, m inter
 	return nil
 }
 
-// [U]: Update AWS Security Object
-func resourceUpdateAWSSobject(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+// [U]: Update Azure Security Object
+func resourceUpdateAzureSobject(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	return nil
 }
 
-// [D]: Delete AWS Security Object
-func resourceDeleteAWSSobject(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+// [D]: Delete Azure Security Object
+func resourceDeleteAzureSobject(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// FIXME: Since deleting, might as well remove the alias if exists
-	if _, ok := d.Get("custom_metadata").(map[string]interface{})["aws-aliases"]; ok {
-		remove_aws_alias := map[string]interface{}{
-			"kid": d.Id(),
-		}
-		remove_aws_alias["custom_metadata"] = map[string]interface{}{
-			"aws-aliases": "",
-			"aws-policy":  d.Get("custom_metadata").(map[string]interface{})["aws-policy"],
-		}
-		_, err := m.(*api_client).APICallBody("PATCH", fmt.Sprintf("crypto/v1/keys/%s", d.Id()), remove_aws_alias)
-		if err != nil {
-			diags = append(diags, diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  "[DSM SDK] Unable to call DSM provider API client",
-				Detail:   fmt.Sprintf("[E]: API: PATCH crypto/v1/keys: %s", err),
-			})
-			return diags
-		}
-	}
+	//if _, ok := d.Get("custom_metadata").(map[string]interface{})["aws-aliases"]; ok {
+	//	remove_aws_alias := map[string]interface{}{
+	//		"kid": d.Id(),
+	//	}
+	//	remove_aws_alias["custom_metadata"] = map[string]interface{}{
+	//		"aws-aliases": "",
+	//		"aws-policy":  d.Get("custom_metadata").(map[string]interface{})["aws-policy"],
+	//	}
+	//	_, err := m.(*api_client).APICallBody("PATCH", fmt.Sprintf("crypto/v1/keys/%s", d.Id()), remove_aws_alias)
+	//	if err != nil {
+	//		diags = append(diags, diag.Diagnostic{
+	//			Severity: diag.Error,
+	//			Summary:  "[DSM SDK] Unable to call DSM provider API client",
+	//			Detail:   fmt.Sprintf("[E]: API: PATCH crypto/v1/keys: %s", err),
+	//		})
+	//		return diags
+	//	}
+	//}
 
-	// FIXME: Need to schedule deletion then delete the key - default is set to 7 days for now
-	delete_object := map[string]interface{}{
-		"pending_window_in_days": d.Get("pending_window_in_days").(int),
-	}
-	if d.Get("custom_metadata").(map[string]interface{})["aws-key-state"] != "PendingDeletion" {
+	// FIXME: Need to schedule deletion then delete the key
+	delete_object := make(map[string]interface{})
+	if d.Get("custom_metadata").(map[string]interface{})["azure-key-state"] != "deleted" {
 		_, err := m.(*api_client).APICallBody("POST", fmt.Sprintf("crypto/v1/keys/%s/schedule_deletion", d.Id()), delete_object)
 		if err != nil {
 			return err

@@ -1,5 +1,5 @@
 // **********
-// Terraform Provider - DSM: resource: group
+// Terraform Provider - DSM: resource: azure kms group
 // **********
 //       - Author:    fyoo at fortanix dot com
 //       - Version:   0.5.0
@@ -19,12 +19,12 @@ import (
 )
 
 // [-] Define Group
-func resourceAWSGroup() *schema.Resource {
+func resourceAzureGroup() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceCreateAWSGroup,
-		ReadContext:   resourceReadAWSGroup,
-		UpdateContext: resourceUpdateAWSGroup,
-		DeleteContext: resourceDeleteAWSGroup,
+		CreateContext: resourceCreateAzureGroup,
+		ReadContext:   resourceReadAzureGroup,
+		UpdateContext: resourceUpdateAzureGroup,
+		DeleteContext: resourceDeleteAzureGroup,
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
@@ -45,22 +45,34 @@ func resourceAWSGroup() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"region": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "",
 			},
-			"access_key": {
+			"url": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"client_id": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"subscription_id": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"tenant_id": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"key_vault_type": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
 			"secret_key": {
 				Type:      schema.TypeString,
-				Optional:  true,
+				Required:  true,
 				Sensitive: true,
 			},
 		},
@@ -70,22 +82,28 @@ func resourceAWSGroup() *schema.Resource {
 	}
 }
 
-// [C]: Create AWS Group
-func resourceCreateAWSGroup(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+// [C]: Create Azure Group
+func resourceCreateAzureGroup(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	group_object := map[string]interface{}{
-		// 0.4.1: AWS KMS Group Name to be predefined as <string>-aws-<region>
-		"name":           fmt.Sprintf("%s-aws-%s", d.Get("name").(string), m.(*api_client).aws_region),
+		// 0.5.0: Azure KMS Group Name to be predefined as <string>-azure-<region>
+		"name":           fmt.Sprintf("%s-azure-%s", d.Get("name").(string), m.(*api_client).azure_region),
 		"description":    d.Get("description").(string),
 		"hmg_redundancy": "PriorityFailover",
 	}
 
 	group_object["add_hmg"] = []map[string]interface{}{
 		{
-			"url":       fmt.Sprintf("kms.%s.amazonaws.com", m.(*api_client).aws_region),
-			"kind":      "AWSKMS",
-			"hsm_order": 0,
+			"url":             d.Get("url").(string),
+			"kind":            "AZUREKEYVAULT",
+			"client_id":       d.Get("client_id").(string),
+			"tenant_id":       d.Get("tenant_id").(string),
+			"subscription_id": d.Get("subscription_id").(string),
+			"secret_key":      d.Get("secret_key").(string),
+			// 0.5.0: FIXME: key_vault_type currently set to Standard only
+			"key_vault_type": "Standard",
+			"hsm_order":      0,
 			"tls": map[string]interface{}{
 				"mode":              "required",
 				"validate_hostname": false,
@@ -94,16 +112,6 @@ func resourceCreateAWSGroup(ctx context.Context, d *schema.ResourceData, m inter
 				},
 			},
 		},
-	}
-
-	// 0.5.0: parse optionals
-	access_key, access_key_exists := d.GetOkExists("access_key")
-	if access_key_exists {
-		group_object["add_hmg"].(map[string]interface{})["access_key"] = access_key.(string)
-	}
-	secret_key, secret_key_exists := d.GetOkExists("secret_key")
-	if secret_key_exists {
-		group_object["add_hmg"].(map[string]interface{})["secret_key"] = secret_key.(string)
 	}
 
 	req, err := m.(*api_client).APICallBody("POST", "sys/v1/groups", group_object)
@@ -117,11 +125,11 @@ func resourceCreateAWSGroup(ctx context.Context, d *schema.ResourceData, m inter
 	}
 
 	d.SetId(req["group_id"].(string))
-	return resourceReadAWSGroup(ctx, d, m)
+	return resourceReadAzureGroup(ctx, d, m)
 }
 
-// [R]: Read AWS Group
-func resourceReadAWSGroup(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+// [R]: Read Azure Group
+func resourceReadAzureGroup(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	req, statuscode, err := m.(*api_client).APICall("GET", fmt.Sprintf("sys/v1/groups/%s", d.Id()))
@@ -147,8 +155,8 @@ func resourceReadAWSGroup(ctx context.Context, d *schema.ResourceData, m interfa
 				return diags
 			}
 
-			awsgroup := AWSGroup{}
-			if err := json.Unmarshal(jsonbody, &awsgroup); err != nil {
+			azuregroup := AzureGroup{}
+			if err := json.Unmarshal(jsonbody, &azuregroup); err != nil {
 				diags = append(diags, diag.Diagnostic{
 					Severity: diag.Error,
 					Summary:  "[DSM SDK] Unable to parse DSM provider API client output",
@@ -156,19 +164,23 @@ func resourceReadAWSGroup(ctx context.Context, d *schema.ResourceData, m interfa
 				})
 				return diags
 			}
-			// FYOO: AWSGroup must conform to this JSON struct - if this crashes, then we have DSM issues
-			name := strings.Split(awsgroup.Name, fmt.Sprintf("-aws-%s", m.(*api_client).aws_region))
+			// FYOO: AzureGroup must conform to this JSON struct - if this crashes, then we have DSM issues
+			name := strings.Split(azuregroup.Name, fmt.Sprintf("-azure-%s", m.(*api_client).azure_region))
 			d.Set("name", name[0])
-			d.Set("group_id", awsgroup.Group_id)
-			d.Set("acct_id", awsgroup.Acct_id)
+			d.Set("group_id", azuregroup.Group_id)
+			d.Set("acct_id", azuregroup.Acct_id)
 			var creatorInt map[string]interface{}
-			creatorRec, _ := json.Marshal(awsgroup.Creator)
+			creatorRec, _ := json.Marshal(azuregroup.Creator)
 			json.Unmarshal(creatorRec, &creatorInt)
 			d.Set("creator", creatorInt)
-			d.Set("region", m.(*api_client).aws_region)
-			// FYOO: there is only one HMG per AWSGroup
-			for _, value := range awsgroup.Hmg {
-				d.Set("access_key", value.Access_key)
+			d.Set("region", m.(*api_client).azure_region)
+			// FYOO: there is only one HMG per AzureGroup
+			for _, value := range azuregroup.Hmg {
+				d.Set("subscription_id", value.Subscription_id)
+				d.Set("client_id", value.Client_id)
+				d.Set("tenant_id", value.Tenant_id)
+				d.Set("key_vault_type", value.Key_vault_type)
+				d.Set("url", value.Url)
 			}
 			// FYOO: remove sensitive information
 			d.Set("secret_key", "")
@@ -181,15 +193,15 @@ func resourceReadAWSGroup(ctx context.Context, d *schema.ResourceData, m interfa
 	return diags
 }
 
-// [U]: Update AWS Group
-func resourceUpdateAWSGroup(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+// [U]: Update Azure Group
+func resourceUpdateAzureGroup(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	d.Set("secret_key", "")
 	return diags
 }
 
-// [D]: Delete AWS Group
-func resourceDeleteAWSGroup(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+// [D]: Delete Azure Group
+func resourceDeleteAzureGroup(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	_, statuscode, err := m.(*api_client).APICall("DELETE", fmt.Sprintf("sys/v1/groups/%s", d.Id()))

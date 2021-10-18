@@ -1,5 +1,5 @@
 // **********
-// Terraform Provider - DSM: data source: aws kms group
+// Terraform Provider - DSM: data source: azure kms group
 // **********
 //       - Author:    fyoo at fortanix dot com
 //       - Version:   0.5.0
@@ -18,9 +18,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func dataSourceAWSGroup() *schema.Resource {
+func dataSourceAzureGroup() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceAWSGroupRead,
+		ReadContext: dataSourceAzureGroupRead,
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
@@ -41,25 +41,34 @@ func dataSourceAWSGroup() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"region": {
+			"description": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			"url": {
 				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "",
+				Computed: true,
 			},
-			"access_key": {
+			"client_id": {
 				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "na",
+				Computed: true,
+			},
+			"subscription_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"tenant_id": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"secret_key": {
 				Type:      schema.TypeString,
-				Optional:  true,
-				Default:   "na",
+				Computed:  true,
 				Sensitive: true,
+			},
+			"key_vault_type": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"scan": {
 				Type:     schema.TypeBool,
@@ -70,7 +79,7 @@ func dataSourceAWSGroup() *schema.Resource {
 	}
 }
 
-func dataSourceAWSGroupRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func dataSourceAzureGroupRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	req, err := m.(*api_client).APICallList("GET", "sys/v1/groups")
@@ -84,7 +93,7 @@ func dataSourceAWSGroupRead(ctx context.Context, d *schema.ResourceData, m inter
 	}
 
 	for _, data := range req {
-		prefix_name := fmt.Sprintf("%s-aws-%s", d.Get("name").(string), m.(*api_client).aws_region)
+		prefix_name := fmt.Sprintf("%s-azure-%s", d.Get("name").(string), m.(*api_client).azure_region)
 		if data.(map[string]interface{})["name"].(string) == prefix_name {
 			jsonbody, err := json.Marshal(data)
 			if err != nil {
@@ -96,8 +105,8 @@ func dataSourceAWSGroupRead(ctx context.Context, d *schema.ResourceData, m inter
 				return diags
 			}
 
-			awsgroup := AWSGroup{}
-			if err := json.Unmarshal(jsonbody, &awsgroup); err != nil {
+			azuregroup := AzureGroup{}
+			if err := json.Unmarshal(jsonbody, &azuregroup); err != nil {
 				diags = append(diags, diag.Diagnostic{
 					Severity: diag.Error,
 					Summary:  "[DSM SDK] Unable to parse DSM provider API client output",
@@ -105,19 +114,24 @@ func dataSourceAWSGroupRead(ctx context.Context, d *schema.ResourceData, m inter
 				})
 				return diags
 			}
-			// FYOO: AWSGroup must conform to this JSON struct - if this crashes, then we have DSM issues
-			name := strings.Split(awsgroup.Name, fmt.Sprintf("-aws-%s", m.(*api_client).aws_region))
+
+			// FYOO: AzureGroup must conform to this JSON struct - if this crashes, then we have DSM issues
+			name := strings.Split(azuregroup.Name, fmt.Sprintf("-azure-%s", m.(*api_client).azure_region))
 			d.Set("name", name[0])
-			d.Set("group_id", awsgroup.Group_id)
-			d.Set("acct_id", awsgroup.Acct_id)
+			d.Set("group_id", azuregroup.Group_id)
+			d.Set("acct_id", azuregroup.Acct_id)
 			var creatorInt map[string]interface{}
-			creatorRec, _ := json.Marshal(awsgroup.Creator)
+			creatorRec, _ := json.Marshal(azuregroup.Creator)
 			json.Unmarshal(creatorRec, &creatorInt)
 			d.Set("creator", creatorInt)
-			d.Set("region", m.(*api_client).aws_region)
-			// FYOO: there is only one HMG per AWSGroup
-			for _, value := range awsgroup.Hmg {
-				d.Set("access_key", value.Access_key)
+			d.Set("region", m.(*api_client).azure_region)
+			// FYOO: there is only one HMG per AzureGroup
+			for _, value := range azuregroup.Hmg {
+				d.Set("subscription_id", value.Subscription_id)
+				d.Set("client_id", value.Client_id)
+				d.Set("tenant_id", value.Tenant_id)
+				d.Set("key_vault_type", value.Key_vault_type)
+				d.Set("url", value.Url)
 			}
 			// FYOO: remove sensitive information
 			d.Set("secret_key", "")

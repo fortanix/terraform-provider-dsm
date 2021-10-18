@@ -2,7 +2,7 @@
 // Terraform Provider - DSM: api client
 // **********
 //       - Author:    fyoo at fortanix dot com
-//       - Version:   0.3.7
+//       - Version:   0.5.0
 //       - Date:      27/11/2020
 // **********
 
@@ -24,14 +24,15 @@ import (
 )
 
 type api_client struct {
-	endpoint    string
-	port        int
-	authtoken   string
-	authtype    string
-	acct_id     string
-	aws_profile string
-	aws_region  string
-	insecure    bool
+	endpoint     string
+	port         int
+	authtoken    string
+	authtype     string
+	acct_id      string
+	aws_profile  string
+	aws_region   string
+	azure_region string
+	insecure     bool
 }
 
 type dsm_plugin struct {
@@ -40,7 +41,7 @@ type dsm_plugin struct {
 }
 
 // [-]: set api_client state
-func NewAPIClient(endpoint string, port int, username string, password string, api_key string, bearer bool, acct_id string, aws_profile string, aws_region string, insecure bool) (*api_client, error) {
+func NewAPIClient(endpoint string, port int, username string, password string, api_key string, bearer bool, acct_id string, aws_profile string, aws_region string, azure_region string, insecure bool) (*api_client, error) {
 	// FIXME: clunky way of creating api_client session
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: insecure},
@@ -157,14 +158,15 @@ func NewAPIClient(endpoint string, port int, username string, password string, a
 	}
 
 	newclient := api_client{
-		endpoint:    endpoint,
-		port:        port,
-		authtoken:   authtoken,
-		authtype:    authtype,
-		acct_id:     acct_id,
-		aws_profile: aws_profile,
-		aws_region:  aws_region,
-		insecure:    insecure,
+		endpoint:     endpoint,
+		port:         port,
+		authtoken:    authtoken,
+		authtype:     authtype,
+		acct_id:      acct_id,
+		aws_profile:  aws_profile,
+		aws_region:   aws_region,
+		azure_region: azure_region,
+		insecure:     insecure,
 	}
 	return &newclient, nil
 }
