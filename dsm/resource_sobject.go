@@ -2,7 +2,7 @@
 // Terraform Provider - SDKMS: resource: security object
 // **********
 //       - Author:    fyoo at fortanix dot com
-//       - Version:   0.3.7
+//       - Version:   0.5.1
 //       - Date:      27/11/2020
 // **********
 
@@ -15,6 +15,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 // [-] Define Security Object
@@ -28,6 +29,10 @@ func resourceSobject() *schema.Resource {
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
+			},
+			"dsm_name": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"group_id": {
 				Type:     schema.TypeString,
@@ -53,7 +58,23 @@ func resourceSobject() *schema.Resource {
 			//	Type:     schema.TypeString,
 			//	Computed: true,
 			//},
+			"rotate": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice([]string{"DSM", "ALL"}, true),
+			},
+			"rotate_from": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"creator": {
+				Type:     schema.TypeMap,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"links": {
 				Type:     schema.TypeMap,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -106,9 +127,11 @@ func resourceSobject() *schema.Resource {
 	}
 }
 
-// [C]: Create Security Object
-func resourceCreateSobject(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+// [-]: Custom Functions
+// createSO: Create Security Object
+func createSO(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	endpoint := "crypto/v1/keys"
 
 	security_object := map[string]interface{}{
 		"name":        d.Get("name").(string),
@@ -138,21 +161,53 @@ func resourceCreateSobject(ctx context.Context, d *schema.ResourceData, m interf
 		}
 	}
 
-	req, err := m.(*api_client).APICallBody("POST", "crypto/v1/keys", security_object)
+	if err := d.Get("rotate").(string); len(err) > 0 {
+		security_object["name"] = d.Get("rotate_from").(string)
+		endpoint = "crypto/v1/keys/rekey"
+	}
+
+	req, err := m.(*api_client).APICallBody("POST", endpoint, security_object)
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "[DSM SDK] Unable to call DSM provider API client",
-			Detail:   fmt.Sprintf("[E]: API: POST crypto/v1/keys: %s", err),
+			Detail:   fmt.Sprintf("[E]: API: POST %s: %s", endpoint, err),
 		})
 		return diags
 	}
 
 	d.SetId(req["kid"].(string))
+	return diags
+}
+
+// [C]: Terraform Func: resourceCreateSobject
+func resourceCreateSobject(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if rotate := d.Get("rotate").(string); len(rotate) > 0 {
+		if rotate_from := d.Get("rotate_from").(string); len(rotate_from) <= 0 {
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "[DSM SDK] Unable to call DSM provider API client",
+				Detail:   "[E]: API: GET crypto/v1/keys/rekey: 'rotate_from' missing",
+			})
+			return diags
+		}
+	}
+
+	if err := createSO(ctx, d, m); err != nil {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "[DSM SDK] Unable to call DSM provider API client",
+			Detail:   fmt.Sprintf("[E]: API: GET crypto/v1/keys: %s", err),
+		})
+		return diags
+	}
+
 	return resourceReadSobject(ctx, d, m)
 }
 
-// [R]: Read Security Object
+// [R]: Terraform Func: resourceReadSobject
 func resourceReadSobject(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
@@ -169,7 +224,7 @@ func resourceReadSobject(ctx context.Context, d *schema.ResourceData, m interfac
 			return diags
 		}
 
-		if err := d.Set("name", req["name"].(string)); err != nil {
+		if err := d.Set("dsm_name", req["name"].(string)); err != nil {
 			return diag.FromErr(err)
 		}
 		if err := d.Set("group_id", req["group_id"].(string)); err != nil {
@@ -187,13 +242,10 @@ func resourceReadSobject(ctx context.Context, d *schema.ResourceData, m interfac
 		if err := d.Set("acct_id", req["acct_id"].(string)); err != nil {
 			return diag.FromErr(err)
 		}
-		//if err := d.Set("kcv", req["kcv"].(string)); err != nil {
-		// RSA keys don't have KCV
-		//	if d.Get("kcv") != nil {
-		//		return diag.FromErr(err)
-		//	}
-		//}
 		if err := d.Set("creator", req["creator"]); err != nil {
+			return diag.FromErr(err)
+		}
+		if err := d.Set("links", req["links"]); err != nil {
 			return diag.FromErr(err)
 		}
 		if err := d.Set("custom_metadata", req["custom_metadata"]); err != nil {
@@ -204,7 +256,6 @@ func resourceReadSobject(ctx context.Context, d *schema.ResourceData, m interfac
 				return diag.FromErr(err)
 			}
 		}
-
 		if err := d.Set("key_ops", req["key_ops"]); err != nil {
 			return diag.FromErr(err)
 		}
@@ -231,7 +282,6 @@ func resourceReadSobject(ctx context.Context, d *schema.ResourceData, m interfac
 				return diag.FromErr(newerr)
 			}
 		}
-
 		if err := req["obj_type"].(string); err == "RSA" {
 			openssh_pub_key, err := PublicPEMtoOpenSSH([]byte(req["pub_key"].(string)))
 			if err != nil {
@@ -242,16 +292,20 @@ func resourceReadSobject(ctx context.Context, d *schema.ResourceData, m interfac
 				}
 			}
 		}
+
+		// FYOO: clear values that are irrelevant
+		d.Set("rotate", "")
+		d.Set("rotate_from", "")
 	}
 	return diags
 }
 
-// [U]: Update Security Object
+// [U]: Terraform Func: resourceUpdateSobject
 func resourceUpdateSobject(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	return nil
+	return resourceReadSobject(ctx, d, m)
 }
 
-// [D]: Delete Security Object
+// [D]: Terraform Func: resourceDeleteSobject
 func resourceDeleteSobject(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
