@@ -98,7 +98,7 @@ func resourceCreateGcpEkmSa(ctx context.Context, d *schema.ResourceData, m inter
 	}
 
 	d.SetId(req["app_id"].(string))
-	return resourceReadApp(ctx, d, m)
+	return resourceReadGcpEkmSa(ctx, d, m)
 }
 
 // [R]: Read GcpEkmSa

@@ -1,4 +1,6 @@
 ChangeLog:
+0.5.2:
+- GCP SA App bug fix
 0.5.0:
 - Initial Azure BYOK support
 0.4.1:
