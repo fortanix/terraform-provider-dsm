@@ -1,6 +1,7 @@
 ChangeLog:
-0.5.3:
+0.5.5:
 - Bugfixes
+- Support multiple groups for apps
 0.5.2:
 - GCP SA App bug fix
 0.5.0:

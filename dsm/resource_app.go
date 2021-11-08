@@ -37,6 +37,13 @@ func resourceApp() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"other_group": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 			"acct_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -76,12 +83,24 @@ func resourceCreateApp(ctx context.Context, d *schema.ResourceData, m interface{
 	app_object := map[string]interface{}{
 		"name":          d.Get("name").(string),
 		"default_group": d.Get("default_group").(string),
-		"add_groups": map[string]interface{}{
-			d.Get("default_group").(string): []string{"SIGN", "VERIFY", "ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "DERIVEKEY", "MACGENERATE", "MACVERIFY", "EXPORT", "MANAGE", "AGREEKEY", "AUDIT"},
-		},
+		//"add_groups": map[string]interface{}{
+		//	d.Get("default_group").(string): []string{"SIGN", "VERIFY", "ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "DERIVEKEY", "MACGENERATE", "MACVERIFY", "EXPORT", "MANAGE", "AGREEKEY", "AUDIT"},
+		//},
 		"app_Type":    "default",
 		"description": d.Get("description").(string),
 	}
+
+	app_add_group := make(map[string]interface{})
+
+	if err := d.Get("other_group").([]interface{}); len(err) > 0 {
+		for _, group_id := range d.Get("other_group").([]interface{}) {
+			app_add_group[group_id.(string)] = []string{"SIGN", "VERIFY", "ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "DERIVEKEY", "MACGENERATE", "MACVERIFY", "EXPORT", "MANAGE", "AGREEKEY", "AUDIT"}
+		}
+	}
+
+	app_add_group[d.Get("default_group").(string)] = []string{"SIGN", "VERIFY", "ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "DERIVEKEY", "MACGENERATE", "MACVERIFY", "EXPORT", "MANAGE", "AGREEKEY", "AUDIT"}
+
+	app_object["add_groups"] = app_add_group
 
 	req, err := m.(*api_client).APICallBody("POST", "sys/v1/apps", app_object)
 	if err != nil {
