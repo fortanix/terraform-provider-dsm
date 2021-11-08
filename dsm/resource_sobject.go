@@ -29,7 +29,9 @@ func resourceSobject() *schema.Resource {
 		CustomizeDiff: customdiff.All(
 			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 				// already has been replaced so "rotate" and "rotate_from" does not apply
-				if len(diff.Get("replacement").(string)) > 0 || len(diff.Get("replacement").(string)) > 0 {
+				_, replacement := diff.GetOkExists("replacement")
+				_, replaced := diff.GetOkExists("replaced")
+				if replacement || replaced {
 					diff.Clear("rotate")
 					diff.Clear("rotate_from")
 				}
