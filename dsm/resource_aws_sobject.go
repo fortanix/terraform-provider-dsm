@@ -170,6 +170,10 @@ func resourceCreateAWSSobject(ctx context.Context, d *schema.ResourceData, m int
 		security_object["custom_metadata"] = d.Get("custom_metadata")
 	}
 
+	if err := d.Get("rotate").(string); len(err) > 0 {
+		security_object["name"] = d.Get("rotate_from").(string)
+	}
+
 	req, err := m.(*api_client).APICallBody("POST", "crypto/v1/keys/copy", security_object)
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
