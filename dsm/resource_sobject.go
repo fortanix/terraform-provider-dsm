@@ -32,10 +32,12 @@ func resourceSobject() *schema.Resource {
 				_, replacement := diff.GetOkExists("replacement")
 				_, replaced := diff.GetOkExists("replaced")
 				if replacement || replaced {
+					return fmt.Errorf("error setting new domain_validation_options diff: %w", diff.Get("rotate"))
 					diff.Clear("rotate")
 					diff.Clear("rotate_from")
 				}
-				return nil
+				return fmt.Errorf("error setting new domain_validation_options diff: %w", diff.Get("rotate_from"))
+				//return nil
 			},
 		),
 		Schema: map[string]*schema.Schema{
