@@ -299,6 +299,7 @@ func resourceUpdateAWSSobject(ctx context.Context, d *schema.ResourceData, m int
 			}
 			old_custom_metadata, _ := d.GetChange("custom_metadata")
 			//update_aws_metadata["custom_metadata"] = old_custom_metadata
+			update_aws_metadata["custom_metadata"] = make(map[string]interface{})
 
 			if newAlias, ok := d.Get("custom_metadata").(map[string]interface{})["aws-aliases"]; ok {
 				update_aws_metadata["custom_metadata"].(map[string]interface{})["aws-aliases"] = newAlias.(string)
