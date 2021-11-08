@@ -78,7 +78,7 @@ func resourceSobject() *schema.Resource {
 				Type:     schema.TypeMap,
 				Computed: true,
 				Elem: &schema.Schema{
-					Type: schema.TypeString,
+					Type: schema.TypeList,
 				},
 			},
 			"ssh_pub_key": {
