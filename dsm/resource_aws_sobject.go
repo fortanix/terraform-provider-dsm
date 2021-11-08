@@ -373,10 +373,17 @@ func resourceUpdateAWSSobject(ctx context.Context, d *schema.ResourceData, m int
 				return diags
 			}
 		}
-		return resourceReadAWSSobject(ctx, d, m)
 	}
 
-	return nil
+	// already has been replaced so "rotate" and "rotate_from" does not apply
+	_, replacement := d.GetOkExists("replacement")
+	_, replaced := d.GetOkExists("replaced")
+	if replacement || replaced {
+		d.Set("rotate", "")
+		d.Set("rotate_from", "")
+	}
+
+	return resourceReadAWSSobject(ctx, d, m)
 }
 
 // [D]: Delete AWS Security Object
