@@ -2,7 +2,7 @@
 // Terraform Provider - DSM: api client
 // **********
 //       - Author:    fyoo at fortanix dot com
-//       - Version:   0.5.0
+//       - Version:   0.5.3
 //       - Date:      27/11/2020
 // **********
 
@@ -41,7 +41,7 @@ type dsm_plugin struct {
 }
 
 // [-]: set api_client state
-func NewAPIClient(endpoint string, port int, username string, password string, api_key string, bearer bool, acct_id string, aws_profile string, aws_region string, azure_region string, insecure bool) (*api_client, error) {
+func NewAPIClient(endpoint string, port int, username string, password string, api_key string, acct_id string, aws_profile string, aws_region string, azure_region string, insecure bool) (*api_client, error) {
 	// FIXME: clunky way of creating api_client session
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: insecure},
@@ -53,58 +53,64 @@ func NewAPIClient(endpoint string, port int, username string, password string, a
 	var authtype string
 	var authtoken string
 
-	if bearer {
-		req, err := http.NewRequest("POST", fmt.Sprintf("%s/sys/v1/session/auth", endpoint), nil)
-		if err != nil {
-			return nil, err
-		}
-		req.SetBasicAuth(username, password)
-		req.Close = true
+	req, err := http.NewRequest("POST", fmt.Sprintf("%s/sys/v1/session/auth", endpoint), nil)
+	if err != nil {
+		return nil, err
+	}
 
-		r, err := client.Do(req)
-		if err != nil {
-			return nil, err
-		}
-		defer r.Body.Close()
-
-		err = json.NewDecoder(r.Body).Decode(&resp)
-		if err != nil {
-			return nil, err
-		}
-
-		account_object := map[string]interface{}{
-			"acct_id": acct_id,
-		}
-
-		reqBody, err := json.Marshal(account_object)
-		if err != nil {
-			return nil, err
-		}
-
-		req, err = http.NewRequest("POST", fmt.Sprintf("%s/sys/v1/session/select_account", endpoint), bytes.NewBuffer(reqBody))
-		if err != nil {
-			return nil, err
-		}
-
-		authtype = "Bearer "
-		authtoken = resp["access_token"].(string)
-		req.Header.Add("Authorization", authtype+authtoken)
-		req.Close = true
-
-		r, err = client.Do(req)
-		if err != nil {
-			return nil, err
-		}
-		defer r.Body.Close()
-
-		// EOF error: select_acccount has no return
-		_, err = io.ReadAll(r.Body)
-		if err != nil {
-			return nil, err
-		}
-	} else {
+	req.Close = true
+	if len(api_key) > 0 {
 		authtype = "Basic "
 		authtoken = api_key
+		req.Header.Add("Authorization", authtype+authtoken)
+	} else {
+		req.SetBasicAuth(username, password)
+	}
+
+	r, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer r.Body.Close()
+
+	if r.StatusCode == 401 {
+		return nil, fmt.Errorf("Unauthorized Access to DSM")
+	}
+
+	err = json.NewDecoder(r.Body).Decode(&resp)
+	if err != nil {
+		return nil, err
+	}
+
+	account_object := map[string]interface{}{
+		"acct_id": acct_id,
+	}
+
+	reqBody, err := json.Marshal(account_object)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err = http.NewRequest("POST", fmt.Sprintf("%s/sys/v1/session/select_account", endpoint), bytes.NewBuffer(reqBody))
+	if err != nil {
+		return nil, err
+	}
+
+	authtype = "Bearer "
+	authtoken = resp["access_token"].(string)
+	req.Header.Add("Authorization", authtype+authtoken)
+	req.Close = true
+
+	r, err = client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer r.Body.Close()
+
+	// EOF error: select_acccount has no return
+	_, err = io.ReadAll(r.Body)
+	if err != nil {
+		return nil, err
 	}
 
 	// Check if AWS profile is set and use it within API client
@@ -193,11 +199,19 @@ func (obj *api_client) APICallBody(method string, url string, body map[string]in
 
 		r, err := client.Do(req)
 		if err != nil {
-			diags = append(diags, diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  "[DSM SDK]: Unable to call DSM provider API client",
-				Detail:   fmt.Sprintf("[E]: API: %s %s %s: %s", method, url, r.StatusCode, err),
-			})
+			if r != nil {
+				diags = append(diags, diag.Diagnostic{
+					Severity: diag.Error,
+					Summary:  "[DSM SDK]: Unable to call DSM provider API client",
+					Detail:   fmt.Sprintf("[E]: API: %s %s %s: %s", method, url, r.StatusCode, err),
+				})
+			} else {
+				diags = append(diags, diag.Diagnostic{
+					Severity: diag.Error,
+					Summary:  "[DSM SDK]: Unable to call DSM provider API client",
+					Detail:   fmt.Sprintf("[E]: API: %s %s %s: %s", method, url, err),
+				})
+			}
 		} else {
 			defer r.Body.Close()
 			bodyBytes, err := io.ReadAll(r.Body)

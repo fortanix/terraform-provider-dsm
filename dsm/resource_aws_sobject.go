@@ -275,7 +275,21 @@ func resourceReadAWSSobject(ctx context.Context, d *schema.ResourceData, m inter
 
 // [U]: Update AWS Security Object
 func resourceUpdateAWSSobject(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	return nil
+	if err := d.Get("custom_metadata").(map[string]interface{}); len(err) > 0 {
+		update_aws_metadata := map[string]interface{}{
+			"kid": d.Id(),
+		}
+		update_aws_metadata["custom_metadata"] = d.Get("custom_metadata")
+		_, err := m.(*api_client).APICallBody("PATCH", fmt.Sprintf("crypto/v1/keys/%s", d.Id()), update_aws_metadata)
+		if err != nil {
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "[DSM SDK] Unable to call DSM provider API client",
+				Detail:   fmt.Sprintf("[E]: API: PATCH crypto/v1/keys: %s", err),
+			})
+			return diags
+		}
+	}
 }
 
 // [D]: Delete AWS Security Object
@@ -302,7 +316,7 @@ func resourceDeleteAWSSobject(ctx context.Context, d *schema.ResourceData, m int
 		}
 	}
 
-	// FIXME: Need to schedule deletion then delete the key - default is set to 7 days for now
+	// FIXME: Need to schedule deletion then delete the key - default is set to 7 days for now (need to specify)
 	delete_object := map[string]interface{}{
 		"pending_window_in_days": d.Get("pending_window_in_days").(int),
 	}

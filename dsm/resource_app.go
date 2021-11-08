@@ -2,7 +2,7 @@
 // Terraform Provider - DSM: resource: app
 // **********
 //       - Author:    fyoo at fortanix dot com
-//       - Version:   0.3.7
+//       - Version:   0.5.3
 //       - Date:      27/11/2020
 // **********
 
@@ -143,6 +143,10 @@ func resourceReadApp(ctx context.Context, d *schema.ResourceData, m interface{})
 	}
 
 	if err := d.Set("credential", base64.StdEncoding.EncodeToString([]byte(d.Id()+":"+req["credential"].(map[string]interface{})["secret"].(string)))); err != nil {
+		return diag.FromErr(err)
+	}
+
+	if err := d.Set("new_credential", false); err != nil {
 		return diag.FromErr(err)
 	}
 	return diags
