@@ -50,12 +50,16 @@ func resourceAWSSobject() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"links": {
-				Type:     schema.TypeMap,
+			"copied_to": {
+				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
+			},
+			"copied_from": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"kid": {
 				Type:     schema.TypeString,
@@ -214,8 +218,19 @@ func resourceReadAWSSobject(ctx context.Context, d *schema.ResourceData, m inter
 		if err := d.Set("group_id", req["group_id"].(string)); err != nil {
 			return diag.FromErr(err)
 		}
-		if err := d.Set("links", req["links"]); err != nil {
-			return diag.FromErr(err)
+		if _, ok := req["links"]; ok {
+			if links := req["links"].(map[string]interface{}); len(links) > 0 {
+				if copiedTo := req["links"].(map[string]interface{})["copiedTo"].([]interface{}); len(copiedTo) > 0 {
+					if err := d.Set("copied_to", req["links"].(map[string]interface{})["copiedTo"].([]interface{})); err != nil {
+						return diag.FromErr(err)
+					}
+				}
+				if copiedFrom := req["links"].(map[string]interface{})["copiedFrom"].(string); len(copiedFrom) > 0 {
+					if err := d.Set("copied_from", req["links"].(map[string]interface{})["copiedFrom"].(string)); err != nil {
+						return diag.FromErr(err)
+					}
+				}
+			}
 		}
 		if err := d.Set("kid", req["kid"].(string)); err != nil {
 			return diag.FromErr(err)

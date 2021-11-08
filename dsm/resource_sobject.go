@@ -89,6 +89,10 @@ func resourceSobject() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"copied_from": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"ssh_pub_key": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -260,6 +264,11 @@ func resourceReadSobject(ctx context.Context, d *schema.ResourceData, m interfac
 			if links := req["links"].(map[string]interface{}); len(links) > 0 {
 				if copiedTo := req["links"].(map[string]interface{})["copiedTo"].([]interface{}); len(copiedTo) > 0 {
 					if err := d.Set("copied_to", req["links"].(map[string]interface{})["copiedTo"].([]interface{})); err != nil {
+						return diag.FromErr(err)
+					}
+				}
+				if copiedFrom := req["links"].(map[string]interface{})["copiedFrom"].(string); len(copiedFrom) > 0 {
+					if err := d.Set("copied_from", req["links"].(map[string]interface{})["copiedFrom"].(string)); err != nil {
 						return diag.FromErr(err)
 					}
 				}
