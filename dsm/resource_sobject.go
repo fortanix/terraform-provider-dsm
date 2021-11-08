@@ -259,7 +259,7 @@ func resourceReadSobject(ctx context.Context, d *schema.ResourceData, m interfac
 		if _, ok := req["links"]; ok {
 			if links := req["links"].(map[string]interface{}); len(links) > 0 {
 				if copiedTo := req["links"].(map[string]interface{})["copiedTo"].([]interface{}); len(copiedTo) > 0 {
-					if err := d.Set("copiedTo", req["links"].(map[string]interface{})["copiedTo"].([]interface{})); err != nil {
+					if err := d.Set("copied_to", req["links"].(map[string]interface{})["copiedTo"].([]interface{})); err != nil {
 						return diag.FromErr(err)
 					}
 				}
