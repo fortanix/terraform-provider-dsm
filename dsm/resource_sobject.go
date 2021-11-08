@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -25,6 +26,16 @@ func resourceSobject() *schema.Resource {
 		ReadContext:   resourceReadSobject,
 		UpdateContext: resourceUpdateSobject,
 		DeleteContext: resourceDeleteSobject,
+		CustomizeDiff: customdiff.All(
+			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+				// already has been replaced so "rotate" and "rotate_from" does not apply
+				if len(diff.Get("replacement").(string)) > 0 || len(diff.Get("replacement").(string)) > 0 {
+					diff.Clear("rotate")
+					diff.Clear("rotate_from")
+				}
+				return nil
+			},
+		),
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
