@@ -99,6 +99,7 @@ func resourceSecret() *schema.Resource {
 func resourceCreateSecret(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	endpoint := "crypto/v1/keys"
+	operation := "PUT"
 
 	plugin_object := map[string]interface{}{
 		"operation":   "create",
@@ -130,11 +131,11 @@ func resourceCreateSecret(ctx context.Context, d *schema.ResourceData, m interfa
 			})
 			return diags
 		}
-
 		endpoint = fmt.Sprintf("sys/v1/plugins/%s", string(reqfpi))
+		operation = "POST"
 	}
 
-	req, err := m.(*api_client).APICallBody("POST", endpoint, plugin_object)
+	req, err := m.(*api_client).APICallBody(operation, endpoint, plugin_object)
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
