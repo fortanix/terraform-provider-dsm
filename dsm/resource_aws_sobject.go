@@ -275,6 +275,7 @@ func resourceReadAWSSobject(ctx context.Context, d *schema.ResourceData, m inter
 
 // [U]: Update AWS Security Object
 func resourceUpdateAWSSobject(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	if err := d.Get("custom_metadata").(map[string]interface{}); len(err) > 0 {
 		update_aws_metadata := map[string]interface{}{
 			"kid": d.Id(),
@@ -290,6 +291,8 @@ func resourceUpdateAWSSobject(ctx context.Context, d *schema.ResourceData, m int
 			return diags
 		}
 	}
+
+	return resourceReadAWSSobject(ctx, d, m)
 }
 
 // [D]: Delete AWS Security Object
