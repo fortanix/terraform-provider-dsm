@@ -98,6 +98,7 @@ func resourceSecret() *schema.Resource {
 // [C]: Create Security Object
 func resourceCreateSecret(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	endpoint := "crypto/v1/keys"
 
 	plugin_object := map[string]interface{}{
 		"operation":   "create",
@@ -118,19 +119,21 @@ func resourceCreateSecret(ctx context.Context, d *schema.ResourceData, m interfa
 
 	if err := d.Get("value").(string); len(err) > 0 {
 		plugin_object["value"] = d.Get("value").(string)
+	} else {
+		reqfpi, err := m.(*api_client).FindPluginId("Terraform Plugin")
+		if err != nil {
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "[DSM SDK] Unable to call DSM provider API client",
+				Detail:   fmt.Sprintf("[E]: API: GET sys/v1/plugins: %s", err),
+			})
+			return diags
+		}
+
+		endpoint = fmt.Sprintf("sys/v1/plugins/%s", string(reqfpi))
 	}
 
-	reqfpi, err := m.(*api_client).FindPluginId("Terraform Plugin")
-	if err != nil {
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "[DSM SDK] Unable to call DSM provider API client",
-			Detail:   fmt.Sprintf("[E]: API: GET sys/v1/plugins: %s", err),
-		})
-		return diags
-	}
-
-	req, err := m.(*api_client).APICallBody("POST", fmt.Sprintf("sys/v1/plugins/%s", string(reqfpi)), plugin_object)
+	req, err := m.(*api_client).APICallBody("POST", endpoint, plugin_object)
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
