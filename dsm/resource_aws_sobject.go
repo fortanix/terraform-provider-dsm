@@ -17,6 +17,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 // [-] Structs to define Terraform AWS Security Object
@@ -125,6 +126,15 @@ func resourceAWSSobject() *schema.Resource {
 				Default:  7,
 			},
 			"expiry_date": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"rotate": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice([]string{"DSM", "ALL"}, true),
+			},
+			"rotate_from": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
