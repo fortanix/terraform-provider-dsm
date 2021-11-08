@@ -1,4 +1,7 @@
 ChangeLog:
+0.5.6:
+- fix aws-policy update
+- fix aws-tags update
 0.5.5:
 - Bugfixes
 - Support multiple groups for apps

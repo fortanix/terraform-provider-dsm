@@ -303,6 +303,10 @@ func resourceUpdateAWSSobject(ctx context.Context, d *schema.ResourceData, m int
 				update_aws_metadata["custom_metadata"].(map[string]interface{})["aws-aliases"] = newAlias.(string)
 			}
 
+			if newPolicy, ok := d.Get("custom_metadata").(map[string]interface{})["aws-policy"]; ok {
+				update_aws_metadata["custom_metadata"].(map[string]interface{})["aws-policy"] = newPolicy
+			}
+
 			//}
 			//update_aws_metadata["custom_metadata"] = map[string]interface{}{
 			//	"aws-aliases": d.Get("custom_metadata").(map[string]interface{})["aws-aliases"],
