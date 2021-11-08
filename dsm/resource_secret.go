@@ -106,7 +106,7 @@ func resourceCreateSecret(ctx context.Context, d *schema.ResourceData, m interfa
 		"description": d.Get("description").(string),
 	}
 
-	if rfcdate, ok := d.Get("expiry_date").(string); ok {
+	if rfcdate := d.Get("expiry_date").(string); len(rfcdate) > 0 {
 		layoutRFC := "2006-01-02T15:04:05Z"
 		layoutDSM := "20060102T150405Z"
 		ddate, newerr := time.Parse(layoutRFC, rfcdate)
