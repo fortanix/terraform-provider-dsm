@@ -338,6 +338,15 @@ func resourceReadAWSSobject(ctx context.Context, d *schema.ResourceData, m inter
 // [U]: Update AWS Security Object
 func resourceUpdateAWSSobject(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+
+	// already has been replaced so "rotate" and "rotate_from" does not apply
+	_, replacement := d.GetOkExists("replacement")
+	_, replaced := d.GetOkExists("replaced")
+	if replacement || replaced {
+		d.Set("rotate", "")
+		d.Set("rotate_from", "")
+	}
+
 	if d.HasChange("custom_metadata") {
 		if err := d.Get("custom_metadata").(map[string]interface{}); len(err) > 0 {
 			update_aws_metadata := map[string]interface{}{
@@ -347,7 +356,7 @@ func resourceUpdateAWSSobject(ctx context.Context, d *schema.ResourceData, m int
 			//update_aws_metadata["custom_metadata"] = old_custom_metadata
 			update_aws_metadata["custom_metadata"] = make(map[string]interface{})
 
-			if newAlias, ok := d.Get("custom_metadata").(map[string]interface{})["aws-aliases"]; ok {
+			if newAlias, ok := d.Get("custom_metadata").(map[string]interface{})["aws-aliases"]; ok && !replacement {
 				update_aws_metadata["custom_metadata"].(map[string]interface{})["aws-aliases"] = newAlias.(string)
 			}
 
@@ -373,14 +382,6 @@ func resourceUpdateAWSSobject(ctx context.Context, d *schema.ResourceData, m int
 				return diags
 			}
 		}
-	}
-
-	// already has been replaced so "rotate" and "rotate_from" does not apply
-	_, replacement := d.GetOkExists("replacement")
-	_, replaced := d.GetOkExists("replaced")
-	if replacement || replaced {
-		d.Set("rotate", "")
-		d.Set("rotate_from", "")
 	}
 
 	return resourceReadAWSSobject(ctx, d, m)
