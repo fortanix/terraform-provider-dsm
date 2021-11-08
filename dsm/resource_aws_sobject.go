@@ -291,26 +291,39 @@ func resourceReadAWSSobject(ctx context.Context, d *schema.ResourceData, m inter
 // [U]: Update AWS Security Object
 func resourceUpdateAWSSobject(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	if err := d.Get("custom_metadata").(map[string]interface{}); len(err) > 0 {
-		update_aws_metadata := map[string]interface{}{
-			"kid": d.Id(),
-		}
-		update_aws_metadata["custom_metadata"] = map[string]interface{}{
-			"aws-aliases": d.Get("custom_metadata").(map[string]interface{})["aws-aliases"],
-			"aws-policy":  d.Get("custom_metadata").(map[string]interface{})["aws-policy"],
-		}
-		_, err := m.(*api_client).APICallBody("PATCH", fmt.Sprintf("crypto/v1/keys/%s", d.Id()), update_aws_metadata)
-		if err != nil {
+	if d.HasChange("custom_metadata") {
+		if err := d.Get("custom_metadata").(map[string]interface{}); len(err) > 0 {
+			update_aws_metadata := map[string]interface{}{
+				"kid": d.Id(),
+			}
+			update_aws_metadata["custom_metadata"] = d.Get("custom_metadata")
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Error,
-				Summary:  "[DSM SDK] Unable to call DSM provider API client",
-				Detail:   fmt.Sprintf("[E]: API: PATCH crypto/v1/keys: %s", err),
+				Summary:  "[DSM SDK] Unable to parse DSM provider API client output",
+				Detail:   fmt.Sprintf("[E]: API: GET crypto/v1/keys: %s", err),
 			})
 			return diags
+			//if _, newAlias := d.Get("custom_metadata").(map[string]interface{})["aws-aliases"]; newAlias {
+
+			//}
+			//update_aws_metadata["custom_metadata"] = map[string]interface{}{
+			//	"aws-aliases": d.Get("custom_metadata").(map[string]interface{})["aws-aliases"],
+			//	"aws-policy":  d.Get("custom_metadata").(map[string]interface{})["aws-policy"],
+			//}
+			_, err := m.(*api_client).APICallBody("PATCH", fmt.Sprintf("crypto/v1/keys/%s", d.Id()), update_aws_metadata)
+			if err != nil {
+				diags = append(diags, diag.Diagnostic{
+					Severity: diag.Error,
+					Summary:  "[DSM SDK] Unable to call DSM provider API client",
+					Detail:   fmt.Sprintf("[E]: API: PATCH crypto/v1/keys: %s", err),
+				})
+				return diags
+			}
 		}
+		return resourceReadAWSSobject(ctx, d, m)
 	}
 
-	return resourceReadAWSSobject(ctx, d, m)
+	return nil
 }
 
 // [D]: Delete AWS Security Object
