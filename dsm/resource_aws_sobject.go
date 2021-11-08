@@ -296,11 +296,11 @@ func resourceUpdateAWSSobject(ctx context.Context, d *schema.ResourceData, m int
 			update_aws_metadata := map[string]interface{}{
 				"kid": d.Id(),
 			}
-			update_aws_metadata["custom_metadata"] = d.Get("custom_metadata")
+			old_custom_metadata, _ := d.GetChange("custom_metadata")
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "[DSM SDK] Unable to parse DSM provider API client output",
-				Detail:   fmt.Sprintf("[E]: API: GET crypto/v1/keys: %s", err),
+				Detail:   fmt.Sprintf("[E]: API: GET crypto/v1/keys: %s", old_custom_metadata),
 			})
 			return diags
 			//if _, newAlias := d.Get("custom_metadata").(map[string]interface{})["aws-aliases"]; newAlias {
