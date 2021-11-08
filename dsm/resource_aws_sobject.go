@@ -41,6 +41,10 @@ func resourceAWSSobject() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"dsm_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"group_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -246,7 +250,7 @@ func resourceReadAWSSobject(ctx context.Context, d *schema.ResourceData, m inter
 		}
 
 		// Sync DSM and Terraform attributes
-		if err := d.Set("name", awssobject.Name); err != nil {
+		if err := d.Set("dsm_name", awssobject.Name); err != nil {
 			return diag.FromErr(err)
 		}
 		if err := d.Set("group_id", req["group_id"].(string)); err != nil {
@@ -354,6 +358,8 @@ func resourceUpdateAWSSobject(ctx context.Context, d *schema.ResourceData, m int
 			}
 			old_custom_metadata, _ := d.GetChange("custom_metadata")
 			//update_aws_metadata["custom_metadata"] = old_custom_metadata
+
+			// FYOO: Needs work
 			update_aws_metadata["custom_metadata"] = make(map[string]interface{})
 
 			if newAlias, ok := d.Get("custom_metadata").(map[string]interface{})["aws-aliases"]; ok {
