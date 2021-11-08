@@ -262,12 +262,12 @@ func resourceReadSobject(ctx context.Context, d *schema.ResourceData, m interfac
 		//}
 		if _, ok := req["links"]; ok {
 			if links := req["links"].(map[string]interface{}); len(links) > 0 {
-				if copiedTo := req["links"].(map[string]interface{})["copiedTo"].([]interface{}); len(copiedTo) > 0 {
+				if _, copiedToExists := req["links"].(map[string]interface{})["copiedTo"]; copiedToExists {
 					if err := d.Set("copied_to", req["links"].(map[string]interface{})["copiedTo"].([]interface{})); err != nil {
 						return diag.FromErr(err)
 					}
 				}
-				if copiedFrom := req["links"].(map[string]interface{})["copiedFrom"].(string); len(copiedFrom) > 0 {
+				if _, copiedFromExists := req["links"].(map[string]interface{})["copiedFrom"]; copiedFromExists {
 					if err := d.Set("copied_from", req["links"].(map[string]interface{})["copiedFrom"].(string)); err != nil {
 						return diag.FromErr(err)
 					}
