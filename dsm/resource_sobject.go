@@ -82,7 +82,7 @@ func resourceSobject() *schema.Resource {
 			//		Type: schema.TypeList,
 			//	},
 			//},
-			"copiedTo": {
+			"copied_to": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Schema{
