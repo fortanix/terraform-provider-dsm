@@ -119,6 +119,7 @@ func resourceCreateSecret(ctx context.Context, d *schema.ResourceData, m interfa
 
 	if err := d.Get("value").(string); len(err) > 0 {
 		plugin_object["value"] = d.Get("value").(string)
+		plugin_object["obj_type"] = "SECRET"
 	} else {
 		reqfpi, err := m.(*api_client).FindPluginId("Terraform Plugin")
 		if err != nil {
