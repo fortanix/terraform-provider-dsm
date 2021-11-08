@@ -297,6 +297,7 @@ func resourceUpdateAWSSobject(ctx context.Context, d *schema.ResourceData, m int
 		}
 		update_aws_metadata["custom_metadata"] = map[string]interface{}{
 			"aws-aliases": d.Get("custom_metadata").(map[string]interface{})["aws-aliases"],
+			"aws-policy":  d.Get("custom_metadata").(map[string]interface{})["aws-policy"],
 		}
 		_, err := m.(*api_client).APICallBody("PATCH", fmt.Sprintf("crypto/v1/keys/%s", d.Id()), update_aws_metadata)
 		if err != nil {
