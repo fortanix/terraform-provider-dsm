@@ -63,6 +63,14 @@ func resourceAWSSobject() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"replacement": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"replaced": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"kid": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -148,6 +156,17 @@ func resourceAWSSobject() *schema.Resource {
 // [C]: Create AWS Security Object
 func resourceCreateAWSSobject(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+
+	if rotate := d.Get("rotate").(string); len(rotate) > 0 {
+		if rotate_from := d.Get("rotate_from").(string); len(rotate_from) <= 0 {
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "[DSM SDK] Unable to call DSM provider API client",
+				Detail:   "[E]: API: GET crypto/v1/keys/copy: 'rotate_from' missing",
+			})
+			return diags
+		}
+	}
 
 	security_object := map[string]interface{}{
 		"name":        d.Get("name").(string),
@@ -245,6 +264,16 @@ func resourceReadAWSSobject(ctx context.Context, d *schema.ResourceData, m inter
 						return diag.FromErr(err)
 					}
 				}
+				if _, replacementExists := req["links"].(map[string]interface{})["replacement"]; replacementExists {
+					if err := d.Set("replacement", req["links"].(map[string]interface{})["replacement"].(string)); err != nil {
+						return diag.FromErr(err)
+					}
+				}
+				if _, replacedExists := req["links"].(map[string]interface{})["replaced"]; replacedExists {
+					if err := d.Set("replaced", req["links"].(map[string]interface{})["replaced"].(string)); err != nil {
+						return diag.FromErr(err)
+					}
+				}
 			}
 		}
 		if err := d.Set("kid", req["kid"].(string)); err != nil {
@@ -298,9 +327,12 @@ func resourceReadAWSSobject(ctx context.Context, d *schema.ResourceData, m inter
 				return diag.FromErr(newerr)
 			}
 		}
+		// FYOO: clear values that are irrelevant
+		d.Set("rotate", "")
+		d.Set("rotate_from", "")
 	}
 
-	return nil
+	return diags
 }
 
 // [U]: Update AWS Security Object
