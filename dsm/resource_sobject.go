@@ -93,6 +93,14 @@ func resourceSobject() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"replacement": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"replaced": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"ssh_pub_key": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -269,6 +277,16 @@ func resourceReadSobject(ctx context.Context, d *schema.ResourceData, m interfac
 				}
 				if _, copiedFromExists := req["links"].(map[string]interface{})["copiedFrom"]; copiedFromExists {
 					if err := d.Set("copied_from", req["links"].(map[string]interface{})["copiedFrom"].(string)); err != nil {
+						return diag.FromErr(err)
+					}
+				}
+				if _, replacementExists := req["links"].(map[string]interface{})["replacement"]; replacementExists {
+					if err := d.Set("replacement", req["links"].(map[string]interface{})["replacement"].(string)); err != nil {
+						return diag.FromErr(err)
+					}
+				}
+				if _, replacedExists := req["links"].(map[string]interface{})["replaced"]; replacedExists {
+					if err := d.Set("replaced", req["links"].(map[string]interface{})["replaced"].(string)); err != nil {
 						return diag.FromErr(err)
 					}
 				}
