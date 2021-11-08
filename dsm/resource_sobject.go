@@ -36,7 +36,7 @@ func resourceSobject() *schema.Resource {
 					diff.Clear("rotate")
 					diff.Clear("rotate_from")
 				}
-				return fmt.Errorf("error setting new domain_validation_options diff: %w", diff.Get("rotate_from"))
+				return fmt.Errorf("error setting new not found diff: %w", diff.Get("rotate_from"))
 				//return nil
 			},
 		),
