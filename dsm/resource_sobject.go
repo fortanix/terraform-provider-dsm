@@ -74,11 +74,19 @@ func resourceSobject() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"links": {
-				Type:     schema.TypeMap,
+			// Unable to define links
+			//"links": {
+			//	Type:     schema.TypeMap,
+			//	Computed: true,
+			//	Elem: &schema.Schema{
+			//		Type: schema.TypeList,
+			//	},
+			//},
+			"copiedTo": {
+				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Schema{
-					Type: schema.TypeList,
+					Type: schema.TypeString,
 				},
 			},
 			"ssh_pub_key": {
@@ -245,8 +253,15 @@ func resourceReadSobject(ctx context.Context, d *schema.ResourceData, m interfac
 		if err := d.Set("creator", req["creator"]); err != nil {
 			return diag.FromErr(err)
 		}
-		if err := d.Set("links", req["links"]); err != nil {
-			return diag.FromErr(err)
+		//if err := d.Set("links", req["links"]); err != nil {
+		//	return diag.FromErr(err)
+		//}
+		if links := req["links"].(map[string]interface{}); len(links) > 0 {
+			if copiedTo := req["links"].(map[string]interface{})["copiedTo"].([]interface{}); len(copiedTo) > 0 {
+				if err := d.Set("copiedTo", req["links"].(map[string]interface{})["copiedTo"].([]interface{})); err != nil {
+					return diag.FromErr(err)
+				}
+			}
 		}
 		if err := d.Set("custom_metadata", req["custom_metadata"]); err != nil {
 			return diag.FromErr(err)
