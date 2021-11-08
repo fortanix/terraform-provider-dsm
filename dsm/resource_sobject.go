@@ -14,7 +14,6 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -26,20 +25,6 @@ func resourceSobject() *schema.Resource {
 		ReadContext:   resourceReadSobject,
 		UpdateContext: resourceUpdateSobject,
 		DeleteContext: resourceDeleteSobject,
-		CustomizeDiff: customdiff.All(
-			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
-				// already has been replaced so "rotate" and "rotate_from" does not apply
-				_, replacement := diff.GetOkExists("replacement")
-				_, replaced := diff.GetOkExists("replaced")
-				if replacement || replaced {
-					return fmt.Errorf("error setting new domain_validation_options diff: %w", diff.Get("rotate"))
-					diff.Clear("rotate")
-					diff.Clear("rotate_from")
-				}
-				return fmt.Errorf("error setting new not found diff: %w", diff.Get("rotate_from"))
-				//return nil
-			},
-		),
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
@@ -361,6 +346,13 @@ func resourceReadSobject(ctx context.Context, d *schema.ResourceData, m interfac
 
 // [U]: Terraform Func: resourceUpdateSobject
 func resourceUpdateSobject(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	// already has been replaced so "rotate" and "rotate_from" does not apply
+	_, replacement := d.GetOkExists("replacement")
+	_, replaced := d.GetOkExists("replaced")
+	if replacement || replaced {
+		d.Set("rotate", "")
+		d.Set("rotate_from", "")
+	}
 	return resourceReadSobject(ctx, d, m)
 }
 
