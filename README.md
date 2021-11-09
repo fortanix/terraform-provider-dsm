@@ -1,4 +1,7 @@
 ChangeLog:
+0.5.7:
+- using "github.com/hashicorp/go-retryablehttp" as wrapper for http client
+- introduce rate limiting from client side
 0.5.6:
 - fix aws-policy update
 - fix aws-tags update

@@ -2,7 +2,7 @@
 // Terraform Provider - DSM: api client
 // **********
 //       - Author:    fyoo at fortanix dot com
-//       - Version:   0.5.3
+//       - Version:   0.5.7
 //       - Date:      27/11/2020
 // **********
 
@@ -10,6 +10,7 @@ package dsm
 
 import (
 	"bytes"
+	"context"
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
@@ -20,7 +21,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 
+	"github.com/hashicorp/go-retryablehttp"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+
+	"golang.org/x/time/rate"
 )
 
 type api_client struct {
@@ -33,6 +37,7 @@ type api_client struct {
 	aws_region   string
 	azure_region string
 	insecure     bool
+	timeout      int
 }
 
 type dsm_plugin struct {
@@ -40,20 +45,52 @@ type dsm_plugin struct {
 	Name string `json:"name"`
 }
 
+// FXHTTPClient Rate Limited HTTP Client
+type FXHTTPClient struct {
+	client      *retryablehttp.Client
+	Ratelimiter *rate.Limiter
+}
+
+// [-]: do FXHTTPClient
+func (c *FXHTTPClient) Do(req *retryablehttp.Request) (*http.Response, error) {
+	ctx := context.Background()
+	err := c.Ratelimiter.Wait(ctx)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+// [-]: set FXHTTPClient
+func NewClient(rl *rate.Limiter) *FXHTTPClient {
+	c := &FXHTTPClient{
+		client:      retryablehttp.NewClient(),
+		Ratelimiter: rl,
+	}
+	return c
+}
+
 // [-]: set api_client state
-func NewAPIClient(endpoint string, port int, username string, password string, api_key string, acct_id string, aws_profile string, aws_region string, azure_region string, insecure bool) (*api_client, error) {
+func NewAPIClient(endpoint string, port int, username string, password string, api_key string, acct_id string, aws_profile string, aws_region string, azure_region string, insecure bool, timeout int) (*api_client, error) {
 	// FIXME: clunky way of creating api_client session
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: insecure},
 	}
 
-	client := &http.Client{Timeout: 600 * time.Second, Transport: tr}
+	rl := rate.NewLimiter(rate.Every(1*time.Second), 5) // 5 requests in every second
+	client := NewClient(rl)
+	client.client.HTTPClient.Transport = tr
+	client.client.HTTPClient.Timeout = time.Duration(timeout) * time.Second
 
 	resp := make(map[string]interface{})
 	var authtype string
 	var authtoken string
 
-	req, err := http.NewRequest("POST", fmt.Sprintf("%s/sys/v1/session/auth", endpoint), nil)
+	req, err := retryablehttp.NewRequest("POST", fmt.Sprintf("%s/sys/v1/session/auth", endpoint), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -91,7 +128,7 @@ func NewAPIClient(endpoint string, port int, username string, password string, a
 		return nil, err
 	}
 
-	req, err = http.NewRequest("POST", fmt.Sprintf("%s/sys/v1/session/select_account", endpoint), bytes.NewBuffer(reqBody))
+	req, err = retryablehttp.NewRequest("POST", fmt.Sprintf("%s/sys/v1/session/select_account", endpoint), bytes.NewBuffer(reqBody))
 	if err != nil {
 		return nil, err
 	}
@@ -139,7 +176,7 @@ func NewAPIClient(endpoint string, port int, username string, password string, a
 					return nil, err
 				}
 
-				req, err := http.NewRequest("POST", fmt.Sprintf("%s/sys/v1/session/aws_temporary_credentials", endpoint), bytes.NewBuffer(reqBody))
+				req, err := retryablehttp.NewRequest("POST", fmt.Sprintf("%s/sys/v1/session/aws_temporary_credentials", endpoint), bytes.NewBuffer(reqBody))
 				if err != nil {
 					return nil, err
 				}
@@ -173,6 +210,7 @@ func NewAPIClient(endpoint string, port int, username string, password string, a
 		aws_region:   aws_region,
 		azure_region: azure_region,
 		insecure:     insecure,
+		timeout:      timeout,
 	}
 	return &newclient, nil
 }
@@ -184,9 +222,13 @@ func (obj *api_client) APICallBody(method string, url string, body map[string]in
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: obj.insecure},
 	}
 
-	client := &http.Client{Timeout: 600 * time.Second, Transport: tr}
+	rl := rate.NewLimiter(rate.Every(1*time.Second), 5) // 5 requests in every second
+	client := NewClient(rl)
+	client.client.HTTPClient.Transport = tr
+	client.client.HTTPClient.Timeout = time.Duration(obj.timeout) * time.Second
+
 	reqBody, _ := json.Marshal(body)
-	req, err := http.NewRequest(method, fmt.Sprintf("%s/%s", obj.endpoint, url), bytes.NewBuffer(reqBody))
+	req, err := retryablehttp.NewRequest(method, fmt.Sprintf("%s/%s", obj.endpoint, url), bytes.NewBuffer(reqBody))
 	req.Close = true
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
@@ -262,9 +304,12 @@ func (obj *api_client) APICall(method string, url string) (map[string]interface{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: obj.insecure},
 	}
 
-	client := &http.Client{Timeout: 600 * time.Second, Transport: tr}
+	rl := rate.NewLimiter(rate.Every(1*time.Second), 5) // 5 requests in every second
+	client := NewClient(rl)
+	client.client.HTTPClient.Transport = tr
+	client.client.HTTPClient.Timeout = time.Duration(obj.timeout) * time.Second
 
-	req, err := http.NewRequest(method, fmt.Sprintf("%s/%s", obj.endpoint, url), nil)
+	req, err := retryablehttp.NewRequest(method, fmt.Sprintf("%s/%s", obj.endpoint, url), nil)
 	req.Close = true
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
@@ -348,8 +393,13 @@ func (obj *api_client) APICallList(method string, url string) ([]interface{}, di
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: obj.insecure},
 	}
 
-	client := &http.Client{Timeout: 600 * time.Second, Transport: tr}
-	req, err := http.NewRequest(method, fmt.Sprintf("%s/%s", obj.endpoint, url), nil)
+	rl := rate.NewLimiter(rate.Every(1*time.Second), 5) // 5 requests in every second
+	client := NewClient(rl)
+	client.client.HTTPClient.Transport = tr
+	client.client.HTTPClient.Timeout = time.Duration(obj.timeout) * time.Second
+
+	req, err := retryablehttp.NewRequest(method, fmt.Sprintf("%s/%s", obj.endpoint, url), nil)
+	req.Close = true
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
@@ -397,8 +447,13 @@ func (obj *api_client) FindPluginId(plugin_name string) ([]byte, diag.Diagnostic
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: obj.insecure},
 	}
 
-	client := &http.Client{Timeout: 60 * time.Second, Transport: tr}
-	req, err := http.NewRequest("GET", fmt.Sprintf("%s/sys/v1/plugins", obj.endpoint), nil)
+	rl := rate.NewLimiter(rate.Every(1*time.Second), 5) // 5 requests in every second
+	client := NewClient(rl)
+	client.client.HTTPClient.Transport = tr
+	client.client.HTTPClient.Timeout = time.Duration(obj.timeout) * time.Second
+
+	req, err := retryablehttp.NewRequest("GET", fmt.Sprintf("%s/sys/v1/plugins", obj.endpoint), nil)
+	req.Close = true
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
