@@ -107,7 +107,7 @@ func resourceCreateApp(ctx context.Context, d *schema.ResourceData, m interface{
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "[DSM SDK] Unable to call DSM provider API client",
-			Detail:   fmt.Sprintf("[E]: API: POST sys/v1/apps: %s", err),
+			Detail:   fmt.Sprintf("[E]: API: POST sys/v1/apps: %v", err),
 		})
 		return diags
 	}
@@ -125,7 +125,7 @@ func resourceReadApp(ctx context.Context, d *schema.ResourceData, m interface{})
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "[DSM SDK] Unable to call DSM provider API client",
-			Detail:   fmt.Sprintf("[E]: API: GET sys/v1/apps: %s", err),
+			Detail:   fmt.Sprintf("[E]: API: GET sys/v1/apps: %v", err),
 		})
 		return diags
 	}
@@ -156,7 +156,7 @@ func resourceReadApp(ctx context.Context, d *schema.ResourceData, m interface{})
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "[DSM SDK] Unable to call DSM provider API client",
-			Detail:   fmt.Sprintf("[E]: API: GET sys/v1/apps/-/credential: %s", err),
+			Detail:   fmt.Sprintf("[E]: API: GET sys/v1/apps/-/credential: %v", err),
 		})
 		return diags
 	}
@@ -185,7 +185,7 @@ func resourceUpdateApp(ctx context.Context, d *schema.ResourceData, m interface{
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "[DSM SDK] Unable to call DSM provider API client",
-				Detail:   fmt.Sprintf("[E]: API: GET sys/v1/apps/-/credential: %s", err),
+				Detail:   fmt.Sprintf("[E]: API: GET sys/v1/apps/-/credential: %v", err),
 			})
 			return diags
 		}
@@ -203,7 +203,7 @@ func resourceDeleteApp(ctx context.Context, d *schema.ResourceData, m interface{
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "[DSM SDK] Unable to call DSM provider API client",
-			Detail:   fmt.Sprintf("[E]: API: DELETE sys/v1/apps: %s", err),
+			Detail:   fmt.Sprintf("[E]: API: DELETE sys/v1/apps: %v", err),
 		})
 		return diags
 	}

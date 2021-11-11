@@ -111,7 +111,7 @@ func resourceCreateAWSGroup(ctx context.Context, d *schema.ResourceData, m inter
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "[DSM SDK] Unable to call DSM provider API client",
-			Detail:   fmt.Sprintf("[E]: API: POST sys/v1/groups: %s", err),
+			Detail:   fmt.Sprintf("[E]: API: POST sys/v1/groups: %v", err),
 		})
 		return diags
 	}
@@ -132,7 +132,7 @@ func resourceReadAWSGroup(ctx context.Context, d *schema.ResourceData, m interfa
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "[DSM SDK] Unable to call DSM provider API client",
-				Detail:   fmt.Sprintf("[E]: API: GET sys/v1/groups: %s", err),
+				Detail:   fmt.Sprintf("[E]: API: GET sys/v1/groups: %v", err),
 			})
 			return diags
 		} else {
@@ -197,7 +197,7 @@ func resourceDeleteAWSGroup(ctx context.Context, d *schema.ResourceData, m inter
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "[DSM SDK] Unable to call DSM provider API client",
-			Detail:   fmt.Sprintf("[E]: API: DELETE sys/v1/groups: %s", err),
+			Detail:   fmt.Sprintf("[E]: API: DELETE sys/v1/groups: %v", err),
 		})
 		return diags
 	} else {

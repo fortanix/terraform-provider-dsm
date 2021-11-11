@@ -69,7 +69,7 @@ func dataSourceSecretRead(ctx context.Context, d *schema.ResourceData, m interfa
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "[DSM SDK] Unable to call DSM provider API client",
-			Detail:   fmt.Sprintf("[E]: API: POST crypto/v1/keys/export: %s", err),
+			Detail:   fmt.Sprintf("[E]: API: POST crypto/v1/keys/export: %v", err),
 		})
 		return diags
 	}

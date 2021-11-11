@@ -21,8 +21,9 @@ func Provider() *schema.Provider {
 	return &schema.Provider{
 		Schema: map[string]*schema.Schema{
 			"endpoint": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				DefaultFunc: schema.EnvDefaultFunc("DSM_ENDPOINT", ""),
+				Required:    true,
 			},
 			"port": {
 				Type:     schema.TypeInt,
@@ -34,15 +35,15 @@ func Provider() *schema.Provider {
 				Default:  false,
 			},
 			"username": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "",
+				Type:        schema.TypeString,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("DSM_USERNAME", ""),
 			},
 			"password": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				Sensitive: true,
-				Default:   "",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Sensitive:   true,
+				DefaultFunc: schema.EnvDefaultFunc("DSM_PASSWORD", ""),
 			},
 			"api_key": {
 				Type:      schema.TypeString,
@@ -51,8 +52,9 @@ func Provider() *schema.Provider {
 				Default:   "",
 			},
 			"acct_id": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				DefaultFunc: schema.EnvDefaultFunc("DSM_ACCT_ID", ""),
+				Required:    true,
 			},
 			"aws_profile": {
 				Type:     schema.TypeString,

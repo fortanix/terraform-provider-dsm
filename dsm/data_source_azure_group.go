@@ -87,7 +87,7 @@ func dataSourceAzureGroupRead(ctx context.Context, d *schema.ResourceData, m int
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "[DSM SDK] Unable to call DSM provider API client",
-			Detail:   fmt.Sprintf("[E]: API: GET sys/v1/groups: %s", err),
+			Detail:   fmt.Sprintf("[E]: API: GET sys/v1/groups: %v", err),
 		})
 		return diags
 	}
@@ -153,7 +153,7 @@ func dataSourceAzureGroupRead(ctx context.Context, d *schema.ResourceData, m int
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "[DSM SDK] Unable to call DSM provider API client",
-				Detail:   fmt.Sprintf("[E]: API: POST sys/v1/groups/-/hmg/check: %s", err),
+				Detail:   fmt.Sprintf("[E]: API: POST sys/v1/groups/-/hmg/check: %v", err),
 			})
 			return diags
 		}
@@ -163,7 +163,7 @@ func dataSourceAzureGroupRead(ctx context.Context, d *schema.ResourceData, m int
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "[DSM SDK] Unable to call DSM provider API client",
-				Detail:   fmt.Sprintf("[E]: API: POST sys/v1/groups/-/hmg/scan: %s", err),
+				Detail:   fmt.Sprintf("[E]: API: POST sys/v1/groups/-/hmg/scan: %v", err),
 			})
 			return diags
 		}
