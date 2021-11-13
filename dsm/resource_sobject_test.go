@@ -10,44 +10,21 @@ import (
 
 var (
 	resourceSobject_createConfig = `resource "dsm_group" "example_group" {
-  		name = "example_group"
+		name = "example_group"
 	}
-
+  
 	resource "dsm_sobject" "example_sobject" {
-		name     = "example_sobject"
-		group_id = "${dsm_group.example_group.group_id}"
+		name = "example_sobject"
+    	group_id = "${dsm_group.example_group.group_id}"
 		key_size = 256
-		key_ops = [
-			"ENCRYPT",
-			"DECRYPT",
-	  	    "WRAPKEY",
-	 	    "UNWRAPKEY",
-			"DERIVEKEY",
-			"MACGENERATE",
-			"MACVERIFY",
-			"APPMANAGEABLE"
-		]
 		obj_type = "AES"
 	}`
-
-	resourceSobject_updateConfig = `
-
-    resource "dsm_sobject" "example_sobject" {
-		name     = "example_sobject_updated"
-	  	group_id = "${dsm_group.example_group.group_id}"
-	 	key_size = 256
-	  	key_ops = [
-			"ENCRYPT",
-		  	"DECRYPT",
-			"WRAPKEY",
-		   	"UNWRAPKEY",
-		  	"DERIVEKEY",
-		  	"MACGENERATE",
-		  	"MACVERIFY",
-		  	"APPMANAGEABLE"
-	  	]
-	  	obj_type = "AES"
-  	}`
+	resourceSobject_updateConfig = `resource "dsm_sobject" "example_sobject" {
+		name = "example_sobject_updated"
+    	group_id = "${dsm_group.example_group.group_id}"
+		key_size = 256
+		obj_type = "AES"
+	}`
 )
 
 func TestAccResourceSobject(t *testing.T) {

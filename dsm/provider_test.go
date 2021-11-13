@@ -46,6 +46,22 @@ func testAccPreCheckAws(t *testing.T) {
 	}
 }
 
+func testAccPreCheckGcp(t *testing.T) {
+	for _, env := range []string{"GOOGLE_SERVICE_ACCOUNT"} {
+		if v := os.Getenv(env); v == "" {
+			t.Fatalf("%s environment variable must be set for GCP EKM tests", env)
+		}
+	}
+}
+
+func testAccPreCheckAzure(t *testing.T) {
+	for _, env := range []string{"AZURE_TENANT_ID", "AZURE_SECRET_KEY", "AZURE_SUBSCRIPTION_ID", "AZURE_CLIENT_ID", "AZURE_URL"} {
+		if v := os.Getenv(env); v == "" {
+			t.Fatalf("%s environment variable must be set for Azure Key Vault tests", env)
+		}
+	}
+}
+
 func TestProvider_impl(t *testing.T) {
 	var (
 		_ *schema.Provider = Provider()

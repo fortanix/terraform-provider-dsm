@@ -9,13 +9,13 @@ import (
 )
 
 var (
-	resourcAwsGroup_createConfig = `resource "dsm_aws_group" "example_aws_group" {
+	resourceAwsGroup_createConfig = `resource "dsm_aws_group" "example_aws_group" {
   		name = "example_aws_group"
   		description = "AWs Group Test"
   		access_key = "test_key"
   		secret_key = "test_secret"
 	}`
-	resourcAwsGroup_updateConfig = `resource "dsm_aws_group" "example_aws_group" {
+	resourceAwsGroup_updateConfig = `resource "dsm_aws_group" "example_aws_group" {
   		name = "example_aws_group_updated"
   		description = "AWS Group Test Update"
 	}`
@@ -29,7 +29,7 @@ func TestAccResourceAwsGroup(t *testing.T) {
 		CheckDestroy: testAccCheckDestroyAwsGroup,
 		Steps: []resource.TestStep{
 			{
-				Config:             resourcAwsGroup_createConfig,
+				Config:             resourceAwsGroup_createConfig,
 				ExpectNonEmptyPlan: true,
 			},
 		},

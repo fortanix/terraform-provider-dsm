@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	resourcAwsSobject_createConfig = `resource "dsm_group" "example_group" {
+	resourceAwsSobject_createConfig = `resource "dsm_group" "example_group" {
 		name = "example_group"
 	}
 
@@ -62,7 +62,7 @@ func TestAccResourceAwsSobject(t *testing.T) {
 		CheckDestroy: testAccCheckDestroyAwsSobject,
 		Steps: []resource.TestStep{
 			{
-				Config:             fmt.Sprintf(resourcAwsSobject_createConfig, aws_access_key, aws_secret_key),
+				Config:             fmt.Sprintf(resourceAwsSobject_createConfig, aws_access_key, aws_secret_key),
 				ExpectNonEmptyPlan: true,
 			},
 		},
