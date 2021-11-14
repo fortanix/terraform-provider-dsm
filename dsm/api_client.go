@@ -100,8 +100,10 @@ func NewAPIClient(endpoint string, port int, username string, password string, a
 		authtype = "Basic "
 		authtoken = api_key
 		req.Header.Add("Authorization", authtype+authtoken)
-	} else {
+	} else if len(username) > 0 && len(password) > 0 {
 		req.SetBasicAuth(username, password)
+	} else {
+		return nil, fmt.Errorf("Unauthorized Access to DSM")
 	}
 
 	r, err := client.Do(req)
