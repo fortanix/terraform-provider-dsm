@@ -2,7 +2,7 @@
 // Terraform Provider - DSM: resource: aws security object
 // **********
 //       - Author:    fyoo at fortanix dot com
-//       - Version:   0.5.1
+//       - Version:   0.5.8
 //       - Date:      27/11/2020
 // **********
 
@@ -91,6 +91,13 @@ func resourceAWSSobject() *schema.Resource {
 				},
 			},
 			"custom_metadata": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"aws_tags": {
 				Type:     schema.TypeMap,
 				Optional: true,
 				Elem: &schema.Schema{
@@ -191,6 +198,16 @@ func resourceCreateAWSSobject(ctx context.Context, d *schema.ResourceData, m int
 
 	if err := d.Get("custom_metadata").(map[string]interface{}); len(err) > 0 {
 		security_object["custom_metadata"] = d.Get("custom_metadata")
+	}
+
+	// FYOO: Get tags
+	if err := d.Get("aws_tags").(map[string]interface{}); len(err) > 0 {
+		if _, cmExists := security_object["custom_metadata"]; !cmExists {
+			security_object["custom_metadata"] = make(map[string]interface{})
+		}
+		for aws_tags_k := range d.Get("aws_tags").(map[string]interface{}) {
+			security_object["custom_metadata"].(map[string]interface{})[(fmt.Sprintf("aws-tag-%s", aws_tags_k))] = d.Get("aws_tags").(map[string]interface{})[aws_tags_k]
+		}
 	}
 
 	if err := d.Get("rotate").(string); len(err) > 0 {
@@ -379,6 +396,18 @@ func resourceUpdateAWSSobject(ctx context.Context, d *schema.ResourceData, m int
 			for k := range d.Get("custom_metadata").(map[string]interface{}) {
 				if strings.HasPrefix(k, "aws-tag-") {
 					update_aws_metadata["custom_metadata"].(map[string]interface{})[k] = d.Get("custom_metadata").(map[string]interface{})[k]
+				}
+			}
+
+			// FYOO: Get tags
+			if d.HasChange("aws_tags") {
+				if err := d.Get("aws_tags").(map[string]interface{}); len(err) > 0 {
+					if _, cmExists := update_aws_metadata["custom_metadata"]; !cmExists {
+						update_aws_metadata["custom_metadata"] = make(map[string]interface{})
+					}
+					for aws_tags_k := range d.Get("aws_tags").(map[string]interface{}) {
+						update_aws_metadata["custom_metadata"].(map[string]interface{})[(fmt.Sprintf("aws-tag-%s", aws_tags_k))] = d.Get("aws_tags").(map[string]interface{})[aws_tags_k]
+					}
 				}
 			}
 
