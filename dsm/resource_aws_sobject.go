@@ -2,7 +2,7 @@
 // Terraform Provider - DSM: resource: aws security object
 // **********
 //       - Author:    fyoo at fortanix dot com
-//       - Version:   0.5.1
+//       - Version:   0.5.8
 //       - Date:      27/11/2020
 // **********
 
@@ -92,6 +92,13 @@ func resourceAWSSobject() *schema.Resource {
 			},
 			"custom_metadata": {
 				Type:     schema.TypeMap,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"aws_tags": {
+				Type: schema.TypeMap,
 				Optional: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
@@ -191,6 +198,16 @@ func resourceCreateAWSSobject(ctx context.Context, d *schema.ResourceData, m int
 
 	if err := d.Get("custom_metadata").(map[string]interface{}); len(err) > 0 {
 		security_object["custom_metadata"] = d.Get("custom_metadata")
+	}
+
+	// FYOO: Get tags
+	if err := d.Get("aws_tags").(map[string]interface{}); len(err) > 0 {
+		if _, cmExists := security_object["custom_metadata"]; !cmExists {
+			security_object["custom_metadata"] = make(map[string]interface{})
+		}
+		for aws_tags_k := range d.Get("aws_tags").(map[string]interface{}) {
+			security_object["custom_metadata"].(map[string]interface{})[(fmt.Sprintf("aws-tag-%s", aws_tags_k))] = d.Get("aws_tags").(map[string]interface{})[aws_tags_k]
+		}
 	}
 
 	if err := d.Get("rotate").(string); len(err) > 0 {
