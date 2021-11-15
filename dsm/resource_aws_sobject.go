@@ -98,7 +98,7 @@ func resourceAWSSobject() *schema.Resource {
 				},
 			},
 			"aws_tags": {
-				Type: schema.TypeMap,
+				Type:     schema.TypeMap,
 				Optional: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
@@ -396,6 +396,18 @@ func resourceUpdateAWSSobject(ctx context.Context, d *schema.ResourceData, m int
 			for k := range d.Get("custom_metadata").(map[string]interface{}) {
 				if strings.HasPrefix(k, "aws-tag-") {
 					update_aws_metadata["custom_metadata"].(map[string]interface{})[k] = d.Get("custom_metadata").(map[string]interface{})[k]
+				}
+			}
+
+			// FYOO: Get tags
+			if d.HasChange("aws_tags") {
+				if err := d.Get("aws_tags").(map[string]interface{}); len(err) > 0 {
+					if _, cmExists := update_aws_metadata["custom_metadata"]; !cmExists {
+						update_aws_metadata["custom_metadata"] = make(map[string]interface{})
+					}
+					for aws_tags_k := range d.Get("aws_tags").(map[string]interface{}) {
+						update_aws_metadata["custom_metadata"].(map[string]interface{})[(fmt.Sprintf("aws-tag-%s", aws_tags_k))] = d.Get("aws_tags").(map[string]interface{})[aws_tags_k]
+					}
 				}
 			}
 
