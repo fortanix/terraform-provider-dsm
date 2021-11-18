@@ -15,13 +15,13 @@ var (
   
 	resource "dsm_sobject" "example_sobject" {
 		name = "example_sobject"
-    	group_id = "${dsm_group.example_group.group_id}"
+    		group_id = "${dsm_group.example_group.group_id}"
 		key_size = 256
 		obj_type = "AES"
 	}`
 	resourceSobject_updateConfig = `resource "dsm_sobject" "example_sobject" {
 		name = "example_sobject_updated"
-    	group_id = "${dsm_group.example_group.group_id}"
+    		group_id = "${dsm_group.example_group.group_id}"
 		key_size = 256
 		obj_type = "AES"
 	}`

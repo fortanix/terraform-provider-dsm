@@ -15,11 +15,11 @@ var (
   
 	resource "dsm_app" "example_app" {
 		name = "example_app"
-    	default_group = "${dsm_group.example_group.group_id}"
+	    	default_group = "${dsm_group.example_group.group_id}"
 	}`
 	resourceApp_updateConfig = `resource "dsm_app" "example_app {
 		name = "example_app_updated"
-    	default_group = "${dsm_group.example_group.group_id}"
+    		default_group = "${dsm_group.example_group.group_id}"
 	}`
 )
 

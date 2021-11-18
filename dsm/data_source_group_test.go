@@ -4,7 +4,6 @@ package dsm
 
 import (
 	"testing"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
@@ -12,6 +11,7 @@ var (
 	dataGroup_createConfig = `resource "dsm_group" "example_group" {
   		name = "example_group"
 	}
+
 	data "dsm_group" "example_group" {
 		name = "${dsm_group.example_group.name}"
 	}`

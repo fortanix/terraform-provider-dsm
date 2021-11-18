@@ -22,8 +22,8 @@ var (
 		key_ops = [
 			"ENCRYPT",
 			"DECRYPT",
-	  	    "WRAPKEY",
-	 	    "UNWRAPKEY",
+	  	        "WRAPKEY",
+                        "UNWRAPKEY",
 			"DERIVEKEY",
 			"MACGENERATE",
 			"MACVERIFY",
@@ -40,6 +40,7 @@ var (
 		access_key = "%s"
 		secret_key = "%s"
   	}
+
 	resource "dsm_aws_sobject" "example_aws_soject" {
 		name     = "example_aws_sobject"
 		group_id = "${dsm_aws_group.example_aws_group.group_id}"

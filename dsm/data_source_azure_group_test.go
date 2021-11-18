@@ -11,7 +11,7 @@ import (
 
 var (
 	dataAzureGroup_createConfig = `resource "dsm_azure_group" "example_azure_group" {
-		ame = "example_azure_group"
+		name = "example_azure_group"
   		description = "Azure Group Test"
   		tenant_id = "%s"
   		secret_key = "%s"

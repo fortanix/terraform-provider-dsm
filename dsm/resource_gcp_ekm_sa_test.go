@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"os"
 	"testing"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -18,7 +17,7 @@ var (
   
 	resource "dsm_gcp_ekm_sa" "example_gcp_ekm_sa" {
 		name = "%s"
-    	default_group = "${dsm_group.example_group.group_id}"
+    		default_group = "${dsm_group.example_group.group_id}"
 	}`
 )
 
