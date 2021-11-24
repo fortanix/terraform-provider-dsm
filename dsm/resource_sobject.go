@@ -191,7 +191,7 @@ func createSO(ctx context.Context, d *schema.ResourceData, m interface{}) diag.D
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "[DSM SDK] Unable to call DSM provider API client",
-			Detail:   fmt.Sprintf("[E]: API: POST %s: %s", endpoint, err),
+			Detail:   fmt.Sprintf("[E]: API: POST %s: %v", endpoint, err),
 		})
 		return diags
 	}
@@ -219,7 +219,7 @@ func resourceCreateSobject(ctx context.Context, d *schema.ResourceData, m interf
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "[DSM SDK] Unable to call DSM provider API client",
-			Detail:   fmt.Sprintf("[E]: API: GET crypto/v1/keys: %s", err),
+			Detail:   fmt.Sprintf("[E]: API: GET crypto/v1/keys: %v", err),
 		})
 		return diags
 	}
@@ -239,7 +239,7 @@ func resourceReadSobject(ctx context.Context, d *schema.ResourceData, m interfac
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "[DSM SDK] Unable to call DSM provider API client",
-				Detail:   fmt.Sprintf("[E]: API: GET crypto/v1/keys: %s", err),
+				Detail:   fmt.Sprintf("[E]: API: GET crypto/v1/keys: %v", err),
 			})
 			return diags
 		}
@@ -366,7 +366,7 @@ func resourceDeleteSobject(ctx context.Context, d *schema.ResourceData, m interf
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "[DSM SDK] Unable to call DSM provider API client",
-			Detail:   fmt.Sprintf("[E]: API: DELETE crypto/v1/keys: %s", err),
+			Detail:   fmt.Sprintf("[E]: API: DELETE crypto/v1/keys: %v", err),
 		})
 		return diags
 	}

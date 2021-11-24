@@ -146,7 +146,7 @@ func resourceCreateAzureSobject(ctx context.Context, d *schema.ResourceData, m i
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "[DSM SDK] Unable to call DSM provider API client",
-			Detail:   fmt.Sprintf("[E]: API: POST crypto/v1/keys/copy: %s", err),
+			Detail:   fmt.Sprintf("[E]: API: POST crypto/v1/keys/copy: %v", err),
 		})
 		return diags
 	}
@@ -167,7 +167,7 @@ func resourceReadAzureSobject(ctx context.Context, d *schema.ResourceData, m int
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "[DSM SDK] Unable to call DSM provider API client",
-				Detail:   fmt.Sprintf("[E]: API: GET crypto/v1/keys: %s", err),
+				Detail:   fmt.Sprintf("[E]: API: GET crypto/v1/keys: %v", err),
 			})
 			return diags
 		}
@@ -302,7 +302,7 @@ func resourceDeleteAzureSobject(ctx context.Context, d *schema.ResourceData, m i
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "[DSM SDK] Unable to call DSM provider API client",
-			Detail:   fmt.Sprintf("[E]: API: DELETE crypto/v1/keys: %s", err),
+			Detail:   fmt.Sprintf("[E]: API: DELETE crypto/v1/keys: %v", err),
 		})
 		return diags
 	}

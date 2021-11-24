@@ -92,7 +92,7 @@ func resourceCreateGcpEkmSa(ctx context.Context, d *schema.ResourceData, m inter
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "[DSM SDK] Unable to call DSM provider API client",
-			Detail:   fmt.Sprintf("[E]: API: POST sys/v1/apps: %s", err),
+			Detail:   fmt.Sprintf("[E]: API: POST sys/v1/apps: %v", err),
 		})
 		return diags
 	}
@@ -113,7 +113,7 @@ func resourceReadGcpEkmSa(ctx context.Context, d *schema.ResourceData, m interfa
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "[DSM SDK] Unable to call DSM provider API client",
-				Detail:   fmt.Sprintf("[E]: API: GET sys/v1/apps: %s", err),
+				Detail:   fmt.Sprintf("[E]: API: GET sys/v1/apps: %v", err),
 			})
 			return diags
 		}
@@ -156,7 +156,7 @@ func resourceDeleteGcpEkmSa(ctx context.Context, d *schema.ResourceData, m inter
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "[DSM SDK] Unable to call DSM provider API client",
-			Detail:   fmt.Sprintf("[E]: API: DELETE sys/v1/apps: %s", err),
+			Detail:   fmt.Sprintf("[E]: API: DELETE sys/v1/apps: %v", err),
 		})
 		return diags
 	}

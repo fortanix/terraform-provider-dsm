@@ -247,13 +247,13 @@ func (obj *api_client) APICallBody(method string, url string, body map[string]in
 				diags = append(diags, diag.Diagnostic{
 					Severity: diag.Error,
 					Summary:  "[DSM SDK]: Unable to call DSM provider API client",
-					Detail:   fmt.Sprintf("[E]: API: %s %s %s: %s", method, url, r.StatusCode, err),
+					Detail:   fmt.Sprintf("[E]: API: %s %s %d: %s", method, url, r.StatusCode, err),
 				})
 			} else {
 				diags = append(diags, diag.Diagnostic{
 					Severity: diag.Error,
 					Summary:  "[DSM SDK]: Unable to call DSM provider API client",
-					Detail:   fmt.Sprintf("[E]: API: %s %s %s: %s", method, url, err),
+					Detail:   fmt.Sprintf("[E]: API: %s %s: %s", method, url, err),
 				})
 			}
 		} else {
@@ -263,7 +263,7 @@ func (obj *api_client) APICallBody(method string, url string, body map[string]in
 				diags = append(diags, diag.Diagnostic{
 					Severity: diag.Error,
 					Summary:  "[DSM SDK]: Unable to read DSM provider API response",
-					Detail:   fmt.Sprintf("[E]: API: %s %s %s: %s", method, url, r.StatusCode, err),
+					Detail:   fmt.Sprintf("[E]: API: %s %s %d: %s", method, url, r.StatusCode, err),
 				})
 			} else {
 				resp := make(map[string]interface{})
@@ -274,13 +274,13 @@ func (obj *api_client) APICallBody(method string, url string, body map[string]in
 						diags = append(diags, diag.Diagnostic{
 							Severity: diag.Error,
 							Summary:  "[DSM SDK]: Call DSM provider API returned non-JSON",
-							Detail:   fmt.Sprintf("[E]: API: %s %s %s: %s", method, url, r.StatusCode, bodyString),
+							Detail:   fmt.Sprintf("[E]: API: %s %s %d: %s", method, url, r.StatusCode, bodyString),
 						})
 					} else {
 						diags = append(diags, diag.Diagnostic{
 							Severity: diag.Error,
 							Summary:  "[DSM SDK]: Call DSM provider API returned error",
-							Detail:   fmt.Sprintf("[E]: API: %s %s %s: %s", method, url, r.StatusCode, resp),
+							Detail:   fmt.Sprintf("[E]: API: %s %s %d: %s", method, url, r.StatusCode, resp),
 						})
 					}
 				} else {
@@ -341,7 +341,7 @@ func (obj *api_client) APICall(method string, url string) (map[string]interface{
 					diags = append(diags, diag.Diagnostic{
 						Severity: diag.Error,
 						Summary:  "[DSM SDK]: DSM provider API call failed",
-						Detail:   fmt.Sprintf("[E]: API: %s %s: %s", method, url, r.StatusCode),
+						Detail:   fmt.Sprintf("[E]: API: %s %s: %d", method, url, r.StatusCode),
 					})
 					return nil, r.StatusCode, diags
 				}
@@ -352,7 +352,7 @@ func (obj *api_client) APICall(method string, url string) (map[string]interface{
 				diags = append(diags, diag.Diagnostic{
 					Severity: diag.Error,
 					Summary:  "[DSM SDK]: Unable to read DSM provider API response",
-					Detail:   fmt.Sprintf("[E]: API: %s %s %s: %s", method, url, r.StatusCode, err),
+					Detail:   fmt.Sprintf("[E]: API: %s %s %d: %s", method, url, r.StatusCode, err),
 				})
 			} else {
 				resp := make(map[string]interface{})
@@ -363,7 +363,7 @@ func (obj *api_client) APICall(method string, url string) (map[string]interface{
 						diags = append(diags, diag.Diagnostic{
 							Severity: diag.Error,
 							Summary:  "[DSM SDK]: Call DSM provider API returned non-JSON",
-							Detail:   fmt.Sprintf("[E]: API: %s %s %s: %s", method, url, r.StatusCode, bodyString),
+							Detail:   fmt.Sprintf("[E]: API: %s %s %d: %s", method, url, r.StatusCode, bodyString),
 						})
 					} else {
 						diags = append(diags, diag.Diagnostic{
