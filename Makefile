@@ -1,7 +1,7 @@
 TEST?=$$(go list ./... | grep -v 'vendor')
 GOFMT_FILES?=$$(find . -name '*.go' |grep -v vendor)
 HOSTNAME=fortanix.com
-NAMESPACE=fyoo
+NAMESPACE=fortanix
 NAME=dsm
 BINARY=terraform-provider-${NAME}
 VERSION=0.5.9
