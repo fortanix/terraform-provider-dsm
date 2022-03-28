@@ -1,4 +1,6 @@
 ChangeLog:
+0.5.10:
+ - Moved AWS rotation to rekey endpoint
 0.5.7:
 - using "github.com/hashicorp/go-retryablehttp" as wrapper for http client
 - introduce rate limiting from client side
