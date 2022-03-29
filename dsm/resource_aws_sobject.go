@@ -151,7 +151,7 @@ func resourceAWSSobject() *schema.Resource {
 			"rotate": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validation.StringInSlice([]string{"DSM", "ALL"}, true),
+				ValidateFunc: validation.StringInSlice([]string{"DSM", "AWS"}, true),
 			},
 			"rotate_from": {
 				Type:     schema.TypeString,
@@ -171,10 +171,13 @@ func resourceCreateAWSSobject(ctx context.Context, d *schema.ResourceData, m int
 
 	if rotate := d.Get("rotate").(string); len(rotate) > 0 {
 		if rotate_from := d.Get("rotate_from").(string); len(rotate_from) <= 0 {
+			if rotate == "AWS" {
+				endpoint = "crypto/v1/keys/rekey"
+			}
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "[DSM SDK] Unable to call DSM provider API client",
-				Detail:   "[E]: API: GET crypto/v1/keys/rekey: 'rotate_from' missing",
+				Detail:   fmt.Sprintf("[E]: API: POST %s: 'rotate_from' missing", endpoint),
 			})
 			return diags
 		}
@@ -213,7 +216,9 @@ func resourceCreateAWSSobject(ctx context.Context, d *schema.ResourceData, m int
 
 	if rotate := d.Get("rotate").(string); len(rotate) > 0 {
 		security_object["name"] = d.Get("rotate_from").(string)
-		endpoint = "crypto/v1/keys/rekey"
+		if rotate == "AWS" {
+			endpoint = "crypto/v1/keys/rekey"
+		}
 	}
 
 	req, err := m.(*api_client).APICallBody("POST", endpoint, security_object)
