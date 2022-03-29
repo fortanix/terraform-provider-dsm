@@ -167,13 +167,14 @@ func resourceAWSSobject() *schema.Resource {
 // [C]: Create AWS Security Object
 func resourceCreateAWSSobject(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	endpoint := "crypto/v1/keys/copy"
 
 	if rotate := d.Get("rotate").(string); len(rotate) > 0 {
 		if rotate_from := d.Get("rotate_from").(string); len(rotate_from) <= 0 {
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "[DSM SDK] Unable to call DSM provider API client",
-				Detail:   "[E]: API: GET crypto/v1/keys/copy: 'rotate_from' missing",
+				Detail:   "[E]: API: GET crypto/v1/keys/rekey: 'rotate_from' missing",
 			})
 			return diags
 		}
@@ -210,16 +211,17 @@ func resourceCreateAWSSobject(ctx context.Context, d *schema.ResourceData, m int
 		}
 	}
 
-	if err := d.Get("rotate").(string); len(err) > 0 {
+	if rotate := d.Get("rotate").(string); len(rotate) > 0 {
 		security_object["name"] = d.Get("rotate_from").(string)
+		endpoint = "crypto/v1/keys/rekey"
 	}
 
-	req, err := m.(*api_client).APICallBody("POST", "crypto/v1/keys/copy", security_object)
+	req, err := m.(*api_client).APICallBody("POST", endpoint, security_object)
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "[DSM SDK] Unable to call DSM provider API client",
-			Detail:   fmt.Sprintf("[E]: API: POST crypto/v1/keys/copy: %v", err),
+			Detail:   fmt.Sprintf("[E]: API: POST %s: %v", endpoint, err),
 		})
 		return diags
 	}
