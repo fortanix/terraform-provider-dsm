@@ -211,7 +211,7 @@ func resourceCreateAWSSobject(ctx context.Context, d *schema.ResourceData, m int
 		}
 	}
 
-	if err := d.Get("rotate").(string); len(err) > 0 {
+	if rotate := d.Get("rotate").(string); len(rotate) > 0 {
 		security_object["name"] = d.Get("rotate_from").(string)
 		endpoint = "crypto/v1/keys/rekey"
 	}
@@ -221,7 +221,7 @@ func resourceCreateAWSSobject(ctx context.Context, d *schema.ResourceData, m int
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "[DSM SDK] Unable to call DSM provider API client",
-			Detail:   fmt.Sprintf("[E]: API: %s: %v", endpoint, err),
+			Detail:   fmt.Sprintf("[E]: API: POST %s: %v", endpoint, err),
 		})
 		return diags
 	}
