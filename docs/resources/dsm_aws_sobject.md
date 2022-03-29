@@ -43,8 +43,8 @@ The following arguments are supported in the `dsm_aws_sobject` resource block:
 * _**pending_window\_in\_days (optional)**_: The default value is `7` days, input the value for “`days`” after which the AWS key will be deleted 
 * _**expiry\_date (optional)**_: The security object expiry date in RFC format
 * _**rotate(optional)**_: specify method to use for key rotation 
-  * **DSM** - To rotate from a DSM local key.
-  * **AWS** - To rotate from a AWS key.
+  * **DSM** - To rotate from a DSM local key. The key material of new key will be stored in DSM.
+  * **AWS** - To rotate from a AWS key. The key material of new key will be stored in AWS.
 * _**rotate_from(optional)**_  = Name of the security object to be rotated
 
 * _**custom\_metadata (optional)**_:  Contains metadata about an AWS KMS key
