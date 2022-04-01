@@ -14,7 +14,7 @@
 
 * terraform apply
 
-Note: Varibales used can also be defined in external vars.tf
+Note: Variables used can also be defined in external vars.tf
 
 ```
 terraform {
