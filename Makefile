@@ -4,7 +4,7 @@ HOSTNAME=fortanix.com
 NAMESPACE=fortanix
 NAME=dsm
 BINARY=terraform-provider-${NAME}
-VERSION=0.5.13
+VERSION=0.5.14
 OS_ARCH=darwin_arm64
 
 default: install
@@ -13,7 +13,7 @@ fmt:
 	gofmt -w $(GOFMT_FILES)
 
 build:
-	go build -o ${BINARY}
+	CGO_ENABLED=0 go build -o ${BINARY}
 
 release:
 	mkdir -p ./bin/${VERSION}
