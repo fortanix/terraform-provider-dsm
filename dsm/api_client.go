@@ -79,6 +79,7 @@ func NewAPIClient(endpoint string, port int, username string, password string, a
 	// FIXME: clunky way of creating api_client session
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: insecure},
+		Proxy: http.ProxyFromEnvironment,
 	}
 
 	rl := rate.NewLimiter(rate.Every(1*time.Second), 5) // 5 requests in every second

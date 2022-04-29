@@ -4,7 +4,7 @@ HOSTNAME=fortanix.com
 NAMESPACE=fortanix
 NAME=dsm
 BINARY=terraform-provider-${NAME}
-VERSION=0.5.13
+VERSION=0.5.14
 OS_ARCH=darwin_arm64
 
 default: install
