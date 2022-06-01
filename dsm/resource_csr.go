@@ -1,5 +1,5 @@
 // **********
-// Terraform Provider - DSM: data source: csr
+// Terraform Provider - DSM: resource: csr
 // **********
 //       - Author:    fyoo at fortanix dot com
 //       - Version:   0.5.15
@@ -16,9 +16,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func dataSourceCsr() *schema.Resource {
+// [-] Define Security Object
+func resourceCsr() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceCsrRead,
+		CreateContext: resourceCreateCsr,
+		ReadContext:   resourceReadCsr,
+		UpdateContext: resourceUpdateCsr,
+		DeleteContext: resourceDeleteCsr,
 		Schema: map[string]*schema.Schema{
 			"kid": {
 				Type:     schema.TypeString,
@@ -57,10 +61,14 @@ func dataSourceCsr() *schema.Resource {
 				Computed: true,
 			},
 		},
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 	}
 }
 
-func dataSourceCsrRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+// [C]: Create CSR
+func resourceCreateCsr(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	subject_dn := make(map[string]interface{})
@@ -123,5 +131,21 @@ func dataSourceCsrRead(ctx context.Context, d *schema.ResourceData, m interface{
 	}
 
 	d.SetId(d.Get("id").(string))
+	return resourceReadCsr(ctx, d, m)
+}
+
+// [R]: Read Security Object
+func resourceReadCsr(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	return nil
+}
+
+// [U]: Update Security Object
+func resourceUpdateCsr(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	return nil
+}
+
+// [D]: Delete Security Object
+func resourceDeleteCsr(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	d.SetId("")
 	return nil
 }

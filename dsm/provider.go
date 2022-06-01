@@ -86,12 +86,12 @@ func Provider() *schema.Provider {
 			"dsm_secret":        resourceSecret(),
 			"dsm_group":         resourceGroup(),
 			"dsm_app":           resourceApp(),
+			"dsm_csr":           resourceCsr(),
 			"dsm_gcp_ekm_sa":    resourceGcpEkmSa(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"dsm_aws_group":   dataSourceAWSGroup(),
 			"dsm_azure_group": dataSourceAzureGroup(),
-			"dsm_csr":         dataSourceCsr(),
 			"dsm_secret":      dataSourceSecret(),
 			"dsm_group":       dataSourceGroup(),
 			"dsm_version":     dataSourceVersion(),

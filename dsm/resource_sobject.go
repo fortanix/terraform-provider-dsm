@@ -108,6 +108,7 @@ func resourceSobject() *schema.Resource {
 			"custom_metadata": {
 				Type:     schema.TypeMap,
 				Optional: true,
+				Computed: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
@@ -119,6 +120,7 @@ func resourceSobject() *schema.Resource {
 			"key_ops": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
@@ -131,10 +133,12 @@ func resourceSobject() *schema.Resource {
 			"enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Computed: true,
 			},
 			"state": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"expiry_date": {
 				Type:     schema.TypeString,
@@ -268,6 +272,11 @@ func resourceReadSobject(ctx context.Context, d *schema.ResourceData, m interfac
 		//if err := d.Set("links", req["links"]); err != nil {
 		//	return diag.FromErr(err)
 		//}
+		// FYOO: Fix this later - some wierd reaction to TypeList/TypeMap within TF
+		if err := d.Set("copied_to", req["copied_to"]); err != nil {
+			return diag.FromErr(err)
+		}
+
 		if _, ok := req["links"]; ok {
 			if links := req["links"].(map[string]interface{}); len(links) > 0 {
 				if _, copiedToExists := req["links"].(map[string]interface{})["copiedTo"]; copiedToExists {
