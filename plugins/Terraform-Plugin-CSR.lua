@@ -7,9 +7,9 @@
 --
 -- ```
 -- {
---   "subject_key": "my server key",
---   "cert_lifetime": 86400,
---   "subject_dn": { "CN": "localhost", "OU": "Testing" }
+--     "kid":       dsmsigner.kid,
+--     "hash_alg":  "SHA256",
+--     "data":      base64.StdEncoding.EncodeToString(digest),
 -- }
 -- ```
 
@@ -17,11 +17,14 @@ function check(input)
    if type(input) ~= 'table' then
       return nil, 'invalid input'
    end
-   if not input.subject_dn then
-      return nil, 'must provide subject DN'
+   if not input.kid then
+      return nil, 'must provide the key id'
    end
-   if not input.subject_key then
-      return nil, 'must provide subject key'
+   if not input.hash_alg then
+      return nil, 'must provide the has algorithm'
+   end
+   if not input.data then
+      return nil, 'must provide the digest to sign'
    end
 end
 
@@ -54,17 +57,14 @@ function load_dn(dn)
 end
 
 function run(input)
-   local something_key = assert(Sobject { kid = input.subject_key })
+   local signing_key = assert(Sobject { kid = input.kid })
 
-   local subject_dn = load_dn(input.subject_dn)
+   --local subject_dn = load_dn(input.subject_dn)
    -- log the DN here?
 
-   local csr = Pkcs10Csr.new(something_key.name, subject_dn)
+   --local csr = Pkcs10Csr.new(something_key.name, subject_dn)
 
-   local conv = Blob.from_bytes(csr:to_der())
-   return {
-      value = format_pem(conv:base64(), "CERTIFICATE REQUEST"),
-      kid = something_key.kid,
-      id = tostring(Time.now_insecure()[1])
-   }
+   --local conv = Blob.from_bytes(csr:to_der())
+   local signature = assert(signing_key:sign { data = input.data, hash_alg = input.hash_alg })
+   return signature
 end
