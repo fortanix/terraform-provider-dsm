@@ -65,6 +65,6 @@ function run(input)
    --local csr = Pkcs10Csr.new(something_key.name, subject_dn)
 
    --local conv = Blob.from_bytes(csr:to_der())
-   local signature = assert(signing_key:sign { data = input.data, hash_alg = input.hash_alg })
+   local signature = assert(signing_key:sign { hash = input.data, hash_alg = input.hash_alg })
    return signature
 end

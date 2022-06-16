@@ -18,6 +18,7 @@ import (
 	"encoding/pem"
 	"fmt"
 	"io"
+	"net"
 	"reflect"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -30,14 +31,15 @@ type dsmsigner struct {
 	kid        string
 	api_client *api_client
 
-	Cn    string
-	Ou    string
-	L     string
-	C     string
-	O     string
-	St    string
-	Email string
-	San   string
+	Cn       string
+	Ou       string
+	L        string
+	C        string
+	O        string
+	St       string
+	Email    []string
+	Dnsnames []string
+	Ips      []net.IP
 }
 
 func (dsmsigner *dsmsigner) setProperty(propName string, propValue string) *dsmsigner {
@@ -45,12 +47,15 @@ func (dsmsigner *dsmsigner) setProperty(propName string, propValue string) *dsms
 	return dsmsigner
 }
 
-func NewDSMSigner(kid string, san string, email string, cn string, ou string, l string, c string, o string, st string, api_client *api_client) (*dsmsigner, diag.Diagnostics) {
+func NewDSMSigner(kid string, dnsnames []string, ips []net.IP, email []string, cn string, ou string, l string, c string, o string, st string, api_client *api_client) (*dsmsigner, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	var new_signer = &dsmsigner{
 		kid:        kid,
 		api_client: api_client,
+		Dnsnames:   dnsnames,
+		Ips:        ips,
+		Email:      email,
 	}
 
 	if len(cn) > 0 {
@@ -70,12 +75,6 @@ func NewDSMSigner(kid string, san string, email string, cn string, ou string, l 
 	}
 	if len(o) > 0 {
 		new_signer.setProperty("O", o)
-	}
-	if len(email) > 0 {
-		new_signer.setProperty("Email", email)
-	}
-	if len(san) > 0 {
-		new_signer.setProperty("San", san)
 	}
 
 	return new_signer, diags
@@ -106,33 +105,14 @@ func (dsmsigner *dsmsigner) generate_csr() (string, diag.Diagnostics) {
 
 	rawSubj := subj.ToRDNSequence()
 
-	// need to duplicate unfortunately
-	if dsmsigner.Email != "" {
-		var oidEmailAddress = asn1.ObjectIdentifier{1, 2, 840, 113549, 1, 9, 1}
-
-		rawSubj = append(rawSubj, []pkix.AttributeTypeAndValue{
-			{Type: oidEmailAddress, Value: dsmsigner.Email},
-		})
-	}
-
 	asn1Subj, _ := asn1.Marshal(rawSubj)
+	// FYOO: SAN support
 	template := x509.CertificateRequest{
 		RawSubject:         asn1Subj,
+		DNSNames:           dsmsigner.Dnsnames,
+		EmailAddresses:     dsmsigner.Email,
+		IPAddresses:        dsmsigner.Ips,
 		SignatureAlgorithm: x509.SHA256WithRSA,
-	}
-
-	// need to duplicate unfortunately
-	if dsmsigner.Email != "" {
-		template.EmailAddresses = []string{dsmsigner.Email}
-	}
-
-	// FYOO: SAN support
-	if dsmsigner.San != "" {
-		extSubjectAltName := pkix.Extension{}
-		extSubjectAltName.Id = asn1.ObjectIdentifier{2, 5, 29, 17}
-		extSubjectAltName.Critical = false
-		extSubjectAltName.Value = []byte(dsmsigner.San)
-		template.ExtraExtensions = []pkix.Extension{extSubjectAltName}
 	}
 
 	csrBytes, err := x509.CreateCertificateRequest(rand.Reader, &template, dsmsigner)
@@ -144,7 +124,6 @@ func (dsmsigner *dsmsigner) generate_csr() (string, diag.Diagnostics) {
 		})
 		return "", diags
 	}
-	//pem.Encode(os.Stdout, &pem.Block{Type: "CERTIFICATE REQUEST", Bytes: csrBytes})
 	generated_csr := pem.Block{
 		Type:  "CERTIFICATE REQUEST",
 		Bytes: csrBytes,
