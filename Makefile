@@ -4,16 +4,21 @@ HOSTNAME=fortanix.com
 NAMESPACE=fortanix
 NAME=dsm
 BINARY=terraform-provider-${NAME}
-VERSION=0.5.14
-OS_ARCH=darwin_arm64
+VERSION=0.5.15
+OS=linux
+ARCH=amd64
+OS_ARCH=${OS}_${ARCH}
 
-default: install
+default: build
 
 fmt: 
 	gofmt -w $(GOFMT_FILES)
 
 build:
-	CGO_ENABLED=0 go build -o ${BINARY}
+	CGO_ENABLED=0 GOOS=${OS} GOARCH=${ARCH} go build -o ${BINARY}
+
+podman: build
+	podman build --build-arg FX_TF_VERSION=${VERSION} -t fortanix/fx-tf-test-image:${VERSION} .
 
 release:
 	mkdir -p ./bin/${VERSION}
