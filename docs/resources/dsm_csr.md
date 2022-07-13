@@ -2,15 +2,15 @@
 
 ## dsm\_csrs
 
-Returns the Fortanix DSM cert security object certs from the cluster as a Resource.
+Returns the Fortanix DSM csr sobject from the cluster as a Resource.
 
 ## Usage Reference
 
 ```
 resource "dsm_csr" "sobject" {
     kid   = <sobject_id>
-    cn    = <Common Name for Cert>
-    email = <Email for Cert>    
+    cn    = <Common Name for CSR>
+    email = <Email for CSR>    
 }
 ```
 

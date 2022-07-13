@@ -2,14 +2,14 @@
 
 ## dsm\_csrs
 
-Returns the Fortanix DSM cert sobject object details from the cluster as a Data Source.
+Returns the Fortanix DSM csr sobject details from the cluster as a Data Source.
 
 ## Usage Reference
 
 ```
 data "dsm_csr" "group" {
-    kid = <>
-    cn = <>
+    kid = <sobject_id>
+    cn = <Common Name for CSR>
 }
 ```
 
