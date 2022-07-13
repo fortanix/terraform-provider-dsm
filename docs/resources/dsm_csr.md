@@ -1,16 +1,15 @@
-# dsm\_certs
+# dsm\_csrs
 
-## dsm\_certs
+## dsm\_csrs
 
 Returns the Fortanix DSM cert security object certs from the cluster as a Resource.
 
 ## Usage Reference
 
 ```
-resource "dsm_csrs" "sobject" {
+resource "dsm_csr" "sobject" {
     kid   = <sobject_id>
-    o     = <Company Name for Cert>
-    l     = <Location for Cert>
+    cn    = <Common Name for Cert>
     email = <Email for Cert>    
 }
 ```

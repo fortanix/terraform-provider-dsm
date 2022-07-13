@@ -95,6 +95,7 @@ func Provider() *schema.Provider {
 			"dsm_secret":      dataSourceSecret(),
 			"dsm_group":       dataSourceGroup(),
 			"dsm_version":     dataSourceVersion(),
+			"dsm_csr": 	   dataSourceCsr(),
 		},
 		ConfigureContextFunc: configureProvider,
 	}

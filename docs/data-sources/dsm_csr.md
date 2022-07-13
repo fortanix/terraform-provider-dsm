@@ -7,7 +7,7 @@ Returns the Fortanix DSM cert sobject object details from the cluster as a Data 
 ## Usage Reference
 
 ```
-data "dsm_cert" "group" {
+data "dsm_csr" "group" {
     kid = <>
     cn = <>
 }
