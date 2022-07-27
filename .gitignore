@@ -59,3 +59,4 @@ terraform.tfstate.backup
 .terraform.lock.hcl
 bin
 *.tf
+terraform-provider-dsm

@@ -86,6 +86,7 @@ func Provider() *schema.Provider {
 			"dsm_secret":        resourceSecret(),
 			"dsm_group":         resourceGroup(),
 			"dsm_app":           resourceApp(),
+			"dsm_csr":           resourceCsr(),
 			"dsm_gcp_ekm_sa":    resourceGcpEkmSa(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{

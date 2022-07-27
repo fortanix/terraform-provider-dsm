@@ -108,6 +108,7 @@ func resourceSobject() *schema.Resource {
 			"custom_metadata": {
 				Type:     schema.TypeMap,
 				Optional: true,
+				Computed: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
@@ -119,6 +120,7 @@ func resourceSobject() *schema.Resource {
 			"key_ops": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
@@ -131,10 +133,12 @@ func resourceSobject() *schema.Resource {
 			"enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Computed: true,
 			},
 			"state": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"expiry_date": {
 				Type:     schema.TypeString,
@@ -148,6 +152,17 @@ func resourceSobject() *schema.Resource {
 }
 
 // [-]: Custom Functions
+// contains: Need to validate whether a string exists in a []string
+func contains(s []string, str string) bool {
+	for _, v := range s {
+		if v == str {
+			return true
+		}
+	}
+
+	return false
+}
+
 // createSO: Create Security Object
 func createSO(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
@@ -268,6 +283,11 @@ func resourceReadSobject(ctx context.Context, d *schema.ResourceData, m interfac
 		//if err := d.Set("links", req["links"]); err != nil {
 		//	return diag.FromErr(err)
 		//}
+		// FYOO: Fix this later - some wierd reaction to TypeList/TypeMap within TF
+		if err := d.Set("copied_to", req["copied_to"]); err != nil {
+			return diag.FromErr(err)
+		}
+
 		if _, ok := req["links"]; ok {
 			if links := req["links"].(map[string]interface{}); len(links) > 0 {
 				if _, copiedToExists := req["links"].(map[string]interface{})["copiedTo"]; copiedToExists {
@@ -300,7 +320,32 @@ func resourceReadSobject(ctx context.Context, d *schema.ResourceData, m interfac
 				return diag.FromErr(err)
 			}
 		}
-		if err := d.Set("key_ops", req["key_ops"]); err != nil {
+		// FYOO: Fix TypeList sorting error
+		key_ops := make([]string, len(req["key_ops"].([]interface{})))
+		if err := d.Get("key_ops").([]interface{}); len(err) > 0 {
+			if len(d.Get("key_ops").([]interface{})) == len(req["key_ops"].([]interface{})) {
+				for idx, key_op := range d.Get("key_ops").([]interface{}) {
+					key_ops[idx] = fmt.Sprint(key_op)
+				}
+			} else {
+				req_key_ops := make([]string, len(req["key_ops"].([]interface{})))
+				for idx, key_op := range req["key_ops"].([]interface{}) {
+					req_key_ops[idx] = fmt.Sprint(key_op)
+				}
+				final_idx := 0
+				for _, key_op := range d.Get("key_ops").([]interface{}) {
+					if contains(req_key_ops, fmt.Sprint(key_op)) {
+						key_ops[final_idx] = fmt.Sprint(key_op)
+						final_idx = final_idx + 1
+					}
+				}
+			}
+		} else {
+			for idx, key_op := range req["key_ops"].([]interface{}) {
+				key_ops[idx] = fmt.Sprint(key_op)
+			}
+		}
+		if err := d.Set("key_ops", key_ops); err != nil {
 			return diag.FromErr(err)
 		}
 		if _, ok := req["description"]; ok {
@@ -346,6 +391,8 @@ func resourceReadSobject(ctx context.Context, d *schema.ResourceData, m interfac
 
 // [U]: Terraform Func: resourceUpdateSobject
 func resourceUpdateSobject(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	// already has been replaced so "rotate" and "rotate_from" does not apply
 	_, replacement := d.GetOkExists("replacement")
 	_, replaced := d.GetOkExists("replaced")
@@ -353,6 +400,47 @@ func resourceUpdateSobject(ctx context.Context, d *schema.ResourceData, m interf
 		d.Set("rotate", "")
 		d.Set("rotate_from", "")
 	}
+
+	if d.HasChange("key_ops") {
+		security_object := map[string]interface{}{
+			"kid": d.Get("kid").(string),
+		}
+		security_object["key_ops"] = d.Get("key_ops")
+
+		req, err := m.(*api_client).APICallBody("PATCH", fmt.Sprintf("crypto/v1/keys/%s", d.Id()), security_object)
+		if err != nil {
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "[DSM SDK] Unable to call DSM provider API client",
+				Detail:   fmt.Sprintf("[E]: API: PATCH crypto/v1/keys: %v", err),
+			})
+			return diags
+		}
+
+		key_ops := make([]string, len(req["key_ops"].([]interface{})))
+		if err := d.Get("key_ops").([]interface{}); len(err) > 0 {
+			if len(d.Get("key_ops").([]interface{})) == len(req["key_ops"].([]interface{})) {
+				for idx, key_op := range d.Get("key_ops").([]interface{}) {
+					key_ops[idx] = fmt.Sprint(key_op)
+				}
+			} else {
+				diags = append(diags, diag.Diagnostic{
+					Severity: diag.Error,
+					Summary:  "[DSM SDK] Unable to call DSM provider API client",
+					Detail:   fmt.Sprintf("[E]: API: PATCH crypto/v1/keys: Sync issue from State and DSM"),
+				})
+				return diags
+			}
+		} else {
+			for idx, key_op := range req["key_ops"].([]interface{}) {
+				key_ops[idx] = fmt.Sprint(key_op)
+			}
+		}
+		if err := d.Set("key_ops", key_ops); err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
 	return resourceReadSobject(ctx, d, m)
 }
 

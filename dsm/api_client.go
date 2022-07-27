@@ -79,6 +79,7 @@ func NewAPIClient(endpoint string, port int, username string, password string, a
 	// FIXME: clunky way of creating api_client session
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: insecure},
+		Proxy:           http.ProxyFromEnvironment,
 	}
 
 	rl := rate.NewLimiter(rate.Every(1*time.Second), 5) // 5 requests in every second
@@ -222,6 +223,7 @@ func (obj *api_client) APICallBody(method string, url string, body map[string]in
 	var diags diag.Diagnostics
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: obj.insecure},
+		Proxy:           http.ProxyFromEnvironment,
 	}
 
 	rl := rate.NewLimiter(rate.Every(1*time.Second), 5) // 5 requests in every second
@@ -304,6 +306,7 @@ func (obj *api_client) APICall(method string, url string) (map[string]interface{
 	var diags diag.Diagnostics
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: obj.insecure},
+		Proxy:           http.ProxyFromEnvironment,
 	}
 
 	rl := rate.NewLimiter(rate.Every(1*time.Second), 5) // 5 requests in every second
@@ -393,6 +396,7 @@ func (obj *api_client) APICallList(method string, url string) ([]interface{}, di
 	var diags diag.Diagnostics
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: obj.insecure},
+		Proxy:           http.ProxyFromEnvironment,
 	}
 
 	rl := rate.NewLimiter(rate.Every(1*time.Second), 5) // 5 requests in every second
@@ -447,6 +451,7 @@ func (obj *api_client) FindPluginId(plugin_name string) ([]byte, diag.Diagnostic
 	var diags diag.Diagnostics
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: obj.insecure},
+		Proxy:           http.ProxyFromEnvironment,
 	}
 
 	rl := rate.NewLimiter(rate.Every(1*time.Second), 5) // 5 requests in every second
