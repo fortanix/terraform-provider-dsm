@@ -9,6 +9,7 @@ require (
 	github.com/google/go-cmp v0.5.6 // indirect
 	github.com/hashicorp/go-retryablehttp v0.7.0
 	github.com/hashicorp/go-version v1.3.0 // indirect
+	github.com/hashicorp/terraform-plugin-go v0.3.0 // indirect
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.7.0
 	github.com/keybase/go-crypto v0.0.0-20161004153544-93f5b35093ba // indirect
 	github.com/mattn/go-colorable v0.1.8 // indirect
