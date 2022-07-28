@@ -1,17 +1,17 @@
 // **********
-// Terraform Provider - DSM: data source: group
+// Terraform Provider - DSM: data source: app
 // **********
-//       - Author:    fyoo at fortanix dot com
-//       - Version:   0.3.7
-//       - Date:      05/01/2021
+//       - Author:    aman.ahuja@fortanix.com
+//       - Version:   0.5.16
+//       - Date:      28/07/2022
 // **********
 
 package dsm
 
 import (
 	"context"
-	"fmt"
 	"encoding/base64"
+	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -19,7 +19,7 @@ import (
 
 func dataSourceApp() *schema.Resource {
 	return &schema.Resource{
-		ReadContext:   dataSourceAppRead,
+		ReadContext: dataSourceAppRead,
 		Schema: map[string]*schema.Schema{
 			"app_id": {
 				Type:     schema.TypeString,
@@ -41,10 +41,9 @@ func dataSourceApp() *schema.Resource {
 	}
 }
 
-
 func dataSourceAppRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	
+
 	d.SetId(d.Get("app_id").(string))
 
 	req, _, err := m.(*api_client).APICall("GET", fmt.Sprintf("sys/v1/apps/%s/credential", d.Id()))
