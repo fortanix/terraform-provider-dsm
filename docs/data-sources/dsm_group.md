@@ -14,7 +14,7 @@ data "dsm_group" "group" {
 
 ## Argument Reference
 
-The following arguments are supported in the `dsm_group` resource block:
+The following arguments are supported in the `dsm_group` data block:
 
 * **name**: Group object name
 
