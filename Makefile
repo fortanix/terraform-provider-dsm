@@ -4,7 +4,7 @@ HOSTNAME=fortanix.com
 NAMESPACE=fortanix
 NAME=dsm
 BINARY=terraform-provider-${NAME}
-VERSION=0.5.16
+VERSION=0.5.17
 OS=linux
 ARCH=amd64
 OS_ARCH=${OS}_${ARCH}
@@ -31,7 +31,7 @@ release:
 	mkdir -p ./bin/${VERSION}/darwin_arm64
 	CGO_ENABLED=0 GOOS=linux GOARCH=386 go build -o ./bin/${VERSION}/linux_386/${BINARY}_v${VERSION}
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o ./bin/${VERSION}/linux_amd64/${BINARY}_v${VERSION}
-	CGO_ENABLED=0 GOOS=linux GOARCH=arm go build -o ./bin/${VERSION}/linux_arm/${BINARY}_v${VERSION}
+	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -o ./bin/${VERSION}/linux_arm/${BINARY}_v${VERSION}
 	CGO_ENABLED=0 GOOS=windows GOARCH=386 go build -o ./bin/${VERSION}/windows_386/${BINARY}_v${VERSION}
 	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -o ./bin/${VERSION}/windows_amd64/${BINARY}_v${VERSION}
 	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -o ./bin/${VERSION}/darwin_amd64/${BINARY}_v${VERSION}
