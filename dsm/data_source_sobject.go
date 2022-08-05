@@ -53,6 +53,29 @@ func dataSourceSobject() *schema.Resource {
 				Computed:  true,
 				Sensitive: true,
 			},
+			"key_ops": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"key_size": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"obj_type": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -102,12 +125,47 @@ func dataSourceSobjectRead(ctx context.Context, d *schema.ResourceData, m interf
 			return diag.FromErr(err)
 		}
 	}
+	if err := d.Set("obj_type", req["obj_type"].(string)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("key_size", int(req["key_size"].(float64))); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("enabled", req["enabled"].(bool)); err != nil {
+		return diag.FromErr(err)
+	}
 	if d.Get("export").(bool) {
 		if err := d.Set("value", req["value"].(string)); err != nil {
 			return diag.FromErr(err)
 		}
 	}
-
+	key_ops := make([]string, len(req["key_ops"].([]interface{})))
+	if err := d.Get("key_ops").([]interface{}); len(err) > 0 {
+		if len(d.Get("key_ops").([]interface{})) == len(req["key_ops"].([]interface{})) {
+			for idx, key_op := range d.Get("key_ops").([]interface{}) {
+				key_ops[idx] = fmt.Sprint(key_op)
+			}
+		} else {
+			req_key_ops := make([]string, len(req["key_ops"].([]interface{})))
+			for idx, key_op := range req["key_ops"].([]interface{}) {
+				req_key_ops[idx] = fmt.Sprint(key_op)
+			}
+			final_idx := 0
+			for _, key_op := range d.Get("key_ops").([]interface{}) {
+				if contains(req_key_ops, fmt.Sprint(key_op)) {
+					key_ops[final_idx] = fmt.Sprint(key_op)
+					final_idx = final_idx + 1
+				}
+			}
+		}
+	} else {
+		for idx, key_op := range req["key_ops"].([]interface{}) {
+			key_ops[idx] = fmt.Sprint(key_op)
+		}
+	}
+	if err := d.Set("key_ops", key_ops); err != nil {
+		return diag.FromErr(err)
+	}
 	d.SetId(d.Get("kid").(string))
 	return nil
 }
