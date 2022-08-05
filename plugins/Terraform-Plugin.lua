@@ -98,7 +98,7 @@ if input.operation == "create" then
     else
       new_secret = generate_secret()
     end
-    local sobject_old = assert(Sobject { name = "something5" })
+    local sobject_old = assert(Sobject { name = input.name })
     local new_sobject = assert(sobject_old:rekey { name = input.name, group_id = input.group_id, obj_type = "SECRET", value = Blob.from_bytes(new_secret)})
     local resp_payload = {
         kid      = new_sobject.kid,
