@@ -148,7 +148,7 @@ func resourceCreateSecret(ctx context.Context, d *schema.ResourceData, m interfa
 	if d.Get("rotate").(bool) {
 		plugin_object["operation"] = "rotate"
 		plugin_object["name"] = d.Get("rotate_from").(string)
-		endpoint = "crypto/v1/rekey"
+		endpoint = "crypto/v1/keys/rekey"
 		operation = "POST"
 	}
 
