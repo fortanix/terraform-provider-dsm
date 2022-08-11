@@ -1,5 +1,6 @@
 --
 --
+--
 -- IMPORT: Name "Terraform Plugin"
 --
 --
@@ -77,31 +78,46 @@ function get_date_from_unix(unix_time)
   end
   
 function run(input)
-	if input.operation == "create" then
-    local new_secret = ""
-    if input.value ~= nil then
-      new_secret = input.value
-    else
-	    new_secret = generate_secret()
-    end
-    local new_sobject = assert(Sobject.import { name = input.name, group_id = input.group_id, obj_type = "SECRET", value = Blob.from_bytes(new_secret)})
-    local resp_payload = {
-      kid      = new_sobject.kid,
-      name     = new_sobject.name,
-      group_id = new_sobject.group_id
-		}
-		return resp_payload
+    if input.operation == "create" then
+        local new_secret = ""
+        if input.value ~= nil then
+            new_secret = input.value
+        else
+            new_secret = generate_secret()
+        end
+        local new_sobject = assert(Sobject.import { name = input.name, group_id = input.group_id, obj_type = "SECRET", value = Blob.from_bytes(new_secret)})
+        local resp_payload = {
+            kid      = new_sobject.kid,
+            name     = new_sobject.name,
+            group_id = new_sobject.group_id
+        }
+        return resp_payload
+    elseif input.operation == "rotate" then
+        local new_secret = ""
+        if input.value ~= nil then
+            new_secret = input.value
+        else
+            new_secret = generate_secret()
+        end
+        local sobject_old = assert(Sobject { name = input.name })
+        local new_sobject = assert(sobject_old:rekey { name = input.name, group_id = input.group_id, obj_type = "SECRET", value = Blob.from_bytes(new_secret)})
+        local resp_payload = {
+            kid      = new_sobject.kid,
+            name     = new_sobject.name,
+            group_id = new_sobject.group_id
+        }
+        return resp_payload
     elseif input.operation == "drop" then
-        local sobject, err = Sobject { name = input.kid }
-        if sobject == nil or err ~= nil then
+        local sobject_del, err = Sobject { name = input.kid }
+        if sobject_del == nil or err ~= nil then
             err = "[DSM SDK]: No known security object named " .. input.kid .. "."
             return nil, err
         end
-		assert(sobject:delete())
-		local resp_payload = {}
+        assert(sobject_del:delete())
+        local resp_payload = {}
         return resp_payload
     else
-		err = "[DSM SDK]: No operation was specified"
-		return nil, err
+        err = "[DSM SDK]: No operation was specified"
+        return nil, err
     end
 end

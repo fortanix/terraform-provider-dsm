@@ -33,6 +33,8 @@ The following arguments are supported in the `dsm_secret` resource block:
 * _**value (optional)**_: The secret value
 * _**state (optional)**_: The state of the secret security object. Allowed states are: `None`, `PreActive`, `Active`, `Deactivated`, `Compromised`, `Destroyed`, `Deleted`
 * _**description (optional)**_: The Fortanix DSM security object description
+* _**rotate(optional)**_: boolean value true/false to enable/disable rotation 
+* _**rotate_from(optional)**_  = Name of the security object to be rotated from
 
 ## Attribute Reference
 

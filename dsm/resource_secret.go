@@ -88,6 +88,33 @@ func resourceSecret() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"rotate": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			"rotate_from": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"copied_to": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"copied_from": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"replacement": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"replaced": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -116,6 +143,13 @@ func resourceCreateSecret(ctx context.Context, d *schema.ResourceData, m interfa
 			return diag.FromErr(newerr)
 		}
 		plugin_object["deactivation_date"] = ddate.Format(layoutDSM)
+	}
+
+	if d.Get("rotate").(bool) {
+		plugin_object["operation"] = "rotate"
+		plugin_object["name"] = d.Get("rotate_from").(string)
+		endpoint = "crypto/v1/keys/rekey"
+		operation = "POST"
 	}
 
 	if err := d.Get("value").(string); len(err) > 0 {
@@ -153,7 +187,7 @@ func resourceCreateSecret(ctx context.Context, d *schema.ResourceData, m interfa
 func resourceReadSecret(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	req, statuscode, err := m.(*api_client).APICall("GET", fmt.Sprintf("crypto/v1/keys/%s", d.Id()))
+	res, statuscode, err := m.(*api_client).APICall("GET", fmt.Sprintf("crypto/v1/keys/%s", d.Id()))
 	if statuscode == 404 {
 		d.SetId("")
 	} else {
@@ -166,42 +200,42 @@ func resourceReadSecret(ctx context.Context, d *schema.ResourceData, m interface
 			return diags
 		}
 
-		if err := d.Set("name", req["name"].(string)); err != nil {
+		if err := d.Set("name", res["name"].(string)); err != nil {
 			return diag.FromErr(err)
 		}
-		if err := d.Set("group_id", req["group_id"].(string)); err != nil {
+		if err := d.Set("group_id", res["group_id"].(string)); err != nil {
 			return diag.FromErr(err)
 		}
-		if err := d.Set("obj_type", req["obj_type"].(string)); err != nil {
+		if err := d.Set("obj_type", res["obj_type"].(string)); err != nil {
 			return diag.FromErr(err)
 		}
-		if err := d.Set("kid", req["kid"].(string)); err != nil {
+		if err := d.Set("kid", res["kid"].(string)); err != nil {
 			return diag.FromErr(err)
 		}
-		if err := d.Set("acct_id", req["acct_id"].(string)); err != nil {
+		if err := d.Set("acct_id", res["acct_id"].(string)); err != nil {
 			return diag.FromErr(err)
 		}
-		if err := d.Set("creator", req["creator"]); err != nil {
+		if err := d.Set("creator", res["creator"]); err != nil {
 			return diag.FromErr(err)
 		}
-		if err := d.Set("custom_metadata", req["custom_metadata"]); err != nil {
+		if err := d.Set("custom_metadata", res["custom_metadata"]); err != nil {
 			return diag.FromErr(err)
 		}
-		if err := d.Set("key_ops", req["key_ops"]); err != nil {
+		if err := d.Set("key_ops", res["key_ops"]); err != nil {
 			return diag.FromErr(err)
 		}
-		if _, ok := req["description"]; ok {
-			if err := d.Set("description", req["description"].(string)); err != nil {
+		if _, ok := res["description"]; ok {
+			if err := d.Set("description", res["description"].(string)); err != nil {
 				return diag.FromErr(err)
 			}
 		}
-		if err := d.Set("enabled", req["enabled"].(bool)); err != nil {
+		if err := d.Set("enabled", res["enabled"].(bool)); err != nil {
 			return diag.FromErr(err)
 		}
-		if err := d.Set("state", req["state"].(string)); err != nil {
+		if err := d.Set("state", res["state"].(string)); err != nil {
 			return diag.FromErr(err)
 		}
-		if rfcdate, ok := req["deactivation_date"].(string); ok {
+		if rfcdate, ok := res["deactivation_date"].(string); ok {
 			// FYOO: once it's set, you can't remove deactivation date
 			layoutRFC := "2006-01-02T15:04:05Z"
 			layoutDSM := "20060102T150405Z"
@@ -211,6 +245,30 @@ func resourceReadSecret(ctx context.Context, d *schema.ResourceData, m interface
 			}
 			if newerr = d.Set("expiry_date", ddate.Format(layoutRFC)); newerr != nil {
 				return diag.FromErr(newerr)
+			}
+		}
+		if _, ok := res["links"]; ok {
+			if links := res["links"].(map[string]interface{}); len(links) > 0 {
+				if _, copiedToExists := res["links"].(map[string]interface{})["copiedTo"]; copiedToExists {
+					if err := d.Set("copied_to", res["links"].(map[string]interface{})["copiedTo"].([]interface{})); err != nil {
+						return diag.FromErr(err)
+					}
+				}
+				if _, copiedFromExists := res["links"].(map[string]interface{})["copiedFrom"]; copiedFromExists {
+					if err := d.Set("copied_from", res["links"].(map[string]interface{})["copiedFrom"].(string)); err != nil {
+						return diag.FromErr(err)
+					}
+				}
+				if _, replacementExists := res["links"].(map[string]interface{})["replacement"]; replacementExists {
+					if err := d.Set("replacement", res["links"].(map[string]interface{})["replacement"].(string)); err != nil {
+						return diag.FromErr(err)
+					}
+				}
+				if _, replacedExists := res["links"].(map[string]interface{})["replaced"]; replacedExists {
+					if err := d.Set("replaced", res["links"].(map[string]interface{})["replaced"].(string)); err != nil {
+						return diag.FromErr(err)
+					}
+				}
 			}
 		}
 	}

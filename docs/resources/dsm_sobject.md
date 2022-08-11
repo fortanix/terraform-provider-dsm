@@ -41,7 +41,9 @@ The following arguments are supported in the `dsm_sobject` resource block:
 * _**enabled (optional)**_: Whether the security object is enabled or disabled. The values are `True`/`False` 
 * _**expiry date (optional)**_: The security object expiry date in RFC format 
 * _**state (optional)**_: The state of the secret security object. Allowed states are: `None`, `PreActive`, `Active`, `Deactivated`, `Compromised`, `Destroyed`, `Deleted`
-
+* _**rotate(optional)**_: specify method to use for key rotation 
+  * **DSM** - To rotate from a DSM local key. The key material of new key will be stored in DSM.
+* _**rotate_from(optional)**_  = Name of the security object to be rotated from
 
 ## Attribute Reference
 
