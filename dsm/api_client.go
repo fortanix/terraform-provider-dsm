@@ -278,7 +278,7 @@ func (obj *api_client) APICallBody(method string, url string, body map[string]in
 						diags = append(diags, diag.Diagnostic{
 							Severity: diag.Error,
 							Summary:  "[DSM SDK]: Call DSM provider API returned non-JSON",
-							Detail:   fmt.Sprintf("[E]: API: %s %s %d: %s\n\nR1: ->%s<-\n--------------------\nR2: ->%s<-\n\n", method, url, r.StatusCode, bodyString, body, reqBody),
+							Detail:   fmt.Sprintf("[E]: API: %s %s %d: %s", method, url, r.StatusCode, bodyString),
 						})
 					} else {
 						diags = append(diags, diag.Diagnostic{
