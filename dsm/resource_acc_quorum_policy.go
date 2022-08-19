@@ -9,28 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-/*
-{
-	"acct_id": "e8109ee3-a729-4562-8806-a932848191af",
-	"approval_policy": {
-		"policy": {
-			"quorum": {
-				"n": 1,
-				"members": [{
-					"user": "54e489ca-f5aa-4e59-869e-281bbd37caa2"
-				}],
-				"require_2fa": false,
-				"require_password": true
-			}
-		},
-		"manage_groups": false,
-		"protect_authentication_methods": true,
-		"protect_cryptographic_policy": true,
-		"protect_logging_config": true
-	}
-}
-*/
-
 // [-] Define Account Quorum Policy
 func resourceAccQuorumPolicy() *schema.Resource {
 	return &schema.Resource{
@@ -54,7 +32,7 @@ func resourceAccQuorumPolicy() *schema.Resource {
 	}
 }
 
-// [U]: Terraform Func: resourceUpdateSobject
+// [C]: Create Account Quorum Policy
 func resourceCreateAccQuorumPolicy(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
@@ -76,16 +54,6 @@ func resourceCreateAccQuorumPolicy(ctx context.Context, d *schema.ResourceData, 
 	d.SetId(req["acct_id"].(string))
 	return resourceReadAccQuorumPolicy(ctx, d, m)
 
-}
-
-// [C]: Create Account Quorum Policy
-func resourceUpdateAccQuorumPolicy(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	return nil
-}
-
-// [D]: Delete Account Quorum Policy
-func resourceDeleteAccQuorumPolicy(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	return nil
 }
 
 // [R]: Read Account Quorum Policy
@@ -115,4 +83,14 @@ func resourceReadAccQuorumPolicy(ctx context.Context, d *schema.ResourceData, m 
 		}
 	}
 	return diags
+}
+
+// [U]: Update Account Quorum Policy
+func resourceUpdateAccQuorumPolicy(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	return nil
+}
+
+// [D]: Delete Account Quorum Policy
+func resourceDeleteAccQuorumPolicy(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	return nil
 }
