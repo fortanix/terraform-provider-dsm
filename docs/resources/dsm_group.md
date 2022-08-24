@@ -10,6 +10,7 @@ Returns the Fortanix DSM group object from the cluster as a Resource.
 resource "dsm_group" "group" {
     name = <group_name>
     description = <group_description>
+    approval_policy = <group_quorum_policy_definition>
 }
 ```
 
@@ -19,6 +20,7 @@ The following arguments are supported in the `dsm_group` resource block:
 
 * **name**: The Fortanix DSM group object name.
 * _**description (optional)**_: The Fortanix DSM group object description
+* _**approval_policy (optional)**_: The Fortanix DSM group object quorum approval policy definition as a JSON string
 
 ## Attribute Reference
 
@@ -32,4 +34,4 @@ The following attributes are stored in the `dsm_group` resource block:
   * **user**: If the group was created by a user, the computed value will be the matching user id
   * **app**: If the group was created by a app, the computed value will be the matching app id
 * **description**: The Fortanix DSM group object description
-
+* **approval_policy**: The Fortanix DSM group object quorum approval policy definition as a JSON string
