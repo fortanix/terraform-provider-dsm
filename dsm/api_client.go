@@ -231,7 +231,6 @@ func (obj *api_client) APICallBody(method string, url string, body map[string]in
 	client.client.HTTPClient.Transport = tr
 	client.client.HTTPClient.Timeout = time.Duration(obj.timeout) * time.Second
 
-	//reqBody, _ := json.Marshal(body)
 	reqBody, _ := json.MarshalIndent(&body, "", "\t")
 
 	req, err := retryablehttp.NewRequest(method, fmt.Sprintf("%s/%s", obj.endpoint, url), bytes.NewBuffer(reqBody))
