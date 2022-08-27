@@ -10,6 +10,7 @@ package dsm
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -48,6 +49,10 @@ func resourceGroup() *schema.Resource {
 				Optional: true,
 				Default:  "",
 			},
+			"approval_policy": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 		},
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -59,8 +64,9 @@ func resourceGroup() *schema.Resource {
 func resourceCreateGroup(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	group_object := map[string]interface{}{
-		"name":        d.Get("name").(string),
-		"description": d.Get("description").(string),
+		"name":            d.Get("name").(string),
+		"description":     d.Get("description").(string),
+		"approval_policy": json.RawMessage(d.Get("approval_policy").(string)),
 	}
 
 	req, err := m.(*api_client).APICallBody("POST", "sys/v1/groups", group_object)
@@ -108,6 +114,11 @@ func resourceReadGroup(ctx context.Context, d *schema.ResourceData, m interface{
 		}
 		if _, ok := req["description"]; ok {
 			if err := d.Set("description", req["description"].(string)); err != nil {
+				return diag.FromErr(err)
+			}
+		}
+		if _, ok := req["approval_policy"]; ok {
+			if err := d.Set("approval_policy", fmt.Sprintf("%v", req["approval_policy"])); err != nil {
 				return diag.FromErr(err)
 			}
 		}

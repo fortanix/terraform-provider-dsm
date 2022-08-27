@@ -60,3 +60,6 @@ terraform.tfstate.backup
 bin
 *.tf
 terraform-provider-dsm
+
+# Vscode related
+.vscode/
