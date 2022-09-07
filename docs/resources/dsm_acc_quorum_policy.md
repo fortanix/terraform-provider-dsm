@@ -27,3 +27,8 @@ The following attributes are stored in the `dsm_group` resource block:
 * **id**: Unique ID of object from Terraform (matches the `group_id` from resource block)
 * **acct\_id**: Account ID from Fortanix DSM
 * **approval_policy**: The Fortanix DSM account object quorum approval policy definition as a JSON string
+
+## Note
+
+Since modifying or deleting an already existing quorum policy will require approval, these operations are not meaningful in an automation. Therefore, only create operation is supported.
+Modifying or deleting quorum policies should be performed from the UI.
