@@ -35,3 +35,8 @@ The following attributes are stored in the `dsm_group` resource block:
   * **app**: If the group was created by a app, the computed value will be the matching app id
 * **description**: The Fortanix DSM group object description
 * **approval_policy**: The Fortanix DSM group object quorum approval policy definition as a JSON string
+
+## Note
+
+Since modifying or deleting an already existing quorum policy will require approval, these operations are not meaningful in an automation. Therefore, only create operation is supported.
+Modifying or deleting quorum policies should be performed from the UI.
