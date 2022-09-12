@@ -12,6 +12,7 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -44,6 +45,21 @@ func resourceApp() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+            "mod_group": {
+                Type: schema.TypeMap,
+                Optional: true,
+                Elem: &schema.Schema{
+                    Type: schema.TypeString,
+                    Optional: true,
+                },
+            },
+            "del_group": {
+                Type: schema.TypeList,
+                Optional: true,
+                Elem: &schema.Schema{
+                    Type: schema.TypeString,
+                },
+            },
 			"acct_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -68,6 +84,10 @@ func resourceApp() *schema.Resource {
 			"new_credential": {
 				Type:     schema.TypeBool,
 				Optional: true,
+			},
+			"patch_request": {
+			    Type:     schema.TypeBool,
+			    Optional: true,
 			},
 		},
 		Importer: &schema.ResourceImporter{
@@ -175,7 +195,16 @@ func resourceReadApp(ctx context.Context, d *schema.ResourceData, m interface{})
 func resourceUpdateApp(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	if d.Get("new_credential").(bool) {
+	if d.Get("new_credential").(bool) && d.Get("patch_request").(bool) {
+        diags = append(diags, diag.Diagnostic{
+            Severity: diag.Error,
+            Summary:  "new_credential/patch_request, either of them should be true.",
+            Detail:   fmt.Sprintf("new_credential is to reset the credentials and patch_request is to update an app."),
+        })
+        return diags
+	}
+
+	if d.Get("new_credential").(bool) && !(d.Get("patch_request").(bool)) {
 		reset_secret := map[string]interface{}{
 			"credential_migration_period": nil,
 		}
@@ -190,8 +219,49 @@ func resourceUpdateApp(ctx context.Context, d *schema.ResourceData, m interface{
 			return diags
 		}
 		return resourceReadApp(ctx, d, m)
-	}
-	return nil
+	}else if d.Get("patch_request").(bool) && !(d.Get("new_credential").(bool)){
+        //Modified by Ravi Gopal
+        app_object := map[string]interface{}{
+          "app_Type":  "default",
+        }
+        if default_group := d.Get("default_group").(string); len(default_group) > 0 {
+          app_object["default_group"] = d.Get("default_group")
+        }
+        if desc := d.Get("description").(string); len(desc) > 0 {
+           app_object["description"] = d.Get("description")
+        }
+        app_add_group := make(map[string]interface{})
+        if add_groups := d.Get("other_group").([]interface{}); len(add_groups) > 0 {
+               for _, group_id := range d.Get("other_group").([]interface{}) {
+                    app_add_group[group_id.(string)] = []string{"SIGN", "VERIFY", "ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "DERIVEKEY", "MACGENERATE", "MACVERIFY", "EXPORT", "MANAGE", "AGREEKEY", "AUDIT"}
+               }
+            app_object["add_groups"] = app_add_group
+        }
+        if del_group := d.Get("del_group").([]interface{}); len(del_group) > 0 {
+               app_object["del_groups"] = del_group
+        }
+        if mod_group := d.Get("mod_group").(map[string]interface{}); len(mod_group) > 0 {
+           app_mod_group := make(map[string]interface{})
+            for group_id, permissions  := range d.Get("mod_group").(map[string]interface{}) {
+                  permissions_list := strings.Split(permissions.(string), "-")
+                  app_mod_group[group_id] = permissions_list
+              }
+           app_object["mod_groups"] = app_mod_group
+        }
+        req, err := m.(*api_client).APICallBody("PATCH", fmt.Sprintf("sys/v1/apps/%s", d.Id()), app_object)
+        if err != nil {
+          diags = append(diags, diag.Diagnostic{
+              Severity: diag.Error,
+              Summary:  "[DSM SDK] Unable to call DSM provider API client",
+              Detail:   fmt.Sprintf("[E]: API: POST sys/v1/apps: %v", err),
+          })
+          return diags
+        }
+
+        d.SetId(req["app_id"].(string))
+        return resourceReadApp(ctx, d, m)
+    }
+    return nil
 }
 
 // [D]: Delete App

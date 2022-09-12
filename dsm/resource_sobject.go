@@ -10,6 +10,7 @@ package dsm
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -54,6 +55,7 @@ func resourceSobject() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+
 			//"kcv": {
 			//	Type:     schema.TypeString,
 			//	Computed: true,
@@ -125,6 +127,10 @@ func resourceSobject() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"rsa": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -163,6 +169,15 @@ func contains(s []string, str string) bool {
 	return false
 }
 
+// this function takes a string in JSON format and unmarshals it. If the string is not in correct JSON format, it returns nil.
+func unmarshalStringToJson(inputString string) interface{}{
+	type mapFormat map[string]interface{}
+	var inputMap mapFormat
+	if err := json.Unmarshal([]byte(inputString), &inputMap); err!=nil{
+		return nil
+	}
+	return inputMap
+}
 // createSO: Create Security Object
 func createSO(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
@@ -189,6 +204,17 @@ func createSO(ctx context.Context, d *schema.ResourceData, m interface{}) diag.D
 	if err := d.Get("key_ops").([]interface{}); len(err) > 0 {
 		security_object["key_ops"] = d.Get("key_ops")
 	}
+	if err := d.Get("rsa").(string); len(err) > 0 {
+	   if unmarshalStringToJson(d.Get("rsa").(string)) == nil{
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "Invalid string for the field 'rsa'.",
+				Detail:   fmt.Sprintf("Invalid string for the field 'rsa'. Please verify and correct it. rsa field should be a string which is in JSON format."),
+			})
+			return diags
+		}
+		security_object["rsa"] = unmarshalStringToJson(err)
+	}
 
 	if err := d.Get("fpe_radix"); err != 0 {
 		security_object["fpe"] = map[string]interface{}{
@@ -200,7 +226,6 @@ func createSO(ctx context.Context, d *schema.ResourceData, m interface{}) diag.D
 		security_object["name"] = d.Get("rotate_from").(string)
 		endpoint = "crypto/v1/keys/rekey"
 	}
-
 	req, err := m.(*api_client).APICallBody("POST", endpoint, security_object)
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
@@ -262,6 +287,7 @@ func resourceReadSobject(ctx context.Context, d *schema.ResourceData, m interfac
 		if err := d.Set("dsm_name", req["name"].(string)); err != nil {
 			return diag.FromErr(err)
 		}
+
 		if err := d.Set("group_id", req["group_id"].(string)); err != nil {
 			return diag.FromErr(err)
 		}
@@ -401,12 +427,25 @@ func resourceUpdateSobject(ctx context.Context, d *schema.ResourceData, m interf
 		d.Set("rotate_from", "")
 	}
 
-	if d.HasChange("key_ops") {
-		security_object := map[string]interface{}{
+	var security_object = map[string]interface{}{
 			"kid": d.Get("kid").(string),
 		}
-		security_object["key_ops"] = d.Get("key_ops")
+	if d.HasChange("rsa") {
+		if unmarshalStringToJson(d.Get("rsa").(string)) == nil{
+			diags = append(diags, diag.Diagnostic{
+                Severity: diag.Error,
+				Summary:  "Invalid string for the field 'rsa'.",
+				Detail:   fmt.Sprintf("Invalid string for the field 'rsa'. Please verify and correct it. rsa field should be a string which is in JSON format."),
+			})
+			return diags
+		}
+		security_object["rsa"] = unmarshalStringToJson(d.Get("rsa").(string))
+	}
+	if d.HasChange("key_ops") {
+	    security_object["key_ops"] = d.Get("key_ops")
 
+	}
+	if security_object != nil {
 		req, err := m.(*api_client).APICallBody("PATCH", fmt.Sprintf("crypto/v1/keys/%s", d.Id()), security_object)
 		if err != nil {
 			diags = append(diags, diag.Diagnostic{
