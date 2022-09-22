@@ -18,8 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// When storing Terraform state locally, this is the default path to the tfstate file
-const DEFAULT_PATH_TO_LOCAL_STATE_FILE = "terraform.tfstate"
 
 
 // [-] Define App
