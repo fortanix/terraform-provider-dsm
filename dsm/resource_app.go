@@ -18,6 +18,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// When storing Terraform state locally, this is the default path to the tfstate file
+const DEFAULT_PATH_TO_LOCAL_STATE_FILE = "terraform.tfstate"
+
+
 // [-] Define App
 func resourceApp() *schema.Resource {
 	return &schema.Resource{
@@ -53,13 +57,6 @@ func resourceApp() *schema.Resource {
                     Optional: true,
                 },
             },
-            "del_group": {
-                Type: schema.TypeList,
-                Optional: true,
-                Elem: &schema.Schema{
-                    Type: schema.TypeString,
-                },
-            },
 			"acct_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -85,10 +82,14 @@ func resourceApp() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"patch_request": {
-			    Type:     schema.TypeBool,
-			    Optional: true,
-			},
+			"other_group_permissions": {
+                Type: schema.TypeMap,
+                Optional: true,
+                Elem: &schema.Schema{
+                    Type: schema.TypeString,
+                    Optional: true,
+                },
+            },
 		},
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -110,17 +111,27 @@ func resourceCreateApp(ctx context.Context, d *schema.ResourceData, m interface{
 		"description": d.Get("description").(string),
 	}
 
-	app_add_group := make(map[string]interface{})
 
+    add_group_perms := form_group_permissions(d.Get("other_group_permissions"))
+
+    app_add_group := make(map[string]interface{})
 	if err := d.Get("other_group").([]interface{}); len(err) > 0 {
-		for _, group_id := range d.Get("other_group").([]interface{}) {
-			app_add_group[group_id.(string)] = []string{"SIGN", "VERIFY", "ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "DERIVEKEY", "MACGENERATE", "MACVERIFY", "EXPORT", "MANAGE", "AGREEKEY", "AUDIT"}
-		}
+        for _, group_id := range d.Get("other_group").([]interface{}) {
+            if perms, ok := add_group_perms[group_id.(string)]; ok {
+                app_add_group[group_id.(string)] = perms
+            }else{
+                app_add_group[group_id.(string)] = []string{"SIGN", "VERIFY", "ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "DERIVEKEY", "MACGENERATE", "MACVERIFY", "EXPORT", "MANAGE", "AGREEKEY", "AUDIT"}
+            }
+        }
 	}
 
-	app_add_group[d.Get("default_group").(string)] = []string{"SIGN", "VERIFY", "ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "DERIVEKEY", "MACGENERATE", "MACVERIFY", "EXPORT", "MANAGE", "AGREEKEY", "AUDIT"}
+	if perms, ok := add_group_perms[d.Get("default_group").(string)]; ok {
+        app_add_group[d.Get("default_group").(string)] = perms
+    }else{
+        app_add_group[d.Get("default_group").(string)] = []string{"SIGN", "VERIFY", "ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "DERIVEKEY", "MACGENERATE", "MACVERIFY", "EXPORT", "MANAGE", "AGREEKEY", "AUDIT"}
+    }
 
-	app_object["add_groups"] = app_add_group
+    app_object["add_groups"] = app_add_group
 
 	req, err := m.(*api_client).APICallBody("POST", "sys/v1/apps", app_object)
 	if err != nil {
@@ -195,16 +206,7 @@ func resourceReadApp(ctx context.Context, d *schema.ResourceData, m interface{})
 func resourceUpdateApp(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	if d.Get("new_credential").(bool) && d.Get("patch_request").(bool) {
-        diags = append(diags, diag.Diagnostic{
-            Severity: diag.Error,
-            Summary:  "new_credential/patch_request, either of them should be true.",
-            Detail:   fmt.Sprintf("new_credential is to reset the credentials and patch_request is to update an app."),
-        })
-        return diags
-	}
-
-	if d.Get("new_credential").(bool) && !(d.Get("patch_request").(bool)) {
+	if d.Get("new_credential").(bool) {
 		reset_secret := map[string]interface{}{
 			"credential_migration_period": nil,
 		}
@@ -219,35 +221,67 @@ func resourceUpdateApp(ctx context.Context, d *schema.ResourceData, m interface{
 			return diags
 		}
 		return resourceReadApp(ctx, d, m)
-	}else if d.Get("patch_request").(bool) && !(d.Get("new_credential").(bool)){
+	}else {
         //Modified by Ravi Gopal
         app_object := map[string]interface{}{
           "app_Type":  "default",
         }
+
         if default_group := d.Get("default_group").(string); len(default_group) > 0 {
-          app_object["default_group"] = d.Get("default_group")
+            app_object["default_group"] = d.Get("default_group")
+        }
+        if d.HasChange("other_group") {
+
+            old_group, new_group := d.GetChange("other_group")
+            /*compares the old and new state
+             * and seggregtes the new groups and groups that are to be deleted.
+            */
+            add_group_ids, del_group_ids := form_add_and_del_groups(old_group, new_group)
+            if len(del_group_ids) > 0 {
+                app_object["del_groups"] = del_group_ids
+            }
+            if len(add_group_ids) > 0 {
+                add_group_perms := form_group_permissions(d.Get("other_group_permissions"))
+                app_add_group := make(map[string]interface{})
+                for i := 0; i < len(add_group_ids); i++ {
+                    if perms, ok := add_group_perms[add_group_ids[i]]; ok {
+                        app_add_group[add_group_ids[i]] = perms
+                    }else{
+                        app_add_group[add_group_ids[i]] = []string{"SIGN", "VERIFY", "ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "DERIVEKEY", "MACGENERATE", "MACVERIFY", "EXPORT", "MANAGE", "AGREEKEY", "AUDIT"}
+                    }
+                }
+                app_object["add_groups"] = app_add_group
+            }
         }
         if desc := d.Get("description").(string); len(desc) > 0 {
-           app_object["description"] = d.Get("description")
+            app_object["description"] = d.Get("description")
         }
-        app_add_group := make(map[string]interface{})
-        if add_groups := d.Get("other_group").([]interface{}); len(add_groups) > 0 {
-               for _, group_id := range d.Get("other_group").([]interface{}) {
-                    app_add_group[group_id.(string)] = []string{"SIGN", "VERIFY", "ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "DERIVEKEY", "MACGENERATE", "MACVERIFY", "EXPORT", "MANAGE", "AGREEKEY", "AUDIT"}
-               }
-            app_object["add_groups"] = app_add_group
+        if d.HasChange("mod_group"){
+            if mod_group := d.Get("mod_group").(map[string]interface{}); len(mod_group) > 0 {
+                mod_group := d.Get("mod_group").(map[string]interface{})
+                app_mod_group := make(map[string]interface{})
+                //if default_group has changes in permissions
+                default_group := d.Get("default_group").(string)
+                if perms, ok := mod_group[default_group]; ok {
+                    app_mod_group[default_group] = strings.Split(perms.(string), ",")
+                }
+                //checking whether all the group_ids from mod_group exists in other groups or not
+                //if not it will ignore the mod_group of the unavailable group_id
+                var other_group_latest []string
+                if err := d.Get("other_group").([]interface{}); len(err) > 0 {
+                    for _, group_id := range d.Get("other_group").([]interface{}) {
+                        other_group_latest = append(other_group_latest, group_id.(string))
+                    }
+                }
+                for i:=0; i < len(other_group_latest); i++ {
+                    if perms, ok := mod_group[other_group_latest[i]]; ok {
+                        app_mod_group[other_group_latest[i]] = strings.Split(perms.(string), ",")
+                    }
+                }
+                app_object["mod_groups"] = app_mod_group
+            }
         }
-        if del_group := d.Get("del_group").([]interface{}); len(del_group) > 0 {
-               app_object["del_groups"] = del_group
-        }
-        if mod_group := d.Get("mod_group").(map[string]interface{}); len(mod_group) > 0 {
-           app_mod_group := make(map[string]interface{})
-            for group_id, permissions  := range d.Get("mod_group").(map[string]interface{}) {
-                  permissions_list := strings.Split(permissions.(string), "-")
-                  app_mod_group[group_id] = permissions_list
-              }
-           app_object["mod_groups"] = app_mod_group
-        }
+
         req, err := m.(*api_client).APICallBody("PATCH", fmt.Sprintf("sys/v1/apps/%s", d.Id()), app_object)
         if err != nil {
           diags = append(diags, diag.Diagnostic{
@@ -280,4 +314,64 @@ func resourceDeleteApp(ctx context.Context, d *schema.ResourceData, m interface{
 
 	d.SetId("")
 	return nil
+}
+
+//forms the group permissions - Ravi Gopal
+func form_group_permissions(permissions interface{}) (map[string]interface{}){
+
+    add_group_perms := make(map[string]interface{})
+    if group_perms := permissions.(map[string]interface{}); len(group_perms) > 0 {
+        for group_id, permissions  := range group_perms {
+              permissions_list := strings.Split(permissions.(string), ",")
+              add_group_perms[group_id] = permissions_list
+          }
+    }
+
+    return add_group_perms
+}
+
+//forms the add and delete groups during patch request - Ravi Gopal
+func form_add_and_del_groups(old_group interface{}, new_group interface{})([]string, []string){
+
+    /*
+    * Compares old state and new state
+    * seggregtes the groups to be added and groups to be deleted.
+    */
+    old_group_set := old_group.([]interface{})
+    new_group_set := new_group.([]interface{})
+
+    old_group_ids := make([]string, len(old_group_set))
+    for i, v := range old_group_set {
+        old_group_ids[i] = v.(string)
+    }
+    new_group_ids := make([]string, len(new_group_set))
+    for i, v := range new_group_set {
+        new_group_ids[i] = v.(string)
+    }
+
+    new_group_bool := make([]bool, len(new_group_set))
+
+    var del_group_ids []string
+    var add_group_ids []string
+
+    for i := 0; i < len(old_group_ids); i++{
+        exist := false
+        for j := 0; j < len(new_group_ids); j++ {
+            if new_group_ids[j] == old_group_ids[i] {
+                exist = true
+                new_group_bool[j] = true
+                break
+            }
+        }
+        if !exist && len(new_group_ids) > 0 {
+            del_group_ids = append(del_group_ids, old_group_ids[i])
+        }
+    }
+    for i := 0; i < len(new_group_bool); i++ {
+        if !(new_group_bool[i]) {
+            add_group_ids = append(add_group_ids, new_group_ids[i])
+        }
+    }
+
+    return add_group_ids, del_group_ids
 }
