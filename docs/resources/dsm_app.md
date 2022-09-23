@@ -53,7 +53,7 @@ resource "dsm_app" "app" {
      * deleting the existing groups: just remove group_id from this array.
      */
     other_group_permissions = "${var.app_data.other_group}"
-    mod_group      = "${var.app_data.mod_group}"
+    mod_group_permissions   = "${var.app_data.mod_group}"
     
 }
 ```
@@ -71,15 +71,15 @@ The following arguments are supported in the `dsm_app` resource block:
 * _**other_group_permissions(optional)**_: Incase if you want to change the default permissions of a new group.
 * _**description (optional)**_: The description of the app 
 * _**new\_credential (optional)**_: Set this if you want to rotate/regenerate the API key. The values can be set as `True`/`False`
-* _**mod_group (optional)**_: To modify the permissions of any existing group
+* _**mod_group_permissions (optional)**_: To modify the permissions of any existing group
 
-   mod_group example:
+   mod_group_permissions example:
 
    A varaiable should be declared. Here it is named as app_data. Please follow the below varaible reference 
    to provide the permissions. For each group_id permissions should be given in a string format. Permissions
    are separated by ','.
 
-   mod_group    = "${var.app_data.mod_group}"
+   mod_group_permissions    = "${var.app_data.mod_group}"
 
    variable "app_data" {
     type = any

@@ -47,14 +47,6 @@ func resourceApp() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-            "mod_group": {
-                Type: schema.TypeMap,
-                Optional: true,
-                Elem: &schema.Schema{
-                    Type: schema.TypeString,
-                    Optional: true,
-                },
-            },
 			"acct_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -81,6 +73,14 @@ func resourceApp() *schema.Resource {
 				Optional: true,
 			},
 			"other_group_permissions": {
+                Type: schema.TypeMap,
+                Optional: true,
+                Elem: &schema.Schema{
+                    Type: schema.TypeString,
+                    Optional: true,
+                },
+            },
+            "mod_group_permissions": {
                 Type: schema.TypeMap,
                 Optional: true,
                 Elem: &schema.Schema{
@@ -254,9 +254,9 @@ func resourceUpdateApp(ctx context.Context, d *schema.ResourceData, m interface{
         if desc := d.Get("description").(string); len(desc) > 0 {
             app_object["description"] = d.Get("description")
         }
-        if d.HasChange("mod_group"){
-            if mod_group := d.Get("mod_group").(map[string]interface{}); len(mod_group) > 0 {
-                mod_group := d.Get("mod_group").(map[string]interface{})
+        if d.HasChange("mod_group_permissions"){
+            if mod_group := d.Get("mod_group_permissions").(map[string]interface{}); len(mod_group) > 0 {
+                mod_group := d.Get("mod_group_permissions").(map[string]interface{})
                 app_mod_group := make(map[string]interface{})
                 //if default_group has changes in permissions
                 default_group := d.Get("default_group").(string)
