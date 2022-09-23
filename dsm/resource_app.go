@@ -109,7 +109,7 @@ func resourceCreateApp(ctx context.Context, d *schema.ResourceData, m interface{
 		"description": d.Get("description").(string),
 	}
 
-    add_group_perms := form_group_permissions(d.Get("other_group_permissions"))
+	add_group_perms := form_group_permissions(d.Get("other_group_permissions"))
 	app_add_group := make(map[string]interface{})
 	if err := d.Get("other_group").([]interface{}); len(err) > 0 {
 		for _, group_id := range d.Get("other_group").([]interface{}) {
@@ -121,13 +121,13 @@ func resourceCreateApp(ctx context.Context, d *schema.ResourceData, m interface{
 		}
 	}
 
-    if perms, ok := add_group_perms[d.Get("default_group").(string)]; ok {
-        app_add_group[d.Get("default_group").(string)] = perms
-    }else{
-        app_add_group[d.Get("default_group").(string)] = []string{"SIGN", "VERIFY", "ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "DERIVEKEY", "MACGENERATE", "MACVERIFY", "EXPORT", "MANAGE", "AGREEKEY", "AUDIT"}
-    }
+	if perms, ok := add_group_perms[d.Get("default_group").(string)]; ok {
+		app_add_group[d.Get("default_group").(string)] = perms
+	}else{
+		app_add_group[d.Get("default_group").(string)] = []string{"SIGN", "VERIFY", "ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "DERIVEKEY", "MACGENERATE", "MACVERIFY", "EXPORT", "MANAGE", "AGREEKEY", "AUDIT"}
+	}
 
-    app_object["add_groups"] = app_add_group
+	app_object["add_groups"] = app_add_group
 
 	req, err := m.(*api_client).APICallBody("POST", "sys/v1/apps", app_object)
 	if err != nil {
