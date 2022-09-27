@@ -52,6 +52,7 @@ func resourceGroup() *schema.Resource {
 			"approval_policy": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Default:  "{}",
 			},
 		},
 		Importer: &schema.ResourceImporter{
