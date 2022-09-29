@@ -217,8 +217,9 @@ func resourceUpdateApp(ctx context.Context, d *schema.ResourceData, m interface{
 			return diags
 		}
 	}
-    //Modified by Ravi Gopal
+	//Modified by Ravi Gopal
 	app_object := make(map[string]interface{})
+	app_object["description"] = d.Get("description")
 
 	if d.HasChange("default_group") {
 		if default_group := d.Get("default_group").(string); len(default_group) > 0 {
@@ -227,10 +228,7 @@ func resourceUpdateApp(ctx context.Context, d *schema.ResourceData, m interface{
 	}
 	if d.HasChange("other_group") {
 		old_group, new_group := d.GetChange("other_group")
-		/*compares the old and new state
-		 * and seggregtes the new groups and groups that are to be deleted.
-		*/
-		add_group_ids, del_group_ids := form_add_and_del_groups(old_group, new_group)
+		add_group_ids, del_group_ids := compute_add_and_del_groups(old_group, new_group)
 		//Add the groups to be deleted
 		if len(del_group_ids) > 0 {
 			app_object["del_groups"] = del_group_ids
@@ -253,14 +251,14 @@ func resourceUpdateApp(ctx context.Context, d *schema.ResourceData, m interface{
 		app_object["description"] = d.Get("description")
 	}
 	//Modifies the existing groups
-	if d.HasChange("mod_group_permissions"){
+	if d.HasChange("mod_group_permissions") {
 		if mod_group := d.Get("mod_group_permissions").(map[string]interface{}); len(mod_group) > 0 {
-			mod_group := d.Get("mod_group_permissions").(map[string]interface{})
 			app_mod_group := make(map[string]interface{})
 			//if default_group has changes in permissions
 			default_group := d.Get("default_group").(string)
 			if perms, ok := mod_group[default_group]; ok {
 				app_mod_group[default_group] = strings.Split(perms.(string), ",")
+				delete(mod_group, default_group)
 			}
 			//checking whether all the group_ids from mod_group_permissions exists in other groups or not
 			//if not it will ignore the mod_group_permissions of the unavailable group_id
@@ -273,7 +271,20 @@ func resourceUpdateApp(ctx context.Context, d *schema.ResourceData, m interface{
 			for i:=0; i < len(other_group_latest); i++ {
 				if perms, ok := mod_group[other_group_latest[i]]; ok {
 					app_mod_group[other_group_latest[i]] = strings.Split(perms.(string), ",")
+					delete(mod_group, other_group_latest[i])
 				}
+			}
+			if len(mod_group) > 0 {
+				var unavailable_group_ids []string
+				for group_id := range mod_group {
+						unavailable_group_ids = append(unavailable_group_ids, group_id)
+				}
+				diags = append(diags, diag.Diagnostic{
+					Severity: diag.Error,
+					Summary:  "All the group_ids available in mod_group are not available in other_group.Please correct them.",
+					Detail:   fmt.Sprintf("[E]: Input: mod_group: Following group_ids are not available in other_group:\n %v", unavailable_group_ids),
+				})
+				return diags
 			}
 			app_object["mod_groups"] = app_mod_group
 		}
@@ -312,26 +323,25 @@ func resourceDeleteApp(ctx context.Context, d *schema.ResourceData, m interface{
 	return nil
 }
 
-//forms the group permissions - Ravi Gopal
-func form_group_permissions(permissions interface{}) (map[string]interface{}){
-
+//form the group permissions - Ravi Gopal
+func form_group_permissions(permissions interface{}) (map[string]interface{}) {
 	add_group_perms := make(map[string]interface{})
 	if group_perms := permissions.(map[string]interface{}); len(group_perms) > 0 {
 		for group_id, permissions  := range group_perms {
-			  permissions_list := strings.Split(permissions.(string), ",")
-			  add_group_perms[group_id] = permissions_list
-		  }
+			permissions_list := strings.Split(permissions.(string), ",")
+			add_group_perms[group_id] = permissions_list
+		}
 	}
 
 	return add_group_perms
 }
 
-//forms the add and delete groups during patch request - Ravi Gopal
-func form_add_and_del_groups(old_group interface{}, new_group interface{})([]string, []string){
+//computes the add and delete groups during patch request - Ravi Gopal
+func compute_add_and_del_groups(old_group interface{}, new_group interface{}) ([]string, []string) {
 
 	/*
 	* Compares old state and new state
-	* seggregtes the groups to be added and groups to be deleted.
+	* segregates the groups to be added and groups to be deleted.
 	*/
 	old_group_set := old_group.([]interface{})
 	new_group_set := new_group.([]interface{})
@@ -350,7 +360,7 @@ func form_add_and_del_groups(old_group interface{}, new_group interface{})([]str
 	var del_group_ids []string
 	var add_group_ids []string
 
-	for i := 0; i < len(old_group_ids); i++{
+	for i := 0; i < len(old_group_ids); i++ {
 		exist := false
 		for j := 0; j < len(new_group_ids); j++ {
 			if new_group_ids[j] == old_group_ids[i] {

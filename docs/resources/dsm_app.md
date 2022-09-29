@@ -76,39 +76,39 @@ The following arguments are supported in the `dsm_app` resource block:
 
    other_group_permissions example:
    
-   A varaiable should be declared. Here it is named as app_data. Please follow the below varaible reference 
+   A variable should be declared. Here it is named as app_data. Please follow the below varaible reference 
    to provide the permissions. For each group_id permissions should be given in a string format. Permissions
    are separated by comma(",").
 
    other_group_permissions = "${var.app_data.other_group}"
    
    variable "app_data" {
-    type = any
-    default = {
-        "other_group" = {
-            "<group_id>" : "SIGN,VERIFY,ENCRYPT,DECRYPT,WRAPKEY,UNWRAPKEY,DERIVEKEY,MACGENERATE,MACVERIFY,EXPORT,MANAGE,AGREEKEY,AUDIT,TRANSFORM"
-            "<group_id>" : "SIGN,ENCRYPT,DECRYPT,WRAPKEY,UNWRAPKEY,MACGENERATE,MACVERIFY,MANAGE,AGREEKEY,AUDIT,EXPORT"
+        type = any
+        default = {
+            "other_group" = {
+                "<group_id>" : "SIGN,VERIFY,ENCRYPT,DECRYPT,WRAPKEY,UNWRAPKEY,DERIVEKEY,MACGENERATE,MACVERIFY,EXPORT,MANAGE,AGREEKEY,AUDIT,TRANSFORM"
+                "<group_id>" : "SIGN,ENCRYPT,DECRYPT,WRAPKEY,UNWRAPKEY,MACGENERATE,MACVERIFY,MANAGE,AGREEKEY,AUDIT,EXPORT"
+            }
         }
-    }
    }
 
    mod_group_permissions example:
 
-   A varaiable should be declared. Here it is named as app_data. Please follow the below varaible reference 
+   A variable should be declared. Here it is named as app_data. Please follow the below varaible reference 
    to provide the permissions. For each group_id permissions should be given in a string format. Permissions
    are separated by comma(",").
 
    variable "app_data" {
-    type = any
-    default = {
-        "mod_group" = {
-            "<group_id>" : "SIGN,VERIFY,ENCRYPT,DECRYPT,WRAPKEY,UNWRAPKEY,DERIVEKEY,MACGENERATE,MACVERIFY,EXPORT,MANAGE,AGREEKEY,AUDIT,TRANSFORM"
-            "<group_id>" : "SIGN,ENCRYPT,DECRYPT,WRAPKEY,UNWRAPKEY,MACGENERATE,MACVERIFY,MANAGE,AGREEKEY,AUDIT,EXPORT"
-        }
-    }
+       type = any
+       default = {
+           "mod_group" = {
+               "<group_id>" : "SIGN,VERIFY,ENCRYPT,DECRYPT,WRAPKEY,UNWRAPKEY,DERIVEKEY,MACGENERATE,MACVERIFY,EXPORT,MANAGE,AGREEKEY,AUDIT,TRANSFORM"
+               "<group_id>" : "SIGN,ENCRYPT,DECRYPT,WRAPKEY,UNWRAPKEY,MACGENERATE,MACVERIFY,MANAGE,AGREEKEY,AUDIT,EXPORT"
+           }
+       }
    }
    
-   mod_group_permissions    = "${var.app_data.mod_group}"
+   mod_group_permissions = "${var.app_data.mod_group}"
 
 
 
