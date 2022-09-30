@@ -206,8 +206,8 @@ func createSO(ctx context.Context, d *schema.ResourceData, m interface{}) diag.D
 		security_object["key_ops"] = d.Get("key_ops")
 	}
 	if err := d.Get("rsa").(string); len(err) > 0 {
-	   rsa_obj, er := unmarshalStringToJson(d.Get("rsa").(string))
-	   if er != nil {
+		rsa_obj, er := unmarshalStringToJson(d.Get("rsa").(string))
+		if er != nil {
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "Invalid json string format for the field 'rsa'.",
@@ -430,8 +430,8 @@ func resourceUpdateSobject(ctx context.Context, d *schema.ResourceData, m interf
 	}
 
 	var security_object = map[string]interface{}{
-			"kid": d.Get("kid").(string),
-		}
+		"kid": d.Get("kid").(string),
+	}
 	if d.HasChange("rsa") {
 		rsa_obj, err := unmarshalStringToJson(d.Get("rsa").(string))
 		if err != nil {
