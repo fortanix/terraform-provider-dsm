@@ -6,13 +6,58 @@ Returns the Fortanix DSM App from the cluster as a resource
 
 ## Usage Reference
 
+
+
 ```
+
+variable "app_data" {
+    type = any
+    default = {
+        "other_group" = {
+            "<group_id>" : "<permissions(separated by ',')>",
+            "<group_id>" : "<permissions(separated by ',')>"
+        }
+    }
+}
+
 resource "dsm_app" "app" {
     name           = <app_name>
     default_group  = <group_id>
     other_group    = [<group_id>,<group_id>]
     description    = <app_description>
     new_credential = <true/false> 
+    other_group_permissions = "${var.app_data.other_group}"
+}
+```
+
+## Update the groups
+
+```
+
+variable "app_data" {
+    type = any
+    default = {
+        "mod_group" = {
+            "<group_id>" : "<permissions(separated by ',')>",
+            "<group_id>" : "<permissions(separated by ',')>"
+        }
+    }
+}
+
+resource "dsm_app" "app" {
+    name           = <app_name>
+    default_group  = <group_id>
+    description    = <app_description>
+    other_group    = [<group_id>,<group_id>] 
+    /* add the new groups:  just add the new group_ids in this array.
+     * delete the existing groups: just remove group_id from this array.
+     */
+    new_credential = <true/false> 
+    other_group_permissions = "${var.app_data.other_group}"
+    mod_group_permissions   = "${var.app_data.mod_group}" 
+}
+```
+
 ```
 
 ## Argument Reference
@@ -21,9 +66,51 @@ The following arguments are supported in the `dsm_app` resource block:
 
 * **name**: The Fortanix DSM App name
 * **default_group**: The Fortanix DSM group object id to be mapped to the app by default
-* _**other_group (optional)**_: The Fortanix DSM group object id the app needs to be assigned to
+* _**other_group (optional)**_: The Fortanix DSM group object id the app needs to be assigned to. If you want to 
+                                delete the existing groups from an app, remove the ids during update.
 * _**description (optional)**_: The description of the app 
 * _**new\_credential (optional)**_: Set this if you want to rotate/regenerate the API key. The values can be set as `True`/`False`
+* _**other_group_permissions(optional)**_: Incase if you want to change the default permissions of a new group.
+* _**mod_group_permissions (optional)**_: To modify the permissions of any existing group
+
+
+   other_group_permissions example:
+   
+   A variable should be declared. Here it is named as app_data. Please follow the below varaible reference 
+   to provide the permissions. For each group_id permissions should be given in a string format. Permissions
+   are separated by comma(",").
+
+   other_group_permissions = "${var.app_data.other_group}"
+   
+   variable "app_data" {
+        type = any
+        default = {
+            "other_group" = {
+                "<group_id>" : "SIGN,VERIFY,ENCRYPT,DECRYPT,WRAPKEY,UNWRAPKEY,DERIVEKEY,MACGENERATE,MACVERIFY,EXPORT,MANAGE,AGREEKEY,AUDIT,TRANSFORM"
+                "<group_id>" : "SIGN,ENCRYPT,DECRYPT,WRAPKEY,UNWRAPKEY,MACGENERATE,MACVERIFY,MANAGE,AGREEKEY,AUDIT,EXPORT"
+            }
+        }
+   }
+
+   mod_group_permissions example:
+
+   A variable should be declared. Here it is named as app_data. Please follow the below varaible reference 
+   to provide the permissions. For each group_id permissions should be given in a string format. Permissions
+   are separated by comma(",").
+
+   variable "app_data" {
+       type = any
+       default = {
+           "mod_group" = {
+               "<group_id>" : "SIGN,VERIFY,ENCRYPT,DECRYPT,WRAPKEY,UNWRAPKEY,DERIVEKEY,MACGENERATE,MACVERIFY,EXPORT,MANAGE,AGREEKEY,AUDIT,TRANSFORM"
+               "<group_id>" : "SIGN,ENCRYPT,DECRYPT,WRAPKEY,UNWRAPKEY,MACGENERATE,MACVERIFY,MANAGE,AGREEKEY,AUDIT,EXPORT"
+           }
+       }
+   }
+   
+   mod_group_permissions = "${var.app_data.mod_group}"
+
+
 
 ## Attribute Reference
 

@@ -23,6 +23,7 @@ resource "dsm_sobject" "sobject" {
     custom_metadata = {        
                     <key> = <value>    
     }
+    rsa             = <rsaOptions_string_format>
 }
 ```
 
@@ -35,6 +36,7 @@ The following arguments are supported in the `dsm_sobject` resource block:
 * **key\_size**: The security object size
 * **group\_id**: The security object group assignment
 * _**key\_ops (optional)**_: The security object key permission
+* _**rsa (optional)**: The rsaOptions for an RSA object
 * _**description (optional)**_: The security object description
 * _**custom_metadata (optional)**_: The user defined security object attributes added to the key’s metadata from Fortanix DSM
 * _**fpe\_radix (optional)**_: integer, The base for input data. The radix should be a number from 2 to 36, inclusive. Each radix corresponds to a subset of ASCII alphanumeric characters (with all letters being uppercase). For instance, a radix of 10 corresponds to a character set consisting of the digits from 0 to 9, while a character set of 16 corresponds to a character set consisting of all hexadecimal digits (with letters A-F being uppercase).
@@ -58,6 +60,8 @@ The following attributes are stored in the `dsm_sobject` resource block:
 * **key\_size**: The security object key size from Fortanix DSM (matches the key_size provided during creation)
 * **key\_ops**: The security object key permission from Fortanix DSM
   * Default is to allow all permissions except "EXPORT"
+* **rsa**: rsaOptions passed as a string (if "RSA” `obj_type` is specified). The string should match the "rsa" value in Post body while working with Fortanix Rest API. For example, 
+`rsa = "{\"encryption_policy\":[{\"padding\":{\"RAW_DECRYPT\":{}}},{\"padding\":{\"OAEP\":{\"mgf\":{\"mgf1\":{\"hash\":\"SHA1\"}}}}}],\"signature_policy\":[{\"padding\":{\"PKCS1_V15\":{}}},{\"padding\":{\"PSS\":{\"mgf\":{\"mgf1\":{\"hash\":\"SHA384\"}}}}}]}"`
 * **creator**: The creator of the security object from Fortanix DSM
   * **user**: If the security object was created by a user, the computed value will be the matching user id
   * **app**: If the security object was created by a app, the computed value will be the matching app id
