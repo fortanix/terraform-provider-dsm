@@ -231,7 +231,15 @@ func (obj *api_client) APICallBody(method string, url string, body map[string]in
 	client.client.HTTPClient.Transport = tr
 	client.client.HTTPClient.Timeout = time.Duration(obj.timeout) * time.Second
 
-	reqBody, _ := json.MarshalIndent(&body, "", "\t")
+	reqBody, err := json.MarshalIndent(&body, "", "\t")
+	if err != nil {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "[Conversion] Unable to marshal request body",
+			Detail:   fmt.Sprintf("[Conversion] Body: %s - Err: %v", body, err),
+		})
+		return nil, diags
+	}
 
 	req, err := retryablehttp.NewRequest(method, fmt.Sprintf("%s/%s", obj.endpoint, url), bytes.NewBuffer(reqBody))
 	req.Close = true

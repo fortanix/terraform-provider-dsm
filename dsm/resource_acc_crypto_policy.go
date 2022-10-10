@@ -1,11 +1,3 @@
-// **********
-// Terraform Provider - DSM: resource: group
-// **********
-//       - Author:    fyoo at fortanix dot com
-//       - Version:   0.3.7
-//       - Date:      27/11/2020
-// **********
-
 package dsm
 
 import (
@@ -13,43 +5,28 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// [-] Define Group
+// [-] Define Account Cryptographic Policy
 func resourceAccountCryptoPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceCreateAccountCryptoPolicy,
 		ReadContext:   resourceReadAccountCryptoPolicy,
-		UpdateContext: resourceUpdateAccountCryptoPolicy,
+		UpdateContext: resourceCreateAccountCryptoPolicy,
 		DeleteContext: resourceDeleteAccountCryptoPolicy,
 		Schema: map[string]*schema.Schema{
-			"name": {
+			"acct_id": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"group_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"acct_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"creator": {
-				Type:     schema.TypeMap,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
-			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "",
-			},
 			"approval_policy": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"cryptographic_policy": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "{}",
@@ -61,100 +38,167 @@ func resourceAccountCryptoPolicy() *schema.Resource {
 	}
 }
 
-// [C]: Create Group
+// [C & U]: Create and Update Account Crypto Policy
 func resourceCreateAccountCryptoPolicy(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	group_object := map[string]interface{}{
-		"name":            d.Get("name").(string),
-		"description":     d.Get("description").(string),
-		"approval_policy": json.RawMessage(d.Get("approval_policy").(string)),
+
+	accountApprovalPolicyRead(ctx, d, m)
+
+	account_crypto_policy_object := make(map[string]interface{})
+	acct_id := d.Get("acct_id").(string)
+	cryptographic_policy := json.RawMessage(d.Get("cryptographic_policy").(string))
+	operation := "PATCH"
+	url := fmt.Sprintf("sys/v1/accounts/%s", acct_id)
+
+	if approval_policy, ok := d.Get("approval_policy").(string); ok {
+		if approval_policy != "" {
+			tflog.Warn(ctx, fmt.Sprintf("[C & U]: Approval policy is present: %s", approval_policy))
+			account_crypto_policy_object["method"] = "PATCH"
+			account_crypto_policy_object["operation"] = url
+			account_crypto_policy_object["body"] = map[string]interface{}{"cryptographic_policy": cryptographic_policy}
+			operation = "POST"
+			url = "sys/v1/approval_requests"
+		} else {
+			tflog.Warn(ctx, fmt.Sprintf("[C & U]: Approval policy is not set: %s", approval_policy))
+			account_crypto_policy_object["acct_id"] = acct_id
+			account_crypto_policy_object["cryptographic_policy"] = cryptographic_policy
+		}
 	}
 
-	req, err := m.(*api_client).APICallBody("POST", "sys/v1/groups", group_object)
-	if err != nil {
+	resp, derr := m.(*api_client).APICallBody(operation, url, account_crypto_policy_object)
+	if derr != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "[DSM SDK] Unable to call DSM provider API client",
-			Detail:   fmt.Sprintf("[E]: API: POST sys/v1/groups: %v", err),
+			Detail:   fmt.Sprintf("[C & U]: API Call: %s %s: %v", operation, url, derr),
 		})
 		return diags
 	}
 
-	d.SetId(req["group_id"].(string))
-	return resourceReadGroup(ctx, d, m)
+	resp_json, _ := json.Marshal(resp)
+	tflog.Warn(ctx, fmt.Sprintf("[C & U]: API response for cryptographic policy create operation: %s", resp_json))
+
+	d.SetId(acct_id)
+	return resourceReadAccountCryptoPolicy(ctx, d, m)
 }
 
-// [R]: Read Group
+// [R]: Read Account Crypto Policy
 func resourceReadAccountCryptoPolicy(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	req, statuscode, err := m.(*api_client).APICall("GET", fmt.Sprintf("sys/v1/groups/%s", d.Id()))
+	req, statuscode, err := m.(*api_client).APICall("GET", fmt.Sprintf("sys/v1/accounts/%s", d.Id()))
 	if statuscode == 404 {
 		d.SetId("")
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "[DSM SDK] DSM provider API client returned not found",
+			Detail:   fmt.Sprintf("[R]: API Call: GET sys/v1/accounts/%s", d.Id()),
+		})
+		return diags
 	} else {
 		if err != nil {
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "[DSM SDK] Unable to call DSM provider API client",
-				Detail:   fmt.Sprintf("[E]: API: GET sys/v1/groups: %v", err),
+				Detail:   fmt.Sprintf("[R]: API Call: GET sys/v1/accounts/%s: %v", d.Id(), err),
 			})
 			return diags
 		}
 
-		if err := d.Set("name", req["name"].(string)); err != nil {
-			return diag.FromErr(err)
-		}
-		if err := d.Set("group_id", req["group_id"].(string)); err != nil {
-			return diag.FromErr(err)
-		}
 		if err := d.Set("acct_id", req["acct_id"].(string)); err != nil {
 			return diag.FromErr(err)
-		}
-		if err := d.Set("creator", req["creator"]); err != nil {
-			return diag.FromErr(err)
-		}
-		if _, ok := req["description"]; ok {
-			if err := d.Set("description", req["description"].(string)); err != nil {
-				return diag.FromErr(err)
-			}
 		}
 		if _, ok := req["approval_policy"]; ok {
 			if err := d.Set("approval_policy", fmt.Sprintf("%v", req["approval_policy"])); err != nil {
 				return diag.FromErr(err)
 			}
 		}
+		if _, ok := req["cryptographic_policy"]; ok {
+			if err := d.Set("cryptographic_policy", fmt.Sprintf("%v", req["cryptographic_policy"])); err != nil {
+				return diag.FromErr(err)
+			}
+		} else {
+			tflog.Warn(ctx, "[R]: Expected cryptographic policy but found none. Operation might be pending if a quorum policy has been set.")
+		}
 	}
 	return diags
 }
 
-// [U]: Update Group
-func resourceUpdateAccountCryptoPolicy(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	return nil
-}
-
-// [D]: Delete Group
+// [D]: Delete Account Crypto Policy
 func resourceDeleteAccountCryptoPolicy(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	_, statuscode, err := m.(*api_client).APICall("DELETE", fmt.Sprintf("sys/v1/groups/%s", d.Id()))
-	if (err != nil) && (statuscode != 404) && (statuscode != 400) {
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "[DSM SDK] Unable to call DSM provider API client",
-			Detail:   fmt.Sprintf("[E]: API: DELETE sys/v1/groups: %v", err),
-		})
-		return diags
-	} else {
-		if statuscode == 400 {
-			diags = append(diags, diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  "[DSM SDK] Call to DSM provider API client failed",
-				Detail:   fmt.Sprintf("[E]: API: DELETE sys/v1/groups: %s", "Group Not Empty"),
-			})
-			return diags
+	accountApprovalPolicyRead(ctx, d, m)
+
+	account_crypto_policy_object := make(map[string]interface{})
+	acct_id := d.Get("acct_id").(string)
+	cryptographic_policy := "remove"
+	operation := "PATCH"
+	url := fmt.Sprintf("sys/v1/accounts/%s", acct_id)
+
+	if approval_policy, ok := d.Get("approval_policy").(string); ok {
+		if approval_policy != "" {
+			tflog.Warn(ctx, fmt.Sprintf("[D]: Approval policy is present: %s", approval_policy))
+			account_crypto_policy_object["method"] = "PATCH"
+			account_crypto_policy_object["operation"] = url
+			account_crypto_policy_object["body"] = map[string]interface{}{"cryptographic_policy": cryptographic_policy}
+			operation = "POST"
+			url = "sys/v1/approval_requests"
+		} else {
+			tflog.Warn(ctx, fmt.Sprintf("[D]: Approval policy is not set: %s", approval_policy))
+			account_crypto_policy_object["acct_id"] = acct_id
+			account_crypto_policy_object["cryptographic_policy"] = cryptographic_policy
 		}
 	}
 
-	d.SetId("")
+	resp, err := m.(*api_client).APICallBody(operation, url, account_crypto_policy_object)
+	if err != nil {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "[DSM SDK] Unable to call DSM provider API client",
+			Detail:   fmt.Sprintf("[D]: API Call: %s %s: %v", operation, url, err),
+		})
+		return diags
+	}
+
+	resp_json, _ := json.Marshal(resp)
+	tflog.Warn(ctx, fmt.Sprintf("[D]: API response for cryptographic policy delete operation: %s", resp_json))
+
+	d.SetId(acct_id)
 	return nil
+}
+
+// Get account details
+func accountApprovalPolicyRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	req, statuscode, err := m.(*api_client).APICall("GET", fmt.Sprintf("sys/v1/accounts/%s", d.Get("acct_id").(string)))
+	if statuscode == 404 {
+		d.SetId("")
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "[DSM SDK] DSM provider API client returned not found",
+			Detail:   fmt.Sprintf("[R]: API Call: GET sys/v1/accounts/%s", d.Get("acct_id").(string)),
+		})
+		return diags
+	} else {
+		if err != nil {
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "[DSM SDK] Unable to call DSM provider API client",
+				Detail:   fmt.Sprintf("[R]: API Call: GET sys/v1/accounts/%s: %v", d.Get("acct_id").(string), err),
+			})
+			return diags
+		}
+		tflog.Warn(ctx, fmt.Sprintf("[R]: API read account id: %s", req["acct_id"]))
+		if _, ok := req["approval_policy"]; ok {
+			if req["approval_policy"] != nil {
+				if err := d.Set("approval_policy", fmt.Sprintf("%s", req["approval_policy"])); err != nil {
+					tflog.Warn(ctx, fmt.Sprintf("[R]: API read approval policy: %s", req["approval_policy"]))
+					return diag.FromErr(err)
+				}
+			}
+		}
+	}
+	return diags
 }
