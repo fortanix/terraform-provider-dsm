@@ -47,6 +47,10 @@ func dataSourceGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"cryptographic_policy": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -86,6 +90,11 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, m interfac
 			}
 			if _, ok := data.(map[string]interface{})["approval_policy"]; ok {
 				if err := d.Set("approval_policy", fmt.Sprintf("%v", data.(map[string]interface{})["approval_policy"])); err != nil {
+					return diag.FromErr(err)
+				}
+			}
+			if _, ok := data.(map[string]interface{})["cryptographic_policy"]; ok {
+				if err := d.Set("cryptographic_policy", fmt.Sprintf("%v", data.(map[string]interface{})["cryptographic_policy"])); err != nil {
 					return diag.FromErr(err)
 				}
 			}

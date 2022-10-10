@@ -18,12 +18,12 @@ import (
 )
 
 // [-] Define Group
-func resourceGroup() *schema.Resource {
+func resourceAccountCryptoPolicy() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceCreateGroup,
-		ReadContext:   resourceReadGroup,
-		UpdateContext: resourceUpdateGroup,
-		DeleteContext: resourceDeleteGroup,
+		CreateContext: resourceCreateAccountCryptoPolicy,
+		ReadContext:   resourceReadAccountCryptoPolicy,
+		UpdateContext: resourceUpdateAccountCryptoPolicy,
+		DeleteContext: resourceDeleteAccountCryptoPolicy,
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
@@ -62,7 +62,7 @@ func resourceGroup() *schema.Resource {
 }
 
 // [C]: Create Group
-func resourceCreateGroup(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceCreateAccountCryptoPolicy(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	group_object := map[string]interface{}{
 		"name":            d.Get("name").(string),
@@ -85,7 +85,7 @@ func resourceCreateGroup(ctx context.Context, d *schema.ResourceData, m interfac
 }
 
 // [R]: Read Group
-func resourceReadGroup(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceReadAccountCryptoPolicy(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	req, statuscode, err := m.(*api_client).APICall("GET", fmt.Sprintf("sys/v1/groups/%s", d.Id()))
@@ -128,12 +128,12 @@ func resourceReadGroup(ctx context.Context, d *schema.ResourceData, m interface{
 }
 
 // [U]: Update Group
-func resourceUpdateGroup(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceUpdateAccountCryptoPolicy(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	return nil
 }
 
 // [D]: Delete Group
-func resourceDeleteGroup(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceDeleteAccountCryptoPolicy(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	_, statuscode, err := m.(*api_client).APICall("DELETE", fmt.Sprintf("sys/v1/groups/%s", d.Id()))

@@ -152,7 +152,7 @@ func resourceSobject() *schema.Resource {
 			},
 		},
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
 }
@@ -173,12 +173,13 @@ func contains(s []string, str string) bool {
 func unmarshalStringToJson(inputString string) (interface{}, error) {
 	type mapFormat map[string]interface{}
 	var inputMap mapFormat
-	if err := json.Unmarshal([]byte(inputString), &inputMap); err!=nil{
+	if err := json.Unmarshal([]byte(inputString), &inputMap); err != nil {
 		return nil, err
 	}
 
 	return inputMap, nil
 }
+
 // createSO: Create Security Object
 func createSO(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
@@ -445,43 +446,44 @@ func resourceUpdateSobject(ctx context.Context, d *schema.ResourceData, m interf
 		security_object["rsa"] = rsa_obj
 	}
 	if d.HasChange("key_ops") {
-	    security_object["key_ops"] = d.Get("key_ops")
+		security_object["key_ops"] = d.Get("key_ops")
 
 	}
-	if security_object != nil {
-		req, err := m.(*api_client).APICallBody("PATCH", fmt.Sprintf("crypto/v1/keys/%s", d.Id()), security_object)
-		if err != nil {
+	// Unnecessary if cause object explicitly defined above
+	//if security_object != nil {
+	req, err := m.(*api_client).APICallBody("PATCH", fmt.Sprintf("crypto/v1/keys/%s", d.Id()), security_object)
+	if err != nil {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "[DSM SDK] Unable to call DSM provider API client",
+			Detail:   fmt.Sprintf("[E]: API: PATCH crypto/v1/keys: %v", err),
+		})
+		return diags
+	}
+
+	key_ops := make([]string, len(req["key_ops"].([]interface{})))
+	if err := d.Get("key_ops").([]interface{}); len(err) > 0 {
+		if len(d.Get("key_ops").([]interface{})) == len(req["key_ops"].([]interface{})) {
+			for idx, key_op := range d.Get("key_ops").([]interface{}) {
+				key_ops[idx] = fmt.Sprint(key_op)
+			}
+		} else {
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "[DSM SDK] Unable to call DSM provider API client",
-				Detail:   fmt.Sprintf("[E]: API: PATCH crypto/v1/keys: %v", err),
+				Detail:   "[E]: API: PATCH crypto/v1/keys: Sync issue from State and DSM",
 			})
 			return diags
 		}
-
-		key_ops := make([]string, len(req["key_ops"].([]interface{})))
-		if err := d.Get("key_ops").([]interface{}); len(err) > 0 {
-			if len(d.Get("key_ops").([]interface{})) == len(req["key_ops"].([]interface{})) {
-				for idx, key_op := range d.Get("key_ops").([]interface{}) {
-					key_ops[idx] = fmt.Sprint(key_op)
-				}
-			} else {
-				diags = append(diags, diag.Diagnostic{
-					Severity: diag.Error,
-					Summary:  "[DSM SDK] Unable to call DSM provider API client",
-					Detail:   fmt.Sprintf("[E]: API: PATCH crypto/v1/keys: Sync issue from State and DSM"),
-				})
-				return diags
-			}
-		} else {
-			for idx, key_op := range req["key_ops"].([]interface{}) {
-				key_ops[idx] = fmt.Sprint(key_op)
-			}
-		}
-		if err := d.Set("key_ops", key_ops); err != nil {
-			return diag.FromErr(err)
+	} else {
+		for idx, key_op := range req["key_ops"].([]interface{}) {
+			key_ops[idx] = fmt.Sprint(key_op)
 		}
 	}
+	if err := d.Set("key_ops", key_ops); err != nil {
+		return diag.FromErr(err)
+	}
+	//}
 
 	return resourceReadSobject(ctx, d, m)
 }

@@ -8,7 +8,7 @@ require (
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-hclog v1.2.2 // indirect
 	github.com/hashicorp/go-retryablehttp v0.7.1
-	github.com/hashicorp/terraform-plugin-log v0.7.0 // indirect
+	github.com/hashicorp/terraform-plugin-log v0.7.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.19.0
 	github.com/hashicorp/yamux v0.1.1 // indirect
 	github.com/mitchellh/go-wordwrap v1.0.1 // indirect
