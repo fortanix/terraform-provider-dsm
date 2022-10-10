@@ -22,7 +22,7 @@ func resourceGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceCreateGroup,
 		ReadContext:   resourceReadGroup,
-		UpdateContext: resourceUpdateGroup,
+		UpdateContext: resourceCreateGroup,
 		DeleteContext: resourceDeleteGroup,
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -47,12 +47,10 @@ func resourceGroup() *schema.Resource {
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "",
 			},
 			"approval_policy": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "{}",
 			},
 		},
 		Importer: &schema.ResourceImporter{
@@ -61,15 +59,19 @@ func resourceGroup() *schema.Resource {
 	}
 }
 
-// [C]: Create Group
+// [C]: Create & Update Group
 func resourceCreateGroup(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	group_object := map[string]interface{}{
-		"name":            d.Get("name").(string),
-		"description":     d.Get("description").(string),
-		"approval_policy": json.RawMessage(d.Get("approval_policy").(string)),
-	}
 
+	group_object := make(map[string]interface{})
+
+	group_object["name"] = d.Get("name").(string)
+	if _, ok := d.GetOk("description"); ok {
+		group_object["description"] = d.Get("description").(string)
+	}
+	if _, ok := d.GetOk("approval_policy"); ok {
+		group_object["approval_policy"] = json.RawMessage(d.Get("approval_policy").(string))
+	}
 	req, err := m.(*api_client).APICallBody("POST", "sys/v1/groups", group_object)
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
@@ -127,21 +129,18 @@ func resourceReadGroup(ctx context.Context, d *schema.ResourceData, m interface{
 	return diags
 }
 
-// [U]: Update Group
-func resourceUpdateGroup(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	return nil
-}
-
 // [D]: Delete Group
 func resourceDeleteGroup(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	_, statuscode, err := m.(*api_client).APICall("DELETE", fmt.Sprintf("sys/v1/groups/%s", d.Id()))
+	dataSourceGroupRead(ctx, d, m)
+
+	_, statuscode, err := m.(*api_client).APICall("DELETE", fmt.Sprintf("sys/v1/groups/%s", d.Get("group_id").(string)))
 	if (err != nil) && (statuscode != 404) && (statuscode != 400) {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "[DSM SDK] Unable to call DSM provider API client",
-			Detail:   fmt.Sprintf("[E]: API: DELETE sys/v1/groups: %v", err),
+			Detail:   fmt.Sprintf("[E]: API: DELETE sys/v1/groups/%s: %v", d.Get("group_id").(string), err),
 		})
 		return diags
 	} else {
@@ -149,7 +148,7 @@ func resourceDeleteGroup(ctx context.Context, d *schema.ResourceData, m interfac
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "[DSM SDK] Call to DSM provider API client failed",
-				Detail:   fmt.Sprintf("[E]: API: DELETE sys/v1/groups: %s", "Group Not Empty"),
+				Detail:   fmt.Sprintf("[E]: API: DELETE sys/v1/groups/%s Group Not Empty", d.Get("group_id").(string)),
 			})
 			return diags
 		}

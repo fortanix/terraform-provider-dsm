@@ -28,8 +28,7 @@ func resourceAccountCryptoPolicy() *schema.Resource {
 			},
 			"cryptographic_policy": {
 				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "{}",
+				Required: true,
 			},
 		},
 		Importer: &schema.ResourceImporter{
@@ -50,19 +49,17 @@ func resourceCreateAccountCryptoPolicy(ctx context.Context, d *schema.ResourceDa
 	operation := "PATCH"
 	url := fmt.Sprintf("sys/v1/accounts/%s", acct_id)
 
-	if approval_policy, ok := d.Get("approval_policy").(string); ok {
-		if approval_policy != "" {
-			tflog.Warn(ctx, fmt.Sprintf("[C & U]: Approval policy is present: %s", approval_policy))
-			account_crypto_policy_object["method"] = "PATCH"
-			account_crypto_policy_object["operation"] = url
-			account_crypto_policy_object["body"] = map[string]interface{}{"cryptographic_policy": cryptographic_policy}
-			operation = "POST"
-			url = "sys/v1/approval_requests"
-		} else {
-			tflog.Warn(ctx, fmt.Sprintf("[C & U]: Approval policy is not set: %s", approval_policy))
-			account_crypto_policy_object["acct_id"] = acct_id
-			account_crypto_policy_object["cryptographic_policy"] = cryptographic_policy
-		}
+	if approval_policy, ok := d.GetOk("approval_policy"); ok {
+		tflog.Warn(ctx, fmt.Sprintf("[C & U]: Approval policy is present: %s", approval_policy))
+		account_crypto_policy_object["method"] = "PATCH"
+		account_crypto_policy_object["operation"] = url
+		account_crypto_policy_object["body"] = map[string]interface{}{"cryptographic_policy": cryptographic_policy}
+		operation = "POST"
+		url = "sys/v1/approval_requests"
+	} else {
+		tflog.Warn(ctx, fmt.Sprintf("[C & U]: Approval policy is not set: %s", approval_policy))
+		account_crypto_policy_object["acct_id"] = acct_id
+		account_crypto_policy_object["cryptographic_policy"] = cryptographic_policy
 	}
 
 	resp, derr := m.(*api_client).APICallBody(operation, url, account_crypto_policy_object)
@@ -109,12 +106,12 @@ func resourceReadAccountCryptoPolicy(ctx context.Context, d *schema.ResourceData
 			return diag.FromErr(err)
 		}
 		if _, ok := req["approval_policy"]; ok {
-			if err := d.Set("approval_policy", fmt.Sprintf("%v", req["approval_policy"])); err != nil {
+			if err := d.Set("approval_policy", fmt.Sprintf("%s", req["approval_policy"])); err != nil {
 				return diag.FromErr(err)
 			}
 		}
 		if _, ok := req["cryptographic_policy"]; ok {
-			if err := d.Set("cryptographic_policy", fmt.Sprintf("%v", req["cryptographic_policy"])); err != nil {
+			if err := d.Set("cryptographic_policy", fmt.Sprintf("%s", req["cryptographic_policy"])); err != nil {
 				return diag.FromErr(err)
 			}
 		} else {
@@ -136,19 +133,17 @@ func resourceDeleteAccountCryptoPolicy(ctx context.Context, d *schema.ResourceDa
 	operation := "PATCH"
 	url := fmt.Sprintf("sys/v1/accounts/%s", acct_id)
 
-	if approval_policy, ok := d.Get("approval_policy").(string); ok {
-		if approval_policy != "" {
-			tflog.Warn(ctx, fmt.Sprintf("[D]: Approval policy is present: %s", approval_policy))
-			account_crypto_policy_object["method"] = "PATCH"
-			account_crypto_policy_object["operation"] = url
-			account_crypto_policy_object["body"] = map[string]interface{}{"cryptographic_policy": cryptographic_policy}
-			operation = "POST"
-			url = "sys/v1/approval_requests"
-		} else {
-			tflog.Warn(ctx, fmt.Sprintf("[D]: Approval policy is not set: %s", approval_policy))
-			account_crypto_policy_object["acct_id"] = acct_id
-			account_crypto_policy_object["cryptographic_policy"] = cryptographic_policy
-		}
+	if approval_policy, ok := d.GetOk("approval_policy"); ok {
+		tflog.Warn(ctx, fmt.Sprintf("[D]: Approval policy is present: %s", approval_policy))
+		account_crypto_policy_object["method"] = "PATCH"
+		account_crypto_policy_object["operation"] = url
+		account_crypto_policy_object["body"] = map[string]interface{}{"cryptographic_policy": cryptographic_policy}
+		operation = "POST"
+		url = "sys/v1/approval_requests"
+	} else {
+		tflog.Warn(ctx, fmt.Sprintf("[D]: Approval policy is not set: %s", approval_policy))
+		account_crypto_policy_object["acct_id"] = acct_id
+		account_crypto_policy_object["cryptographic_policy"] = cryptographic_policy
 	}
 
 	resp, err := m.(*api_client).APICallBody(operation, url, account_crypto_policy_object)
@@ -192,12 +187,12 @@ func accountApprovalPolicyRead(ctx context.Context, d *schema.ResourceData, m in
 		}
 		tflog.Warn(ctx, fmt.Sprintf("[R]: API read account id: %s", req["acct_id"]))
 		if _, ok := req["approval_policy"]; ok {
-			if req["approval_policy"] != nil {
-				if err := d.Set("approval_policy", fmt.Sprintf("%s", req["approval_policy"])); err != nil {
-					tflog.Warn(ctx, fmt.Sprintf("[R]: API read approval policy: %s", req["approval_policy"]))
-					return diag.FromErr(err)
-				}
+			//if req["approval_policy"] != nil {
+			if err := d.Set("approval_policy", fmt.Sprintf("%s", req["approval_policy"])); err != nil {
+				tflog.Warn(ctx, fmt.Sprintf("[R]: API read approval policy: %s", req["approval_policy"]))
+				return diag.FromErr(err)
 			}
+			//}
 		}
 	}
 	return diags

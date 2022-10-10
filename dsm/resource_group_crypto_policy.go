@@ -69,23 +69,18 @@ func resourceCreateGroupCryptoPolicy(ctx context.Context, d *schema.ResourceData
 	operation := "PATCH"
 	url := fmt.Sprintf("sys/v1/groups/%s", group_id)
 
-	if approval_policy, ok := d.Get("approval_policy").(string); ok {
-		if approval_policy != "" {
-			tflog.Warn(ctx, fmt.Sprintf("[C & U]: Approval policy is present: %s", approval_policy))
-			group_crypto_policy_object["method"] = "PATCH"
-			group_crypto_policy_object["operation"] = url
-			group_crypto_policy_object["body"] = map[string]interface{}{"cryptographic_policy": cryptographic_policy}
-			operation = "POST"
-			url = "sys/v1/approval_requests"
-		} else {
-			tflog.Warn(ctx, fmt.Sprintf("[C & U]: Approval policy is not set: %s", approval_policy))
-			group_crypto_policy_object["group_id"] = group_id
-			group_crypto_policy_object["cryptographic_policy"] = cryptographic_policy
-		}
+	if approval_policy, ok := d.GetOk("approval_policy"); ok {
+		tflog.Warn(ctx, fmt.Sprintf("[C & U]: Approval policy is present: %s", approval_policy))
+		group_crypto_policy_object["method"] = "PATCH"
+		group_crypto_policy_object["operation"] = url
+		group_crypto_policy_object["body"] = map[string]interface{}{"cryptographic_policy": cryptographic_policy}
+		operation = "POST"
+		url = "sys/v1/approval_requests"
+	} else {
+		tflog.Warn(ctx, fmt.Sprintf("[C & U]: Approval policy is not set: %s", approval_policy))
+		group_crypto_policy_object["group_id"] = group_id
+		group_crypto_policy_object["cryptographic_policy"] = cryptographic_policy
 	}
-
-	group_crypto_policy_object_json, _ := json.Marshal(group_crypto_policy_object)
-	tflog.Warn(ctx, fmt.Sprintf("[C & U]: Creating group cryptographic policy object: %s", group_crypto_policy_object_json))
 
 	resp, err := m.(*api_client).APICallBody(operation, url, group_crypto_policy_object)
 	if err != nil {
@@ -111,6 +106,12 @@ func resourceReadGroupCryptoPolicy(ctx context.Context, d *schema.ResourceData, 
 	req, statuscode, err := m.(*api_client).APICall("GET", fmt.Sprintf("sys/v1/groups/%s", d.Id()))
 	if statuscode == 404 {
 		d.SetId("")
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "[DSM SDK] DSM provider API client returned not found",
+			Detail:   fmt.Sprintf("[R]: API Call: GET sys/v1/groups/%s", d.Id()),
+		})
+		return diags
 	} else {
 		if err != nil {
 			diags = append(diags, diag.Diagnostic{
@@ -166,19 +167,17 @@ func resourceDeleteGroupCryptoPolicy(ctx context.Context, d *schema.ResourceData
 	operation := "PATCH"
 	url := fmt.Sprintf("sys/v1/groups/%s", group_id)
 
-	if approval_policy, ok := d.Get("approval_policy").(string); ok {
-		if approval_policy != "" {
-			tflog.Warn(ctx, fmt.Sprintf("[D]: Approval policy is present: %s", approval_policy))
-			group_crypto_policy_object["method"] = "PATCH"
-			group_crypto_policy_object["operation"] = url
-			group_crypto_policy_object["body"] = map[string]interface{}{"cryptographic_policy": cryptographic_policy}
-			operation = "POST"
-			url = "sys/v1/approval_requests"
-		} else {
-			tflog.Warn(ctx, fmt.Sprintf("[D]: Approval policy is not set: %s", approval_policy))
-			group_crypto_policy_object["group_id"] = group_id
-			group_crypto_policy_object["cryptographic_policy"] = cryptographic_policy
-		}
+	if approval_policy, ok := d.GetOk("approval_policy"); ok {
+		tflog.Warn(ctx, fmt.Sprintf("[D]: Approval policy is present: %s", approval_policy))
+		group_crypto_policy_object["method"] = "PATCH"
+		group_crypto_policy_object["operation"] = url
+		group_crypto_policy_object["body"] = map[string]interface{}{"cryptographic_policy": cryptographic_policy}
+		operation = "POST"
+		url = "sys/v1/approval_requests"
+	} else {
+		tflog.Warn(ctx, fmt.Sprintf("[D]: Approval policy is not set: %s", approval_policy))
+		group_crypto_policy_object["group_id"] = group_id
+		group_crypto_policy_object["cryptographic_policy"] = cryptographic_policy
 	}
 
 	resp, err := m.(*api_client).APICallBody(operation, url, group_crypto_policy_object)
