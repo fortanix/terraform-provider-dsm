@@ -35,5 +35,5 @@ The following attributes are stored in the `dsm_group_crypto_policy` resource bl
 * **cryptographic\_policy**: The Fortanix DSM group object cryptographic policy definition as a JSON string
 
 ## Important Note
-It is best to use a "depends_on" directive to wait for the creation of the parent group resource:
+It is best to use a "depends_on" directive to wait for the creation of the parent group resource:</br>
 depends_on = [resource.dsm_group.GROUPNAME]
