@@ -65,7 +65,7 @@ func resourceCreateGroup(ctx context.Context, d *schema.ResourceData, m interfac
 	if _, ok := d.GetOk("approval_policy"); ok {
 		group_object["approval_policy"] = json.RawMessage(d.Get("approval_policy").(string))
 	}
-	req, err := m.(*api_client).APICallBody("POST", "sys/v1/groups", group_object)
+	resp, err := m.(*api_client).APICallBody("POST", "sys/v1/groups", group_object)
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
@@ -75,18 +75,22 @@ func resourceCreateGroup(ctx context.Context, d *schema.ResourceData, m interfac
 		return diags
 	}
 
-	d.SetId(req["group_id"].(string))
+	resp_json, _ := json.Marshal(resp)
+	tflog.Warn(ctx, fmt.Sprintf("[U]: API response for group create operation: %s", resp_json))
+
+	d.SetId(resp["group_id"].(string))
 	return resourceReadGroup(ctx, d, m)
 }
 
 // [U]: Update Group
 func resourceUpdateGroup(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	var approval_policy_new json.RawMessage
+	var approval_policy_new json.RawMessage = nil
 	description_new := ""
 
 	if _, ok := d.GetOk("approval_policy"); ok {
 		approval_policy_new = json.RawMessage(d.Get("approval_policy").(string))
+		d.Set("approval_policy", nil)
 	}
 	if description, ok := d.GetOk("description"); ok {
 		description_new = description.(string)
@@ -97,15 +101,22 @@ func resourceUpdateGroup(ctx context.Context, d *schema.ResourceData, m interfac
 	group_object := make(map[string]interface{})
 	body_object := make(map[string]interface{})
 	group_id := d.Get("group_id").(string)
-	tflog.Warn(ctx, fmt.Sprintf("Group id: ->%s<-", group_id))
 	operation := "PATCH"
 	url := fmt.Sprintf("sys/v1/groups/%s", group_id)
+
+	tflog.Warn(ctx, fmt.Sprintf("Update operation group id: ->%s<-", group_id))
+	tflog.Warn(ctx, fmt.Sprintf("New Approval Policy: ->%s<-", approval_policy_new))
+	tflog.Warn(ctx, fmt.Sprintf("Old Approval Policy: ->%s<-", json.RawMessage(d.Get("approval_policy").(string))))
 
 	if _, ok := d.GetOk("approval_policy"); ok {
 		tflog.Warn(ctx, "[U]: Approval policy is present.")
 		group_object["method"] = "PATCH"
 		group_object["operation"] = url
-		body_object["approval_policy"] = approval_policy_new
+		if approval_policy_new == nil {
+			body_object["approval_policy"] = make(map[string]interface{})
+		} else {
+			body_object["approval_policy"] = approval_policy_new
+		}
 		if description_new != "" {
 			body_object["description"] = description_new
 		}
@@ -121,6 +132,9 @@ func resourceUpdateGroup(ctx context.Context, d *schema.ResourceData, m interfac
 		}
 	}
 
+	jj, _ := json.Marshal(group_object)
+	tflog.Warn(ctx, fmt.Sprintf("Group Object: %s", jj))
+
 	resp, err := m.(*api_client).APICallBody(operation, url, group_object)
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
@@ -132,7 +146,7 @@ func resourceUpdateGroup(ctx context.Context, d *schema.ResourceData, m interfac
 	}
 
 	resp_json, _ := json.Marshal(resp)
-	tflog.Warn(ctx, fmt.Sprintf("[U]: API response for approval policy create operation: %s", resp_json))
+	tflog.Warn(ctx, fmt.Sprintf("[U]: API response for group update operation: %s", resp_json))
 
 	d.SetId(group_id)
 	return resourceReadGroup(ctx, d, m)

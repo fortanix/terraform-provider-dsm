@@ -70,15 +70,15 @@ func resourceCreateGroupCryptoPolicy(ctx context.Context, d *schema.ResourceData
 	operation := "PATCH"
 	url := fmt.Sprintf("sys/v1/groups/%s", group_id)
 
-	if approval_policy, ok := d.GetOk("approval_policy"); ok {
-		tflog.Warn(ctx, fmt.Sprintf("[C & U]: Approval policy is present: %s", approval_policy))
+	if _, ok := d.GetOk("approval_policy"); ok {
+		tflog.Warn(ctx, "[C & U]: Approval policy is present.")
 		group_crypto_policy_object["method"] = "PATCH"
 		group_crypto_policy_object["operation"] = url
 		group_crypto_policy_object["body"] = map[string]interface{}{"cryptographic_policy": cryptographic_policy}
 		operation = "POST"
 		url = "sys/v1/approval_requests"
 	} else {
-		tflog.Warn(ctx, fmt.Sprintf("[C & U]: Approval policy is not set: %s", approval_policy))
+		tflog.Warn(ctx, "[C & U]: Approval policy is not set.")
 		group_crypto_policy_object["group_id"] = group_id
 		group_crypto_policy_object["cryptographic_policy"] = cryptographic_policy
 	}
