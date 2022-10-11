@@ -61,11 +61,12 @@ func resourceGroupCryptoPolicy() *schema.Resource {
 func resourceCreateGroupCryptoPolicy(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
+	cryptographic_policy := json.RawMessage(d.Get("cryptographic_policy").(string))
+
 	dataSourceGroupRead(ctx, d, m)
 
 	group_crypto_policy_object := make(map[string]interface{})
 	group_id := d.Get("group_id").(string)
-	cryptographic_policy := json.RawMessage(d.Get("cryptographic_policy").(string))
 	operation := "PATCH"
 	url := fmt.Sprintf("sys/v1/groups/%s", group_id)
 

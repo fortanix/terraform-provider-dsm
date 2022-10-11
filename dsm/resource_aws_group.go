@@ -97,11 +97,11 @@ func resourceCreateAWSGroup(ctx context.Context, d *schema.ResourceData, m inter
 	}
 
 	// 0.5.0: parse optionals
-	access_key, access_key_exists := d.GetOkExists("access_key")
+	access_key, access_key_exists := d.GetOk("access_key")
 	if access_key_exists {
 		group_object["add_hmg"].([]map[string]interface{})[0]["access_key"] = access_key.(string)
 	}
-	secret_key, secret_key_exists := d.GetOkExists("secret_key")
+	secret_key, secret_key_exists := d.GetOk("secret_key")
 	if secret_key_exists {
 		group_object["add_hmg"].([]map[string]interface{})[0]["secret_key"] = secret_key.(string)
 	}

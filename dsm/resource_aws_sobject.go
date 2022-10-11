@@ -368,8 +368,8 @@ func resourceUpdateAWSSobject(ctx context.Context, d *schema.ResourceData, m int
 	var diags diag.Diagnostics
 
 	// already has been replaced so "rotate" and "rotate_from" does not apply
-	_, replacement := d.GetOkExists("replacement")
-	_, replaced := d.GetOkExists("replaced")
+	_, replacement := d.GetOk("replacement")
+	_, replaced := d.GetOk("replaced")
 	if replacement || replaced {
 		d.Set("rotate", "")
 		d.Set("rotate_from", "")

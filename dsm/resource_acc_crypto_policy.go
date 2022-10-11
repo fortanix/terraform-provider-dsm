@@ -187,12 +187,10 @@ func accountApprovalPolicyRead(ctx context.Context, d *schema.ResourceData, m in
 		}
 		tflog.Warn(ctx, fmt.Sprintf("[R]: API read account id: %s", req["acct_id"]))
 		if _, ok := req["approval_policy"]; ok {
-			//if req["approval_policy"] != nil {
 			if err := d.Set("approval_policy", fmt.Sprintf("%s", req["approval_policy"])); err != nil {
 				tflog.Warn(ctx, fmt.Sprintf("[R]: API read approval policy: %s", req["approval_policy"]))
 				return diag.FromErr(err)
 			}
-			//}
 		}
 	}
 	return diags
