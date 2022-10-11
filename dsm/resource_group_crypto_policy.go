@@ -47,8 +47,7 @@ func resourceGroupCryptoPolicy() *schema.Resource {
 			},
 			"cryptographic_policy": {
 				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "{}",
+				Required: true,
 			},
 		},
 		Importer: &schema.ResourceImporter{
@@ -67,6 +66,7 @@ func resourceCreateGroupCryptoPolicy(ctx context.Context, d *schema.ResourceData
 
 	group_crypto_policy_object := make(map[string]interface{})
 	group_id := d.Get("group_id").(string)
+	tflog.Warn(ctx, fmt.Sprintf("Group id: ->%s<-", group_id))
 	operation := "PATCH"
 	url := fmt.Sprintf("sys/v1/groups/%s", group_id)
 

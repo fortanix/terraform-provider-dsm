@@ -1,11 +1,3 @@
-// **********
-// Terraform Provider - DSM: resource: group
-// **********
-//       - Author:    fyoo at fortanix dot com
-//       - Version:   0.3.7
-//       - Date:      27/11/2020
-// **********
-
 package dsm
 
 import (
@@ -13,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -22,7 +15,7 @@ func resourceGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceCreateGroup,
 		ReadContext:   resourceReadGroup,
-		UpdateContext: resourceCreateGroup,
+		UpdateContext: resourceUpdateGroup,
 		DeleteContext: resourceDeleteGroup,
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -59,7 +52,7 @@ func resourceGroup() *schema.Resource {
 	}
 }
 
-// [C]: Create & Update Group
+// [C]: Create Group
 func resourceCreateGroup(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
@@ -83,6 +76,65 @@ func resourceCreateGroup(ctx context.Context, d *schema.ResourceData, m interfac
 	}
 
 	d.SetId(req["group_id"].(string))
+	return resourceReadGroup(ctx, d, m)
+}
+
+// [U]: Update Group
+func resourceUpdateGroup(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	var approval_policy_new json.RawMessage
+	description_new := ""
+
+	if _, ok := d.GetOk("approval_policy"); ok {
+		approval_policy_new = json.RawMessage(d.Get("approval_policy").(string))
+	}
+	if description, ok := d.GetOk("description"); ok {
+		description_new = description.(string)
+	}
+
+	dataSourceGroupRead(ctx, d, m)
+
+	group_object := make(map[string]interface{})
+	body_object := make(map[string]interface{})
+	group_id := d.Get("group_id").(string)
+	tflog.Warn(ctx, fmt.Sprintf("Group id: ->%s<-", group_id))
+	operation := "PATCH"
+	url := fmt.Sprintf("sys/v1/groups/%s", group_id)
+
+	if _, ok := d.GetOk("approval_policy"); ok {
+		tflog.Warn(ctx, "[U]: Approval policy is present.")
+		group_object["method"] = "PATCH"
+		group_object["operation"] = url
+		body_object["approval_policy"] = approval_policy_new
+		if description_new != "" {
+			body_object["description"] = description_new
+		}
+		group_object["body"] = body_object
+		operation = "POST"
+		url = "sys/v1/approval_requests"
+	} else {
+		tflog.Warn(ctx, "[U]: Approval policy is not set.")
+		group_object["group_id"] = group_id
+		group_object["approval_policy"] = approval_policy_new
+		if description_new != "" {
+			group_object["description"] = description_new
+		}
+	}
+
+	resp, err := m.(*api_client).APICallBody(operation, url, group_object)
+	if err != nil {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "[DSM SDK] Unable to call DSM provider API client",
+			Detail:   fmt.Sprintf("[U]: API Call: %s %s: %v", operation, url, err),
+		})
+		return diags
+	}
+
+	resp_json, _ := json.Marshal(resp)
+	tflog.Warn(ctx, fmt.Sprintf("[U]: API response for approval policy create operation: %s", resp_json))
+
+	d.SetId(group_id)
 	return resourceReadGroup(ctx, d, m)
 }
 
@@ -134,24 +186,24 @@ func resourceDeleteGroup(ctx context.Context, d *schema.ResourceData, m interfac
 	var diags diag.Diagnostics
 
 	dataSourceGroupRead(ctx, d, m)
+	group_id := d.Get("group_id").(string)
 
-	_, statuscode, err := m.(*api_client).APICall("DELETE", fmt.Sprintf("sys/v1/groups/%s", d.Get("group_id").(string)))
-	if (err != nil) && (statuscode != 404) && (statuscode != 400) {
+	_, statuscode, err := m.(*api_client).APICall("DELETE", fmt.Sprintf("sys/v1/groups/%s", group_id))
+	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "[DSM SDK] Unable to call DSM provider API client",
-			Detail:   fmt.Sprintf("[E]: API: DELETE sys/v1/groups/%s: %v", d.Get("group_id").(string), err),
+			Detail:   fmt.Sprintf("[E]: API: DELETE sys/v1/groups/%s %d: %v", group_id, statuscode, err),
 		})
 		return diags
-	} else {
-		if statuscode == 400 {
-			diags = append(diags, diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  "[DSM SDK] Call to DSM provider API client failed",
-				Detail:   fmt.Sprintf("[E]: API: DELETE sys/v1/groups/%s Group Not Empty", d.Get("group_id").(string)),
-			})
-			return diags
-		}
+	}
+	if statuscode == 400 {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "[DSM SDK] Call to DSM provider API client failed",
+			Detail:   fmt.Sprintf("[E]: API: DELETE sys/v1/groups/%s Group is not empty", group_id),
+		})
+		return diags
 	}
 
 	d.SetId("")
