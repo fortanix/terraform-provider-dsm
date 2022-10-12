@@ -87,13 +87,19 @@ func resourceUpdateGroup(ctx context.Context, d *schema.ResourceData, m interfac
 	var diags diag.Diagnostics
 	var approval_policy_new json.RawMessage = nil
 	description_new := ""
+	name_new := ""
 
-	if _, ok := d.GetOk("approval_policy"); ok {
-		approval_policy_new = json.RawMessage(d.Get("approval_policy").(string))
+	if approval_policy, ok := d.GetOk("approval_policy"); ok {
+		approval_policy_new = json.RawMessage(approval_policy.(string))
 		d.Set("approval_policy", nil)
 	}
+
 	if description, ok := d.GetOk("description"); ok {
 		description_new = description.(string)
+	}
+
+	if d.HasChange("name") {
+		name_new = d.Get("name").(string)
 	}
 
 	dataSourceGroupRead(ctx, d, m)
@@ -117,8 +123,9 @@ func resourceUpdateGroup(ctx context.Context, d *schema.ResourceData, m interfac
 		} else {
 			body_object["approval_policy"] = approval_policy_new
 		}
-		if description_new != "" {
-			body_object["description"] = description_new
+		body_object["description"] = description_new
+		if name_new != "" {
+			body_object["name"] = name_new
 		}
 		group_object["body"] = body_object
 		operation = "POST"
@@ -126,9 +133,14 @@ func resourceUpdateGroup(ctx context.Context, d *schema.ResourceData, m interfac
 	} else {
 		tflog.Warn(ctx, "[U]: Approval policy is not set.")
 		group_object["group_id"] = group_id
-		group_object["approval_policy"] = approval_policy_new
-		if description_new != "" {
-			group_object["description"] = description_new
+		if approval_policy_new == nil {
+			group_object["approval_policy"] = make(map[string]interface{})
+		} else {
+			group_object["approval_policy"] = approval_policy_new
+		}
+		group_object["description"] = description_new
+		if name_new != "" {
+			group_object["name"] = name_new
 		}
 	}
 
