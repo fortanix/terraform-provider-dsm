@@ -10,15 +10,19 @@ Returns the Fortanix DSM App from the cluster as a resource
 
 ```
 
-variable "app_data" {
-    type = any
-    default = {
-        "other_group" = {
-            "<group_id>" : "<permissions(separated by ',')>",
-            "<group_id>" : "<permissions(separated by ',')>"
-        }
-    }
+locals {
+    app_other_group_permissions = zipmap(
+        [
+            dsm_group.group1.group_id,
+            "<group_id>"
+        ],
+        [
+            "SIGN,VERIFY,ENCRYPT,WRAPKEY,UNWRAPKEY,DERIVEKEY,MACGENERATE,MACVERIFY,EXPORT,MANAGE,AGREEKEY,AUDIT,TRANSFORM",
+            "SIGN,VERIFY,DECRYPT,WRAPKEY,UNWRAPKEY,DERIVEKEY,MACGENERATE,MACVERIFY,EXPORT,MANAGE,AGREEKEY,AUDIT,TRANSFORM"
+        ]
+    )
 }
+
 
 resource "dsm_app" "app" {
     name           = <app_name>
@@ -26,7 +30,7 @@ resource "dsm_app" "app" {
     other_group    = [<group_id>,<group_id>]
     description    = <app_description>
     new_credential = <true/false> 
-    other_group_permissions = "${var.app_data.other_group}"
+    other_group_permissions = local.app_other_group_permissions
 }
 ```
 
@@ -34,15 +38,19 @@ resource "dsm_app" "app" {
 
 ```
 
-variable "app_data" {
-    type = any
-    default = {
-        "mod_group" = {
-            "<group_id>" : "<permissions(separated by ',')>",
-            "<group_id>" : "<permissions(separated by ',')>"
-        }
-    }
+locals {
+    app_mod_group_permissions = zipmap(
+        [
+            dsm_group.group1.group_id,
+            "<group_id>"
+        ],
+        [
+            "SIGN,VERIFY,ENCRYPT,WRAPKEY,UNWRAPKEY,DERIVEKEY,MACGENERATE,MACVERIFY,EXPORT,MANAGE,AGREEKEY,AUDIT,TRANSFORM",
+            "SIGN,VERIFY,DECRYPT,WRAPKEY,UNWRAPKEY,DERIVEKEY,MACGENERATE,MACVERIFY,EXPORT,MANAGE,AGREEKEY,AUDIT,TRANSFORM"
+        ]
+    )
 }
+
 
 resource "dsm_app" "app" {
     name           = <app_name>
@@ -53,8 +61,8 @@ resource "dsm_app" "app" {
      * delete the existing groups: just remove group_id from this array.
      */
     new_credential = <true/false> 
-    other_group_permissions = "${var.app_data.other_group}"
-    mod_group_permissions   = "${var.app_data.mod_group}" 
+    other_group_permissions = local.app_other_group_permissions
+    mod_group_permissions   = local.app_mod_group_permissions 
 }
 ```
 
@@ -76,39 +84,47 @@ The following arguments are supported in the `dsm_app` resource block:
 
    other_group_permissions example:
    
-   A variable should be declared. Here it is named as app_data. Please follow the below varaible reference 
-   to provide the permissions. For each group_id permissions should be given in a string format. Permissions
-   are separated by comma(",").
+   A variable should be declared as locals. Here it is named as app_other_group_permissions. Please follow the below 
+   varaible reference to provide the permissions. For each group_id permissions should be given in a string format. Permissions
+   are separated by comma(","). Count of group_ids and permission strings should be same.
+   First group_id in the first array will match to first string in the second array and so on.
 
-   other_group_permissions = "${var.app_data.other_group}"
+   other_group_permissions = local.app_other_group_permissions
    
-   variable "app_data" {
-        type = any
-        default = {
-            "other_group" = {
-                "<group_id>" : "SIGN,VERIFY,ENCRYPT,DECRYPT,WRAPKEY,UNWRAPKEY,DERIVEKEY,MACGENERATE,MACVERIFY,EXPORT,MANAGE,AGREEKEY,AUDIT,TRANSFORM"
-                "<group_id>" : "SIGN,ENCRYPT,DECRYPT,WRAPKEY,UNWRAPKEY,MACGENERATE,MACVERIFY,MANAGE,AGREEKEY,AUDIT,EXPORT"
-            }
-        }
+   locals {
+        app_other_group_permissions = zipmap(
+            [
+                dsm_group.group1.group_id,
+                "<group_id>"
+            ],
+            [
+                "SIGN,VERIFY,ENCRYPT,WRAPKEY,UNWRAPKEY,DERIVEKEY,MACGENERATE,MACVERIFY,EXPORT,MANAGE,AGREEKEY,AUDIT,TRANSFORM",
+                "SIGN,VERIFY,DECRYPT,WRAPKEY,UNWRAPKEY,DERIVEKEY,MACGENERATE,MACVERIFY,EXPORT,MANAGE,AGREEKEY,AUDIT,TRANSFORM"
+            ]
+        )
    }
 
    mod_group_permissions example:
 
-   A variable should be declared. Here it is named as app_data. Please follow the below varaible reference 
-   to provide the permissions. For each group_id permissions should be given in a string format. Permissions
-   are separated by comma(",").
+   A variable should be declared as locals. Here it is named as app_other_group_permissions. Please follow the below 
+   varaible reference to provide the permissions. For each group_id permissions should be given in a string format. 
+   Permissions are separated by comma(","). Count of group_ids and permission strings should be same.
+   First group_id in the first array will match to first string in the second array and so on.
 
-   variable "app_data" {
-       type = any
-       default = {
-           "mod_group" = {
-               "<group_id>" : "SIGN,VERIFY,ENCRYPT,DECRYPT,WRAPKEY,UNWRAPKEY,DERIVEKEY,MACGENERATE,MACVERIFY,EXPORT,MANAGE,AGREEKEY,AUDIT,TRANSFORM"
-               "<group_id>" : "SIGN,ENCRYPT,DECRYPT,WRAPKEY,UNWRAPKEY,MACGENERATE,MACVERIFY,MANAGE,AGREEKEY,AUDIT,EXPORT"
-           }
-       }
+   locals {
+        app_mod_group_permissions = zipmap(
+            [
+                dsm_group.group1.group_id,
+                "<group_id>"
+            ],
+            [
+                "SIGN,VERIFY,ENCRYPT,WRAPKEY,UNWRAPKEY,DERIVEKEY,MACGENERATE,MACVERIFY,EXPORT,MANAGE,AGREEKEY,AUDIT,TRANSFORM",
+                "SIGN,VERIFY,DECRYPT,WRAPKEY,UNWRAPKEY,DERIVEKEY,MACGENERATE,MACVERIFY,EXPORT,MANAGE,AGREEKEY,AUDIT,TRANSFORM"
+            ]
+        )
    }
    
-   mod_group_permissions = "${var.app_data.mod_group}"
+   mod_group_permissions = local.app_mod_group_permissions
 
 
 
