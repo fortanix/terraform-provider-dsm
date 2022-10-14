@@ -224,6 +224,9 @@ func createSO(ctx context.Context, d *schema.ResourceData, m interface{}) diag.D
 		}
 	}
 
+	if err := d.Get("custom_metadata").(map[string]interface{}); len(err) > 0 {
+		security_object["custom_metadata"] = err
+	}
 	if err := d.Get("rotate").(string); len(err) > 0 {
 		security_object["name"] = d.Get("rotate_from").(string)
 		endpoint = "crypto/v1/keys/rekey"
@@ -445,8 +448,10 @@ func resourceUpdateSobject(ctx context.Context, d *schema.ResourceData, m interf
 		security_object["rsa"] = rsa_obj
 	}
 	if d.HasChange("key_ops") {
-	    security_object["key_ops"] = d.Get("key_ops")
-
+		security_object["key_ops"] = d.Get("key_ops")
+	}
+	if d.HasChange("custom_metadata") {
+		security_object["custom_metadata"] = d.Get("custom_metadata").(map[string]interface{})
 	}
 	if security_object != nil {
 		req, err := m.(*api_client).APICallBody("PATCH", fmt.Sprintf("crypto/v1/keys/%s", d.Id()), security_object)
