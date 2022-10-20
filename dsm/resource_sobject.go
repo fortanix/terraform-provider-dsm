@@ -45,7 +45,7 @@ func resourceSobject() *schema.Resource {
 			},
 			"key_size": {
 				Type:     schema.TypeInt,
-				Required: true,
+				Optional: true,
 			},
 			"kid": {
 				Type:     schema.TypeString,
@@ -150,6 +150,10 @@ func resourceSobject() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"elliptic_curve": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 		},
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -183,15 +187,36 @@ func unmarshalStringToJson(inputString string) (interface{}, error) {
 func createSO(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	endpoint := "crypto/v1/keys"
+	key_size := d.Get("key_size").(int)
+	obj_type := d.Get("obj_type").(string)
+	elliptic_curve := d.Get("elliptic_curve").(string)
 
 	security_object := map[string]interface{}{
 		"name":        d.Get("name").(string),
-		"obj_type":    d.Get("obj_type").(string),
-		"key_size":    d.Get("key_size").(int),
+		"obj_type":    obj_type,
 		"group_id":    d.Get("group_id").(string),
 		"description": d.Get("description").(string),
 	}
 
+	if obj_type == "EC" {
+		if key_size > 0 || len(elliptic_curve) == 0 {
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Detail:   fmt.Sprintf("key_size should not be specified and elliptic_curve should be specified for %s", obj_type),
+			})
+			return diags
+		} else {
+			security_object["elliptic_curve"] = elliptic_curve
+		}
+	} else if key_size == 0 || len(elliptic_curve) > 0 {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Detail:   fmt.Sprintf("key_size should be specified and elliptic_curve should not be specified for %s", obj_type),
+		})
+		return diags
+	}else {
+		security_object["key_size"] = key_size
+	}
 	if rfcdate := d.Get("expiry_date").(string); len(rfcdate) > 0 {
 		layoutRFC := "2006-01-02T15:04:05Z"
 		layoutDSM := "20060102T150405Z"
@@ -223,7 +248,6 @@ func createSO(ctx context.Context, d *schema.ResourceData, m interface{}) diag.D
 			"radix": d.Get("fpe_radix").(int),
 		}
 	}
-
 	if err := d.Get("custom_metadata").(map[string]interface{}); len(err) > 0 {
 		security_object["custom_metadata"] = err
 	}
@@ -299,8 +323,10 @@ func resourceReadSobject(ctx context.Context, d *schema.ResourceData, m interfac
 		if err := d.Set("obj_type", req["obj_type"].(string)); err != nil {
 			return diag.FromErr(err)
 		}
-		if err := d.Set("key_size", int(req["key_size"].(float64))); err != nil {
-			return diag.FromErr(err)
+		if _, ok := req["key_size"]; ok {
+			if err := d.Set("key_size", int(req["key_size"].(float64))); err != nil {
+				return diag.FromErr(err)
+			}
 		}
 		if err := d.Set("kid", req["kid"].(string)); err != nil {
 			return diag.FromErr(err)
@@ -460,6 +486,16 @@ func resourceUpdateSobject(ctx context.Context, d *schema.ResourceData, m interf
 				Severity: diag.Error,
 				Summary:  "[DSM SDK] Unable to call DSM provider API client",
 				Detail:   fmt.Sprintf("[E]: API: PATCH crypto/v1/keys: %v", err),
+			})
+			return diags
+		}
+		if d.HasChange("elliptic_curve") {
+			old_ec, _ := d.GetChange("elliptic_curve")
+			d.Set("elliptic_curve", old_ec)
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "elliptic_curve cannot modify on update",
+				Detail:   fmt.Sprintf("[E]: API: PATCH crypto/v1/keys: elliptic_curve cannot change on update. Please retain it to old value: %s", old_ec),
 			})
 			return diags
 		}
