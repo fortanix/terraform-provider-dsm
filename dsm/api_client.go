@@ -421,38 +421,64 @@ func (obj *api_client) APICallList(method string, url string) ([]interface{}, di
 			Summary:  "[DSM SDK]: Unable to prepare DSM provider API client",
 			Detail:   fmt.Sprintf("[E]: API: %s %s: %s", method, url, err),
 		})
-	} else {
-		req.Header.Add("Authorization", obj.authtype+obj.authtoken)
+		return nil, diags
+	}
+	req.Header.Add("Authorization", obj.authtype+obj.authtoken)
 
-		r, err := client.Do(req)
+	r, err := client.Do(req)
+	if err != nil {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "[DSM SDK]: Unable to call DSM provider API client",
+			Detail:   fmt.Sprintf("[E]: API: %s %s: %s", method, url, err),
+		})
+		return nil, diags
+	}
+	defer r.Body.Close()
+
+	// FIXME: DELETE does not have any output
+	if method == "DELETE" {
+		return nil, nil
+	}
+
+	bodybytes, err := io.ReadAll(r.Body)
+	if err != nil {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "[DSM SDK]: Unable to read DSM provider API response body",
+			Detail:   fmt.Sprintf("[E]: API: %s %s: %s", method, url, err),
+		})
+		return nil, diags
+	}
+
+	var response []interface{}
+
+	if string(bodybytes[0]) == "[" {
+		err = json.Unmarshal(bodybytes, &response)
 		if err != nil {
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Error,
-				Summary:  "[DSM SDK]: Unable to call DSM provider API client",
-				Detail:   fmt.Sprintf("[E]: API: %s %s: %s", method, url, err),
+				Summary:  "[DSM SDK]: Unable to unmarshall DSM provider API response body",
+				Detail:   fmt.Sprintf("[E]: API: %s %s: %s -> %s", method, url, err, bodybytes),
 			})
-		} else {
-			defer r.Body.Close()
-
-			// FIXME: DELETE does not have any output
-			if method == "DELETE" {
-				return nil, nil
-			}
-
-			resp := make([]interface{}, 0)
-			err = json.NewDecoder(r.Body).Decode(&resp)
-			if err != nil {
-				diags = append(diags, diag.Diagnostic{
-					Severity: diag.Error,
-					Summary:  "[DSM SDK]: Unable to read DSM provider API response",
-					Detail:   fmt.Sprintf("[E]: API: %s %s: %s", method, url, err),
-				})
-			} else {
-				return resp, nil
-			}
+			return nil, diags
 		}
+	} else {
+		var msgMapTemplate map[string]interface{}
+		err = json.Unmarshal(bodybytes, &msgMapTemplate)
+		if err != nil {
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "[DSM SDK]: Unable to unmarshall DSM provider API response body",
+				Detail:   fmt.Sprintf("[E]: API: %s %s: %s -> %s", method, url, err, bodybytes),
+			})
+			return nil, diags
+		}
+		items := msgMapTemplate["items"]
+		response = items.([]interface{})
 	}
-	return nil, diags
+
+	return response, nil
 }
 
 // [-]: find plugin - "Terraform Plugin" - return as array

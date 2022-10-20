@@ -69,12 +69,14 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, m interfac
 	}
 	//	Detail:   fmt.Sprintf("%s", req[0].(map[string]interface{})["group_id"]),
 
+	group_id := ""
 	for _, data := range req {
 		if data.(map[string]interface{})["name"].(string) == d.Get("name").(string) {
+			group_id = data.(map[string]interface{})["group_id"].(string)
 			if err := d.Set("name", data.(map[string]interface{})["name"].(string)); err != nil {
 				return diag.FromErr(err)
 			}
-			if err := d.Set("group_id", data.(map[string]interface{})["group_id"].(string)); err != nil {
+			if err := d.Set("group_id", group_id); err != nil {
 				return diag.FromErr(err)
 			}
 			if err := d.Set("acct_id", data.(map[string]interface{})["acct_id"].(string)); err != nil {
@@ -101,6 +103,6 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, m interfac
 		}
 	}
 
-	d.SetId(d.Get("group_id").(string))
+	d.SetId(group_id)
 	return nil
 }
