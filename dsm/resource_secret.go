@@ -41,6 +41,10 @@ func resourceSecret() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"pub_key": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"acct_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -211,6 +215,11 @@ func resourceReadSecret(ctx context.Context, d *schema.ResourceData, m interface
 		}
 		if err := d.Set("kid", res["kid"].(string)); err != nil {
 			return diag.FromErr(err)
+		}
+		if _, ok := res["pub_key"]; ok {
+			if err := d.Set("pub_key", res["pub_key"].(string)); err != nil {
+				return diag.FromErr(err)
+			}
 		}
 		if err := d.Set("acct_id", res["acct_id"].(string)); err != nil {
 			return diag.FromErr(err)

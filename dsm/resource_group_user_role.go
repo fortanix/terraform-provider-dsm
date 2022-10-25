@@ -135,5 +135,16 @@ func bind_group_user_role(mode string, ctx context.Context, d *schema.ResourceDa
 	tflog.Warn(ctx, fmt.Sprintf("[U]: API response for group-user-role binding operation: %s", resp_json))
 
 	d.SetId(resp["user_id"].(string))
+
+	if err := d.Set("user_id", user_id); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("role_id", role_id); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("group_id", group_id); err != nil {
+		return diag.FromErr(err)
+	}
+
 	return nil
 }
