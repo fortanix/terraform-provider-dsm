@@ -89,6 +89,7 @@ func Provider() *schema.Provider {
 			"dsm_csr":               resourceCsr(),
 			"dsm_gcp_ekm_sa":        resourceGcpEkmSa(),
 			"dsm_acc_quorum_policy": resourceAccQuorumPolicy(),
+			"dsm_plugin":            resourcePlugin(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"dsm_aws_group":   dataSourceAWSGroup(),

@@ -92,3 +92,49 @@ func PublicPEMtoOpenSSH(pemBytes []byte) (*string, diag.Diagnostics) {
 
 	return &sshPubKey, diags
 }
+
+// computes the add and delete arrays - Ravi Gopal
+func compute_add_and_del_arrays(old_array interface{}, new_array interface{}) ([]string, []string) {
+
+	/*
+	* Compares old state and new state
+	* segregates the arrays to be added and arrays to be deleted.
+	*/
+	old_array_set := old_array.([]interface{})
+	new_array_set := new_array.([]interface{})
+
+	old_array_ids := make([]string, len(old_array_set))
+	for i, v := range old_array_set {
+		old_array_ids[i] = v.(string)
+	}
+	new_array_ids := make([]string, len(new_array_set))
+	for i, v := range new_array_set {
+		new_array_ids[i] = v.(string)
+	}
+
+	new_array_bool := make([]bool, len(new_array_set))
+
+	var del_array_ids []string
+	var add_array_ids []string
+
+	for i := 0; i < len(old_array_ids); i++ {
+		exist := false
+		for j := 0; j < len(new_array_ids); j++ {
+			if new_array_ids[j] == old_array_ids[i] {
+				exist = true
+				new_array_bool[j] = true
+				break
+			}
+		}
+		if !exist {
+			del_array_ids = append(del_array_ids, old_array_ids[i])
+		}
+	}
+	for i := 0; i < len(new_array_bool); i++ {
+		if !(new_array_bool[i]) {
+			add_array_ids = append(add_array_ids, new_array_ids[i])
+		}
+	}
+
+	return add_array_ids, del_array_ids
+}
