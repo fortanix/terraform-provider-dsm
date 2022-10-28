@@ -45,6 +45,10 @@ func resourceGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"hmg": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 		},
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -64,6 +68,11 @@ func resourceCreateGroup(ctx context.Context, d *schema.ResourceData, m interfac
 	}
 	if _, ok := d.GetOk("approval_policy"); ok {
 		group_object["approval_policy"] = json.RawMessage(d.Get("approval_policy").(string))
+	}
+	if _, ok := d.GetOk("hmg"); ok {
+		var hmg_object []json.RawMessage
+		hmg_object[0] = json.RawMessage(d.Get("hmg").(string))
+		group_object["add_hmg"] = hmg_object
 	}
 	resp, err := m.(*api_client).APICallBody("POST", "sys/v1/groups", group_object)
 	if err != nil {
@@ -200,6 +209,11 @@ func resourceReadGroup(ctx context.Context, d *schema.ResourceData, m interface{
 		}
 		if _, ok := req["approval_policy"]; ok {
 			if err := d.Set("approval_policy", fmt.Sprintf("%v", req["approval_policy"])); err != nil {
+				return diag.FromErr(err)
+			}
+		}
+		if _, ok := req["hmg"]; ok {
+			if err := d.Set("hmg", fmt.Sprintf("%v", req["hmg"])); err != nil {
 				return diag.FromErr(err)
 			}
 		}
