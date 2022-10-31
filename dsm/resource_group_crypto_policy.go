@@ -66,19 +66,25 @@ func resourceCreateGroupCryptoPolicy(ctx context.Context, d *schema.ResourceData
 
 	group_crypto_policy_object := make(map[string]interface{})
 	group_id := d.Get("group_id").(string)
-	tflog.Warn(ctx, fmt.Sprintf("Group id: ->%s<-", group_id))
+	if debug_output {
+		tflog.Warn(ctx, fmt.Sprintf("Group id: ->%s<-", group_id))
+	}
 	operation := "PATCH"
 	url := fmt.Sprintf("sys/v1/groups/%s", group_id)
 
 	if _, ok := d.GetOk("approval_policy"); ok {
-		tflog.Warn(ctx, "[C & U]: Approval policy is present.")
+		if debug_output {
+			tflog.Warn(ctx, "[C & U]: Approval policy is present.")
+		}
 		group_crypto_policy_object["method"] = "PATCH"
 		group_crypto_policy_object["operation"] = url
 		group_crypto_policy_object["body"] = map[string]interface{}{"cryptographic_policy": cryptographic_policy}
 		operation = "POST"
 		url = "sys/v1/approval_requests"
 	} else {
-		tflog.Warn(ctx, "[C & U]: Approval policy is not set.")
+		if debug_output {
+			tflog.Warn(ctx, "[C & U]: Approval policy is not set.")
+		}
 		group_crypto_policy_object["group_id"] = group_id
 		group_crypto_policy_object["cryptographic_policy"] = cryptographic_policy
 	}
@@ -93,8 +99,10 @@ func resourceCreateGroupCryptoPolicy(ctx context.Context, d *schema.ResourceData
 		return diags
 	}
 
-	resp_json, _ := json.Marshal(resp)
-	tflog.Warn(ctx, fmt.Sprintf("[C & U]: API response for cryptographic policy create operation: %s", resp_json))
+	if debug_output {
+		resp_json, _ := json.Marshal(resp)
+		tflog.Warn(ctx, fmt.Sprintf("[C & U]: API response for cryptographic policy create operation: %s", resp_json))
+	}
 
 	d.SetId(group_id)
 	return resourceReadGroupCryptoPolicy(ctx, d, m)
@@ -150,7 +158,9 @@ func resourceReadGroupCryptoPolicy(ctx context.Context, d *schema.ResourceData, 
 				return diag.FromErr(err)
 			}
 		} else {
-			tflog.Warn(ctx, "[R]: Expected cryptographic policy but found none. Operation might be pending if a quorum policy has been set.")
+			if debug_output {
+				tflog.Warn(ctx, "[R]: Expected cryptographic policy but found none. Operation might be pending if a quorum policy has been set.")
+			}
 		}
 	}
 	return diags
@@ -169,14 +179,18 @@ func resourceDeleteGroupCryptoPolicy(ctx context.Context, d *schema.ResourceData
 	url := fmt.Sprintf("sys/v1/groups/%s", group_id)
 
 	if approval_policy, ok := d.GetOk("approval_policy"); ok {
-		tflog.Warn(ctx, fmt.Sprintf("[D]: Approval policy is present: %s", approval_policy))
+		if debug_output {
+			tflog.Warn(ctx, fmt.Sprintf("[D]: Approval policy is present: %s", approval_policy))
+		}
 		group_crypto_policy_object["method"] = "PATCH"
 		group_crypto_policy_object["operation"] = url
 		group_crypto_policy_object["body"] = map[string]interface{}{"cryptographic_policy": cryptographic_policy}
 		operation = "POST"
 		url = "sys/v1/approval_requests"
 	} else {
-		tflog.Warn(ctx, fmt.Sprintf("[D]: Approval policy is not set: %s", approval_policy))
+		if debug_output {
+			tflog.Warn(ctx, fmt.Sprintf("[D]: Approval policy is not set: %s", approval_policy))
+		}
 		group_crypto_policy_object["group_id"] = group_id
 		group_crypto_policy_object["cryptographic_policy"] = cryptographic_policy
 	}
@@ -191,8 +205,10 @@ func resourceDeleteGroupCryptoPolicy(ctx context.Context, d *schema.ResourceData
 		return diags
 	}
 
-	resp_json, _ := json.Marshal(resp)
-	tflog.Warn(ctx, fmt.Sprintf("[D]: API response for cryptographic policy delete operation: %s", resp_json))
+	if debug_output {
+		resp_json, _ := json.Marshal(resp)
+		tflog.Warn(ctx, fmt.Sprintf("[D]: API response for cryptographic policy delete operation: %s", resp_json))
+	}
 
 	d.SetId(group_id)
 	return nil

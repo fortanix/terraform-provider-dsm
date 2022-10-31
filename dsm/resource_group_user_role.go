@@ -91,14 +91,18 @@ func bind_group_user_role(mode string, ctx context.Context, d *schema.ResourceDa
 	}
 	dataSourceGroupRead(ctx, d, m)
 	group_id := d.Get("group_id").(string)
-	tflog.Warn(ctx, fmt.Sprintf("1 Group ID for group-user-role binding operation: %s", group_id))
+	if debug_output {
+		tflog.Warn(ctx, fmt.Sprintf("1 Group ID for group-user-role binding operation: %s", group_id))
+	}
 
 	if err := d.Set("user_email", user_email); err != nil {
 		return diag.FromErr(err)
 	}
 	dataSourceUserRead(ctx, d, m)
 	user_id := d.Get("user_id").(string)
-	tflog.Warn(ctx, fmt.Sprintf("User ID for group-user-role binding operation: %s", user_id))
+	if debug_output {
+		tflog.Warn(ctx, fmt.Sprintf("User ID for group-user-role binding operation: %s", user_id))
+	}
 
 	if role_name != "GROUPAUDITOR" && role_name != "GROUPADMINISTRATOR" {
 		if err := d.Set("name", role_name); err != nil {
@@ -110,7 +114,6 @@ func bind_group_user_role(mode string, ctx context.Context, d *schema.ResourceDa
 		}
 		role_id = d.Get("role_id").(string)
 	}
-	tflog.Warn(ctx, fmt.Sprintf("Role ID for group-user-role binding operation: %s", role_id))
 
 	main_object := make(map[string]interface{})
 	sub_object := make(map[string]interface{})
@@ -119,7 +122,10 @@ func bind_group_user_role(mode string, ctx context.Context, d *schema.ResourceDa
 	sub_object[group_id] = []string{role_id}
 	main_object[mode] = sub_object
 
-	tflog.Warn(ctx, fmt.Sprintf("Main object for group-user-role binding operation: %s", main_object))
+	if debug_output {
+		tflog.Warn(ctx, fmt.Sprintf("Role ID for group-user-role binding operation: %s", role_id))
+		tflog.Warn(ctx, fmt.Sprintf("Main object for group-user-role binding operation: %s", main_object))
+	}
 
 	resp, err := m.(*api_client).APICallBody("PATCH", fmt.Sprintf("sys/v1/users/%s", user_id), main_object)
 	if err != nil {
@@ -131,8 +137,10 @@ func bind_group_user_role(mode string, ctx context.Context, d *schema.ResourceDa
 		return diags
 	}
 
-	resp_json, _ := json.Marshal(resp)
-	tflog.Warn(ctx, fmt.Sprintf("[U]: API response for group-user-role binding operation: %s", resp_json))
+	if debug_output {
+		resp_json, _ := json.Marshal(resp)
+		tflog.Warn(ctx, fmt.Sprintf("[U]: API response for group-user-role binding operation: %s", resp_json))
+	}
 
 	d.SetId(resp["user_id"].(string))
 
