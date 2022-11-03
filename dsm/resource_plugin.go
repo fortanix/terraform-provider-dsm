@@ -94,6 +94,7 @@ func resourceCreatePlugin(ctx context.Context, d *schema.ResourceData, m interfa
 		"name":          d.Get("name").(string),
 		"default_group": d.Get("default_group").(string),
 		"description":   d.Get("description").(string),
+		"groups":        d.Get("groups").([]interface{}),
 	}
 	source := make(map[string]string)
 	source["language"] = d.Get("language").(string)
@@ -108,17 +109,41 @@ func resourceCreatePlugin(ctx context.Context, d *schema.ResourceData, m interfa
 	if err := d.Get("enabled").(bool); err {
 		plugin["enabled"] = d.Get("enabled")
 	}
-	req, err := m.(*api_client).APICallBody("POST", endpoint, plugin)
-	if err != nil {
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "[DSM SDK] Unable to call DSM provider API client",
-			Detail:   fmt.Sprintf("[E]: API: POST %s: %v", endpoint, err),
-		})
+	isapprovalPolicy := isApprovalPolicy(d.Get("groups").([]interface{}), m)
+	if (isapprovalPolicy) {
+		approval_request_body := map[string]interface{}{
+			"operation": endpoint,
+			"body":      plugin,
+			"method":    "POST",
+		}
+		req, err := m.(*api_client).APICallBody("POST", "sys/v1/approval_requests", approval_request_body)
+		if err != nil {
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "[DSM SDK] Unable to call DSM provider API client",
+				Detail:   fmt.Sprintf("[E]: API: POST %s: sys/v1/approval_requests", err),
+			})
+		} else {
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Warning,
+				Summary:  "This plugin creation requires approval request. Please get the approval from required users in UI.",
+				Detail:   fmt.Sprintf("[E]: API: POST %s: sys/v1/plugins", req["request_id"]),
+			})
+		}
 		return diags
+	} else {
+		req, err := m.(*api_client).APICallBody("POST", endpoint, plugin)
+		if err != nil {
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "[DSM SDK] Unable to call DSM provider API client",
+				Detail:   fmt.Sprintf("[E]: API: POST %s: %v", endpoint, err),
+			})
+			return diags
+		}
+		d.SetId(req["plugin_id"].(string))
+		return resourceReadPlugin(ctx, d, m)
 	}
-	d.SetId(req["plugin_id"].(string))
-	return resourceReadPlugin(ctx, d, m)
 }
 
 // Read
@@ -231,4 +256,21 @@ func resourceDeletePlugin(ctx context.Context, d *schema.ResourceData, m interfa
 	}
 	d.SetId("")
 	return nil
+}
+
+// Read Group
+func isApprovalPolicy(group_ids ([]interface{}), m interface{}) bool {
+	group_ids_arr := make([]string, len(group_ids))
+	for i, v := range group_ids {
+		group_ids_arr[i] = v.(string)
+	}
+	for _, group_id := range group_ids_arr {
+		req, statuscode, _ := m.(*api_client).APICall("GET", fmt.Sprintf("sys/v1/groups/%s", group_id))
+		if (statuscode == 200) {
+			if _, ok := req["approval_policy"]; ok {
+				return true
+			}
+		}
+	}
+	return false
 }
