@@ -280,8 +280,11 @@ func resourceUpdateApp(ctx context.Context, d *schema.ResourceData, m interface{
 				diags = append(diags, diag.Diagnostic{
 					Severity: diag.Error,
 					Summary:  "All the group_ids available in mod_group are not available in other_group.Please correct them.",
-					Detail:   fmt.Sprintf("[E]: Input: mod_group: Following group_ids are not available in other_group:\n %v", unavailable_group_ids),
+					Detail:   fmt.Sprintf("[E]: Input: mod_group: Please remove the group_ids from mod_group those are not part of other_group. \n Following group_ids are not available in other_group:\n %v", unavailable_group_ids),
 				})
+				if old_group, new_group := d.GetChange("other_group"); len(new_group.([]interface{})) > 0 {
+					d.Set("other_group", old_group)
+				}
 				return diags
 			}
 			app_object["mod_groups"] = app_mod_group
@@ -296,6 +299,7 @@ func resourceUpdateApp(ctx context.Context, d *schema.ResourceData, m interface{
 				Summary:  "[DSM SDK] Unable to call DSM provider API client",
 				Detail:   fmt.Sprintf("[E]: API: POST sys/v1/apps: %v", err),
 			})
+
 			return diags
 		}
 		d.SetId(req["app_id"].(string))
@@ -367,7 +371,7 @@ func compute_add_and_del_groups(old_group interface{}, new_group interface{}) ([
 				break
 			}
 		}
-		if !exist && len(new_group_ids) > 0 {
+		if !exist {
 			del_group_ids = append(del_group_ids, old_group_ids[i])
 		}
 	}

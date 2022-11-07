@@ -24,6 +24,7 @@ resource "dsm_sobject" "sobject" {
                     <key> = <value>    
     }
     rsa             = <rsaOptions_string_format>
+    elliptic_curve  = <elliptic_curve>
 }
 ```
 
@@ -33,7 +34,7 @@ The following arguments are supported in the `dsm_sobject` resource block:
 
 * **name**: The security object name
 * **obj\_type**: The security object type
-* **key\_size**: The security object size
+* **key\_size**: The security object size. It should not be given only when the obj_type is EC.
 * **group\_id**: The security object group assignment
 * _**key\_ops (optional)**_: The security object key permission
 * _**rsa (optional)**: The rsaOptions for an RSA object
@@ -46,6 +47,7 @@ The following arguments are supported in the `dsm_sobject` resource block:
 * _**rotate(optional)**_: specify method to use for key rotation 
   * **DSM** - To rotate from a DSM local key. The key material of new key will be stored in DSM.
 * _**rotate_from(optional)**_  = Name of the security object to be rotated from
+* _**elliptic_curve**_  = Standardized elliptic curve. It should be given only when the obj_type is EC.
 
 ## Attribute Reference
 
@@ -71,3 +73,4 @@ The following attributes are stored in the `dsm_sobject` resource block:
 * **expiry\_date**: The security object expiry date in RFC format
 * **custom\_metadata**: The user defined security object attributes added to the key’s metadata from Fortanix DSM.
 * **fpe\_radix**:   integer, The base for input data. The radix should be a number from 2 to 36, inclusive. Each radix corresponds to a subset of ASCII alphanumeric characters (with all letters being uppercase). For instance, a radix of 10 corresponds to a character set consisting of the digits from 0 to 9, while a character set of 16 corresponds to a character set consisting of all hexadecimal digits (with letters A-F being uppercase).
+* **elliptic\_curve**: Standardized elliptic curve.
