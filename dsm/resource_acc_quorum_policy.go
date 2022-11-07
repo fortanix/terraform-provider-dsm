@@ -10,12 +10,12 @@ import (
 )
 
 // [-] Define Account Quorum Policy
-func resourceAccQuorumPolicy() *schema.Resource {
+func resourceAccountQuorumPolicy() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceCreateAccQuorumPolicy,
-		ReadContext:   resourceReadAccQuorumPolicy,
-		UpdateContext: resourceUpdateAccQuorumPolicy,
-		DeleteContext: resourceDeleteAccQuorumPolicy,
+		CreateContext: resourceCreateAccountQuorumPolicy,
+		ReadContext:   resourceReadAccountQuorumPolicy,
+		UpdateContext: resourceUpdateAccountQuorumPolicy,
+		DeleteContext: resourceDeleteAccountQuorumPolicy,
 		Schema: map[string]*schema.Schema{
 			"acct_id": {
 				Type:     schema.TypeString,
@@ -27,13 +27,13 @@ func resourceAccQuorumPolicy() *schema.Resource {
 			},
 		},
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
 }
 
 // [C]: Create Account Quorum Policy
-func resourceCreateAccQuorumPolicy(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceCreateAccountQuorumPolicy(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	policy_object := map[string]interface{}{
@@ -52,12 +52,12 @@ func resourceCreateAccQuorumPolicy(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	d.SetId(req["acct_id"].(string))
-	return resourceReadAccQuorumPolicy(ctx, d, m)
+	return resourceReadAccountQuorumPolicy(ctx, d, m)
 
 }
 
 // [R]: Read Account Quorum Policy
-func resourceReadAccQuorumPolicy(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceReadAccountQuorumPolicy(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	req, statuscode, err := m.(*api_client).APICall("GET", fmt.Sprintf("sys/v1/accounts/%s", d.Id()))
@@ -86,11 +86,11 @@ func resourceReadAccQuorumPolicy(ctx context.Context, d *schema.ResourceData, m 
 }
 
 // [U]: Update Account Quorum Policy
-func resourceUpdateAccQuorumPolicy(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceUpdateAccountQuorumPolicy(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	return nil
 }
 
 // [D]: Delete Account Quorum Policy
-func resourceDeleteAccQuorumPolicy(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceDeleteAccountQuorumPolicy(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	return nil
 }

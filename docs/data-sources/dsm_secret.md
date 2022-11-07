@@ -29,6 +29,7 @@ The following attributes are stored in the `dsm_group` data source block:
 * **group\_id**: The group object ID from Fortanix DSM
 * **name**: The secret object name from Fortanix DSM (matches the name provided during creation)
 * **acct\_id**: The account ID from Fortanix DSM
+* **pub\_key**: Public key from DSM (If applicable)
 * **creator**: The creator of the group object from Fortanix DSM
   * **user**: If the group was created by a user, the computed value will be the matching user id
   * **app**: If the group was created by a app, the computed value will be the matching app id

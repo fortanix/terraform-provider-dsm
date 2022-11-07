@@ -103,7 +103,7 @@ func resourceSobject() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"ssh_pub_key": {
+			"pub_key": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -156,7 +156,7 @@ func resourceSobject() *schema.Resource {
 			},
 		},
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
 }
@@ -177,12 +177,13 @@ func contains(s []string, str string) bool {
 func unmarshalStringToJson(inputString string) (interface{}, error) {
 	type mapFormat map[string]interface{}
 	var inputMap mapFormat
-	if err := json.Unmarshal([]byte(inputString), &inputMap); err!=nil{
+	if err := json.Unmarshal([]byte(inputString), &inputMap); err != nil {
 		return nil, err
 	}
 
 	return inputMap, nil
 }
+
 // createSO: Create Security Object
 func createSO(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
@@ -214,7 +215,7 @@ func createSO(ctx context.Context, d *schema.ResourceData, m interface{}) diag.D
 			Detail:   fmt.Sprintf("key_size should be specified and elliptic_curve should not be specified for %s", obj_type),
 		})
 		return diags
-	}else {
+	} else {
 		security_object["key_size"] = key_size
 	}
 	if rfcdate := d.Get("expiry_date").(string); len(rfcdate) > 0 {
@@ -336,6 +337,11 @@ func resourceReadSobject(ctx context.Context, d *schema.ResourceData, m interfac
 		if err := d.Set("kid", req["kid"].(string)); err != nil {
 			return diag.FromErr(err)
 		}
+		if _, ok := req["pub_key"]; ok {
+			if err := d.Set("pub_key", req["pub_key"].(string)); err != nil {
+				return diag.FromErr(err)
+			}
+		}
 		if err := d.Set("acct_id", req["acct_id"].(string)); err != nil {
 			return diag.FromErr(err)
 		}
@@ -456,8 +462,8 @@ func resourceUpdateSobject(ctx context.Context, d *schema.ResourceData, m interf
 	var diags diag.Diagnostics
 
 	// already has been replaced so "rotate" and "rotate_from" does not apply
-	_, replacement := d.GetOkExists("replacement")
-	_, replaced := d.GetOkExists("replaced")
+	_, replacement := d.GetOk("replacement")
+	_, replaced := d.GetOk("replaced")
 	if replacement || replaced {
 		d.Set("rotate", "")
 		d.Set("rotate_from", "")
@@ -484,49 +490,48 @@ func resourceUpdateSobject(ctx context.Context, d *schema.ResourceData, m interf
 	if d.HasChange("custom_metadata") {
 		security_object["custom_metadata"] = d.Get("custom_metadata").(map[string]interface{})
 	}
-	if security_object != nil {
-		req, err := m.(*api_client).APICallBody("PATCH", fmt.Sprintf("crypto/v1/keys/%s", d.Id()), security_object)
-		if err != nil {
+
+	req, err := m.(*api_client).APICallBody("PATCH", fmt.Sprintf("crypto/v1/keys/%s", d.Id()), security_object)
+	if err != nil {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "[DSM SDK] Unable to call DSM provider API client",
+			Detail:   fmt.Sprintf("[E]: API: PATCH crypto/v1/keys: %v", err),
+		})
+		return diags
+	}
+	if d.HasChange("elliptic_curve") {
+		old_ec, _ := d.GetChange("elliptic_curve")
+		d.Set("elliptic_curve", old_ec)
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "elliptic_curve cannot modify on update",
+			Detail:   fmt.Sprintf("[E]: API: PATCH crypto/v1/keys: elliptic_curve cannot change on update. Please retain it to old value: %s", old_ec),
+		})
+		return diags
+	}
+
+	key_ops := make([]string, len(req["key_ops"].([]interface{})))
+	if err := d.Get("key_ops").([]interface{}); len(err) > 0 {
+		if len(d.Get("key_ops").([]interface{})) == len(req["key_ops"].([]interface{})) {
+			for idx, key_op := range d.Get("key_ops").([]interface{}) {
+				key_ops[idx] = fmt.Sprint(key_op)
+			}
+		} else {
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "[DSM SDK] Unable to call DSM provider API client",
-				Detail:   fmt.Sprintf("[E]: API: PATCH crypto/v1/keys: %v", err),
+				Detail:   "[E]: API: PATCH crypto/v1/keys: Sync issue from State and DSM",
 			})
 			return diags
 		}
-		if d.HasChange("elliptic_curve") {
-			old_ec, _ := d.GetChange("elliptic_curve")
-			d.Set("elliptic_curve", old_ec)
-			diags = append(diags, diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  "elliptic_curve cannot modify on update",
-				Detail:   fmt.Sprintf("[E]: API: PATCH crypto/v1/keys: elliptic_curve cannot change on update. Please retain it to old value: %s", old_ec),
-			})
-			return diags
+	} else {
+		for idx, key_op := range req["key_ops"].([]interface{}) {
+			key_ops[idx] = fmt.Sprint(key_op)
 		}
-
-		key_ops := make([]string, len(req["key_ops"].([]interface{})))
-		if err := d.Get("key_ops").([]interface{}); len(err) > 0 {
-			if len(d.Get("key_ops").([]interface{})) == len(req["key_ops"].([]interface{})) {
-				for idx, key_op := range d.Get("key_ops").([]interface{}) {
-					key_ops[idx] = fmt.Sprint(key_op)
-				}
-			} else {
-				diags = append(diags, diag.Diagnostic{
-					Severity: diag.Error,
-					Summary:  "[DSM SDK] Unable to call DSM provider API client",
-					Detail:   fmt.Sprintf("[E]: API: PATCH crypto/v1/keys: Sync issue from State and DSM"),
-				})
-				return diags
-			}
-		} else {
-			for idx, key_op := range req["key_ops"].([]interface{}) {
-				key_ops[idx] = fmt.Sprint(key_op)
-			}
-		}
-		if err := d.Set("key_ops", key_ops); err != nil {
-			return diag.FromErr(err)
-		}
+	}
+	if err := d.Set("key_ops", key_ops); err != nil {
+		return diag.FromErr(err)
 	}
 
 	return resourceReadSobject(ctx, d, m)

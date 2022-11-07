@@ -91,7 +91,7 @@ func resourceCsr() *schema.Resource {
 			},
 		},
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
 }
@@ -134,7 +134,7 @@ func resourceCreateCsr(ctx context.Context, d *schema.ResourceData, m interface{
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "[DSM SDK] Unable to create signer",
-			Detail:   fmt.Sprintf("[E]: SDK: Terraform: %s", newsigner),
+			Detail:   fmt.Sprintf("[E]: SDK: Terraform: %v", newsigner),
 		})
 		return diags
 	}
@@ -145,7 +145,7 @@ func resourceCreateCsr(ctx context.Context, d *schema.ResourceData, m interface{
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "[DSM SDK] Unable to get DSM signer up",
-			Detail:   fmt.Sprintf("[E]: SDK: Terraform: %s", err),
+			Detail:   fmt.Sprintf("[E]: SDK: Terraform: %v", err),
 		})
 		return diags
 	}

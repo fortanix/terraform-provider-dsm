@@ -104,7 +104,7 @@ func NewAPIClient(endpoint string, port int, username string, password string, a
 	} else if len(username) > 0 && len(password) > 0 {
 		req.SetBasicAuth(username, password)
 	} else {
-		return nil, fmt.Errorf("Unauthorized Access to DSM")
+		return nil, fmt.Errorf("unauthorized access to DSM")
 	}
 
 	r, err := client.Do(req)
@@ -114,7 +114,7 @@ func NewAPIClient(endpoint string, port int, username string, password string, a
 	defer r.Body.Close()
 
 	if r.StatusCode == 401 {
-		return nil, fmt.Errorf("Unauthorized Access to DSM")
+		return nil, fmt.Errorf("unauthorized access to DSM")
 	}
 
 	err = json.NewDecoder(r.Body).Decode(&resp)
@@ -231,7 +231,15 @@ func (obj *api_client) APICallBody(method string, url string, body map[string]in
 	client.client.HTTPClient.Transport = tr
 	client.client.HTTPClient.Timeout = time.Duration(obj.timeout) * time.Second
 
-	reqBody, _ := json.MarshalIndent(&body, "", "\t")
+	reqBody, err := json.MarshalIndent(&body, "", "\t")
+	if err != nil {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "[Conversion] Unable to marshal request body",
+			Detail:   fmt.Sprintf("[Conversion] Body: %s - Err: %v", body, err),
+		})
+		return nil, diags
+	}
 
 	req, err := retryablehttp.NewRequest(method, fmt.Sprintf("%s/%s", obj.endpoint, url), bytes.NewBuffer(reqBody))
 	req.Close = true
@@ -413,38 +421,64 @@ func (obj *api_client) APICallList(method string, url string) ([]interface{}, di
 			Summary:  "[DSM SDK]: Unable to prepare DSM provider API client",
 			Detail:   fmt.Sprintf("[E]: API: %s %s: %s", method, url, err),
 		})
-	} else {
-		req.Header.Add("Authorization", obj.authtype+obj.authtoken)
+		return nil, diags
+	}
+	req.Header.Add("Authorization", obj.authtype+obj.authtoken)
 
-		r, err := client.Do(req)
+	r, err := client.Do(req)
+	if err != nil {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "[DSM SDK]: Unable to call DSM provider API client",
+			Detail:   fmt.Sprintf("[E]: API: %s %s: %s", method, url, err),
+		})
+		return nil, diags
+	}
+	defer r.Body.Close()
+
+	// FIXME: DELETE does not have any output
+	if method == "DELETE" {
+		return nil, nil
+	}
+
+	bodybytes, err := io.ReadAll(r.Body)
+	if err != nil {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "[DSM SDK]: Unable to read DSM provider API response body",
+			Detail:   fmt.Sprintf("[E]: API: %s %s: %s", method, url, err),
+		})
+		return nil, diags
+	}
+
+	var response []interface{}
+
+	if string(bodybytes[0]) == "[" {
+		err = json.Unmarshal(bodybytes, &response)
 		if err != nil {
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Error,
-				Summary:  "[DSM SDK]: Unable to call DSM provider API client",
-				Detail:   fmt.Sprintf("[E]: API: %s %s: %s", method, url, err),
+				Summary:  "[DSM SDK]: Unable to unmarshall DSM provider API response body",
+				Detail:   fmt.Sprintf("[E]: API: %s %s: %s -> %s", method, url, err, bodybytes),
 			})
-		} else {
-			defer r.Body.Close()
-
-			// FIXME: DELETE does not have any output
-			if method == "DELETE" {
-				return nil, nil
-			}
-
-			resp := make([]interface{}, 0)
-			err = json.NewDecoder(r.Body).Decode(&resp)
-			if err != nil {
-				diags = append(diags, diag.Diagnostic{
-					Severity: diag.Error,
-					Summary:  "[DSM SDK]: Unable to read DSM provider API response",
-					Detail:   fmt.Sprintf("[E]: API: %s %s: %s", method, url, err),
-				})
-			} else {
-				return resp, nil
-			}
+			return nil, diags
 		}
+	} else {
+		var msgMapTemplate map[string]interface{}
+		err = json.Unmarshal(bodybytes, &msgMapTemplate)
+		if err != nil {
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "[DSM SDK]: Unable to unmarshall DSM provider API response body",
+				Detail:   fmt.Sprintf("[E]: API: %s %s: %s -> %s", method, url, err, bodybytes),
+			})
+			return nil, diags
+		}
+		items := msgMapTemplate["items"]
+		response = items.([]interface{})
 	}
-	return nil, diags
+
+	return response, nil
 }
 
 // [-]: find plugin - "Terraform Plugin" - return as array
@@ -466,7 +500,7 @@ func (obj *api_client) FindPluginId(plugin_name string) ([]byte, diag.Diagnostic
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "[DSM SDK]: Unable to prepare DSM provider API client",
-			Detail:   fmt.Sprintf("[E]: API: %s %s: %s", "GET", "sys/v1/plugins", err),
+			Detail:   fmt.Sprintf("[E]: API: GET sys/v1/plugins: %s", err),
 		})
 	} else {
 		req.Header.Add("Authorization", obj.authtype+obj.authtoken)
@@ -476,7 +510,7 @@ func (obj *api_client) FindPluginId(plugin_name string) ([]byte, diag.Diagnostic
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "[DSM SDK]: Unable to call DSM provider API client",
-				Detail:   fmt.Sprintf("[E]: API: %s %s: %s", "GET", "sys/v1/plugins", err),
+				Detail:   fmt.Sprintf("[E]: API: GET sys/v1/plugins: %s", err),
 			})
 		} else {
 			defer r.Body.Close()
@@ -486,11 +520,18 @@ func (obj *api_client) FindPluginId(plugin_name string) ([]byte, diag.Diagnostic
 				diags = append(diags, diag.Diagnostic{
 					Severity: diag.Error,
 					Summary:  "[DSM SDK]: Unable to read DSM provider API response",
-					Detail:   fmt.Sprintf("[E]: API: %s %s: %s", "GET", "sys/v1/plugins", err),
+					Detail:   fmt.Sprintf("[E]: API: GET sys/v1/plugins: %s", err),
 				})
 			} else {
 				var allPlugins []dsm_plugin
 				err = json.Unmarshal(bodyBytes, &allPlugins)
+				if err != nil {
+					diags = append(diags, diag.Diagnostic{
+						Severity: diag.Error,
+						Summary:  "[DSM SDK]: Unable to unmarshal provider API response body",
+						Detail:   fmt.Sprintf("[E]: API: GET sys/v1/plugins: %s", err),
+					})
+				}
 				resp := ""
 				for i := range allPlugins {
 					if allPlugins[i].Name == plugin_name {
@@ -502,7 +543,7 @@ func (obj *api_client) FindPluginId(plugin_name string) ([]byte, diag.Diagnostic
 					diags = append(diags, diag.Diagnostic{
 						Severity: diag.Error,
 						Summary:  "[DSM SDK]: Unable to find Terraform Plugin through DSM provider",
-						Detail:   fmt.Sprintf("[E]: API: %s %s", "GET", "sys/v1/plugins"),
+						Detail:   "[E]: API: GET sys/v1/plugins",
 					})
 				} else {
 					return []byte(resp), nil
