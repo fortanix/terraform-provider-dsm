@@ -41,7 +41,7 @@ func dataSourceRoleRead(ctx context.Context, d *schema.ResourceData, m interface
 	for _, data := range req {
 		if data.(map[string]interface{})["name"].(string) == d.Get("name").(string) {
 			role_id = data.(map[string]interface{})["role_id"].(string)
-			if err := d.Set("name", data.(map[string]interface{})["name"].(string)); err != nil {
+			if err := d.Set("name", d.Get("name").(string)); err != nil {
 				return diag.FromErr(err)
 			}
 			if err := d.Set("role_id", role_id); err != nil {

@@ -121,48 +121,48 @@ func resourceReadGroupCryptoPolicy(ctx context.Context, d *schema.ResourceData, 
 			Detail:   fmt.Sprintf("[R]: API Call: GET sys/v1/groups/%s", d.Id()),
 		})
 		return diags
-	} else {
-		if err != nil {
-			diags = append(diags, diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  "[DSM SDK] Unable to call DSM provider API client",
-				Detail:   fmt.Sprintf("[R]: API Call: GET sys/v1/groups/%s: %v", d.Id(), err),
-			})
-			return diags
-		}
+	}
+	if err != nil {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "[DSM SDK] Unable to call DSM provider API client",
+			Detail:   fmt.Sprintf("[R]: API Call: GET sys/v1/groups/%s: %v", d.Id(), err),
+		})
+		return diags
+	}
 
-		if err := d.Set("name", req["name"].(string)); err != nil {
+	if err := d.Set("name", req["name"].(string)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("group_id", req["group_id"].(string)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("acct_id", req["acct_id"].(string)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("creator", req["creator"]); err != nil {
+		return diag.FromErr(err)
+	}
+	if _, ok := req["description"]; ok {
+		if err := d.Set("description", req["description"].(string)); err != nil {
 			return diag.FromErr(err)
-		}
-		if err := d.Set("group_id", req["group_id"].(string)); err != nil {
-			return diag.FromErr(err)
-		}
-		if err := d.Set("acct_id", req["acct_id"].(string)); err != nil {
-			return diag.FromErr(err)
-		}
-		if err := d.Set("creator", req["creator"]); err != nil {
-			return diag.FromErr(err)
-		}
-		if _, ok := req["description"]; ok {
-			if err := d.Set("description", req["description"].(string)); err != nil {
-				return diag.FromErr(err)
-			}
-		}
-		if _, ok := req["approval_policy"]; ok {
-			if err := d.Set("approval_policy", fmt.Sprintf("%v", req["approval_policy"])); err != nil {
-				return diag.FromErr(err)
-			}
-		}
-		if _, ok := req["cryptographic_policy"]; ok {
-			if err := d.Set("cryptographic_policy", fmt.Sprintf("%v", req["cryptographic_policy"])); err != nil {
-				return diag.FromErr(err)
-			}
-		} else {
-			if debug_output {
-				tflog.Warn(ctx, "[R]: Expected cryptographic policy but found none. Operation might be pending if a quorum policy has been set.")
-			}
 		}
 	}
+	if _, ok := req["approval_policy"]; ok {
+		if err := d.Set("approval_policy", fmt.Sprintf("%v", req["approval_policy"])); err != nil {
+			return diag.FromErr(err)
+		}
+	}
+	if _, ok := req["cryptographic_policy"]; ok {
+		if err := d.Set("cryptographic_policy", fmt.Sprintf("%v", req["cryptographic_policy"])); err != nil {
+			return diag.FromErr(err)
+		}
+	} else {
+		if debug_output {
+			tflog.Warn(ctx, "[R]: Expected cryptographic policy but found none. Operation might be pending if a quorum policy has been set.")
+		}
+	}
+
 	return diags
 }
 

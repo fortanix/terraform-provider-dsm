@@ -99,34 +99,34 @@ func resourceReadAccountCryptoPolicy(ctx context.Context, d *schema.ResourceData
 			Detail:   fmt.Sprintf("[R]: API Call: GET sys/v1/accounts/%s", d.Id()),
 		})
 		return diags
-	} else {
-		if err != nil {
-			diags = append(diags, diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  "[DSM SDK] Unable to call DSM provider API client",
-				Detail:   fmt.Sprintf("[R]: API Call: GET sys/v1/accounts/%s: %v", d.Id(), err),
-			})
-			return diags
-		}
+	}
+	if err != nil {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "[DSM SDK] Unable to call DSM provider API client",
+			Detail:   fmt.Sprintf("[R]: API Call: GET sys/v1/accounts/%s: %v", d.Id(), err),
+		})
+		return diags
+	}
 
-		if err := d.Set("acct_id", req["acct_id"].(string)); err != nil {
+	if err := d.Set("acct_id", req["acct_id"].(string)); err != nil {
+		return diag.FromErr(err)
+	}
+	if _, ok := req["approval_policy"]; ok {
+		if err := d.Set("approval_policy", fmt.Sprintf("%s", req["approval_policy"])); err != nil {
 			return diag.FromErr(err)
 		}
-		if _, ok := req["approval_policy"]; ok {
-			if err := d.Set("approval_policy", fmt.Sprintf("%s", req["approval_policy"])); err != nil {
-				return diag.FromErr(err)
-			}
+	}
+	if _, ok := req["cryptographic_policy"]; ok {
+		if err := d.Set("cryptographic_policy", fmt.Sprintf("%s", req["cryptographic_policy"])); err != nil {
+			return diag.FromErr(err)
 		}
-		if _, ok := req["cryptographic_policy"]; ok {
-			if err := d.Set("cryptographic_policy", fmt.Sprintf("%s", req["cryptographic_policy"])); err != nil {
-				return diag.FromErr(err)
-			}
-		} else {
-			if debug_output {
-				tflog.Warn(ctx, "[R]: Expected cryptographic policy but found none. Operation might be pending if a quorum policy has been set.")
-			}
+	} else {
+		if debug_output {
+			tflog.Warn(ctx, "[R]: Expected cryptographic policy but found none. Operation might be pending if a quorum policy has been set.")
 		}
 	}
+
 	return diags
 }
 

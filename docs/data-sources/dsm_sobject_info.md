@@ -8,7 +8,7 @@ Returns the DSM security object info from the cluster as a Data Source.
 
 ```
 data "dsm_sobject_info" "sobject" {
-    name        = <sobject_name>
+    name = <sobject_name>
 }
 ```
 

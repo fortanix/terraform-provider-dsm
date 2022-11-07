@@ -111,8 +111,10 @@ func dataSourceSobjectInfoRead(ctx context.Context, d *schema.ResourceData, m in
 	if err := d.Set("obj_type", req["obj_type"].(string)); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("key_size", int(req["key_size"].(float64))); err != nil {
-		return diag.FromErr(err)
+	if _, ok := req["key_size"]; ok {
+		if err := d.Set("key_size", int(req["key_size"].(float64))); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 	if err := d.Set("enabled", req["enabled"].(bool)); err != nil {
 		return diag.FromErr(err)
