@@ -17,9 +17,9 @@ resource "dsm_plugin" "plugin" {
 	default_group = "<default_group_id>"
 	groups        = ["<default_group_id>", "<group_id_1>", ...]
 	language      = "<plugin_code_language>"
-    code          = data.local_file.plugin_code.content
-    plugin_type   = "<plugin_type>"
-    enabled       = "<true/false>"
+	code          = data.local_file.plugin_code.content
+	plugin_type   = "<plugin_type>"
+	enabled       = "<true/false>"
 }
 ```
 
