@@ -18,8 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-
-
 // [-] Define App
 func resourceApp() *schema.Resource {
 	return &schema.Resource{
@@ -73,24 +71,24 @@ func resourceApp() *schema.Resource {
 				Optional: true,
 			},
 			"other_group_permissions": {
-				Type: schema.TypeMap,
+				Type:     schema.TypeMap,
 				Optional: true,
 				Elem: &schema.Schema{
-					Type: schema.TypeString,
+					Type:     schema.TypeString,
 					Optional: true,
 				},
 			},
 			"mod_group_permissions": {
-				Type: schema.TypeMap,
+				Type:     schema.TypeMap,
 				Optional: true,
 				Elem: &schema.Schema{
-					Type: schema.TypeString,
+					Type:     schema.TypeString,
 					Optional: true,
 				},
 			},
 		},
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
 }
@@ -115,7 +113,7 @@ func resourceCreateApp(ctx context.Context, d *schema.ResourceData, m interface{
 		for _, group_id := range d.Get("other_group").([]interface{}) {
 			if perms, ok := add_group_perms[group_id.(string)]; ok {
 				app_add_group[group_id.(string)] = perms
-			}else{
+			} else {
 				app_add_group[group_id.(string)] = []string{"SIGN", "VERIFY", "ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "DERIVEKEY", "MACGENERATE", "MACVERIFY", "EXPORT", "MANAGE", "AGREEKEY", "AUDIT"}
 			}
 		}
@@ -123,7 +121,7 @@ func resourceCreateApp(ctx context.Context, d *schema.ResourceData, m interface{
 
 	if perms, ok := add_group_perms[d.Get("default_group").(string)]; ok {
 		app_add_group[d.Get("default_group").(string)] = perms
-	}else{
+	} else {
 		app_add_group[d.Get("default_group").(string)] = []string{"SIGN", "VERIFY", "ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "DERIVEKEY", "MACGENERATE", "MACVERIFY", "EXPORT", "MANAGE", "AGREEKEY", "AUDIT"}
 	}
 
@@ -241,7 +239,7 @@ func resourceUpdateApp(ctx context.Context, d *schema.ResourceData, m interface{
 			for i := 0; i < len(add_group_ids); i++ {
 				if perms, ok := add_group_perms[add_group_ids[i]]; ok {
 					app_add_group[add_group_ids[i]] = perms
-				}else{
+				} else {
 					app_add_group[add_group_ids[i]] = []string{"SIGN", "VERIFY", "ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "DERIVEKEY", "MACGENERATE", "MACVERIFY", "EXPORT", "MANAGE", "AGREEKEY", "AUDIT"}
 				}
 			}
@@ -269,7 +267,7 @@ func resourceUpdateApp(ctx context.Context, d *schema.ResourceData, m interface{
 					other_group_latest = append(other_group_latest, group_id.(string))
 				}
 			}
-			for i:=0; i < len(other_group_latest); i++ {
+			for i := 0; i < len(other_group_latest); i++ {
 				if perms, ok := mod_group[other_group_latest[i]]; ok {
 					app_mod_group[other_group_latest[i]] = strings.Split(perms.(string), ",")
 					delete(mod_group, other_group_latest[i])
@@ -278,7 +276,7 @@ func resourceUpdateApp(ctx context.Context, d *schema.ResourceData, m interface{
 			if len(mod_group) > 0 {
 				var unavailable_group_ids []string
 				for group_id := range mod_group {
-						unavailable_group_ids = append(unavailable_group_ids, group_id)
+					unavailable_group_ids = append(unavailable_group_ids, group_id)
 				}
 				diags = append(diags, diag.Diagnostic{
 					Severity: diag.Error,
@@ -328,11 +326,11 @@ func resourceDeleteApp(ctx context.Context, d *schema.ResourceData, m interface{
 	return nil
 }
 
-//form the group permissions - Ravi Gopal
-func form_group_permissions(permissions interface{}) (map[string]interface{}) {
+// form the group permissions - Ravi Gopal
+func form_group_permissions(permissions interface{}) map[string]interface{} {
 	add_group_perms := make(map[string]interface{})
 	if group_perms := permissions.(map[string]interface{}); len(group_perms) > 0 {
-		for group_id, permissions  := range group_perms {
+		for group_id, permissions := range group_perms {
 			permissions_list := strings.Split(permissions.(string), ",")
 			add_group_perms[group_id] = permissions_list
 		}

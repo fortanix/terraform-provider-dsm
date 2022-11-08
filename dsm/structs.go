@@ -73,7 +73,7 @@ type AzureGroup struct {
 type AzureGroupHmg struct {
 	Kind            string `json:"kind"`
 	Url             string `json:"url"`
-	Key_vault_type  string `json:"key_vault_type`
+	Key_vault_type  string `json:"key_vault_type"`
 	Client_id       string `json:"client_id"`
 	Subscription_id string `json:"subscription_id"`
 	Tenant_id       string `json:"tenant_id"`

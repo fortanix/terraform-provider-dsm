@@ -28,6 +28,10 @@ func dataSourceSobject() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"pub_key": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"acct_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -102,6 +106,11 @@ func dataSourceSobjectRead(ctx context.Context, d *schema.ResourceData, m interf
 	}
 	if err := d.Set("kid", req["kid"].(string)); err != nil {
 		return diag.FromErr(err)
+	}
+	if _, ok := req["pub_key"]; ok {
+		if err := d.Set("pub_key", req["pub_key"].(string)); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 	if err := d.Set("acct_id", req["acct_id"].(string)); err != nil {
 		return diag.FromErr(err)

@@ -21,15 +21,15 @@ func dataSourceVersion() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceVersionRead,
 		Schema: map[string]*schema.Schema{
-			"version": &schema.Schema{
+			"version": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"api_version": &schema.Schema{
+			"api_version": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"server_mode": &schema.Schema{
+			"server_mode": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},

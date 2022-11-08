@@ -16,6 +16,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+const debug_output = false
+
 // [-] Define Provider
 func Provider() *schema.Provider {
 	return &schema.Provider{
@@ -78,28 +80,34 @@ func Provider() *schema.Provider {
 			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
-			"dsm_sobject":           resourceSobject(),
-			"dsm_aws_sobject":       resourceAWSSobject(),
-			"dsm_aws_group":         resourceAWSGroup(),
-			"dsm_azure_sobject":     resourceAzureSobject(),
-			"dsm_azure_group":       resourceAzureGroup(),
-			"dsm_secret":            resourceSecret(),
-			"dsm_group":             resourceGroup(),
-			"dsm_app":               resourceApp(),
-			"dsm_csr":               resourceCsr(),
-			"dsm_gcp_ekm_sa":        resourceGcpEkmSa(),
-			"dsm_acc_quorum_policy": resourceAccQuorumPolicy(),
-			"dsm_plugin":            resourcePlugin(),
+			"dsm_sobject":             resourceSobject(),
+			"dsm_aws_sobject":         resourceAWSSobject(),
+			"dsm_aws_group":           resourceAWSGroup(),
+			"dsm_azure_sobject":       resourceAzureSobject(),
+			"dsm_azure_group":         resourceAzureGroup(),
+			"dsm_secret":              resourceSecret(),
+			"dsm_group":               resourceGroup(),
+			"dsm_group_user_role":     resourceGroupUserRole(),
+			"dsm_group_crypto_policy": resourceGroupCryptoPolicy(),
+			"dsm_app":                 resourceApp(),
+			"dsm_csr":                 resourceCsr(),
+			"dsm_gcp_ekm_sa":          resourceGcpEkmSa(),
+			"dsm_acc_quorum_policy":   resourceAccountQuorumPolicy(),
+			"dsm_acc_crypto_policy":   resourceAccountCryptoPolicy(),
+			"dsm_plugin":              resourcePlugin(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
-			"dsm_aws_group":   dataSourceAWSGroup(),
-			"dsm_azure_group": dataSourceAzureGroup(),
-			"dsm_secret":      dataSourceSecret(),
-			"dsm_group":       dataSourceGroup(),
-			"dsm_version":     dataSourceVersion(),
-			"dsm_app":         dataSourceApp(),
-			"dsm_sobject":     dataSourceSobject(),
-			"dsm_plugin":      dataSourcePlugin(),
+			"dsm_aws_group":    dataSourceAWSGroup(),
+			"dsm_azure_group":  dataSourceAzureGroup(),
+			"dsm_secret":       dataSourceSecret(),
+			"dsm_group":        dataSourceGroup(),
+			"dsm_user":         dataSourceUser(),
+			"dsm_role":         dataSourceRole(),
+			"dsm_version":      dataSourceVersion(),
+			"dsm_app":          dataSourceApp(),
+			"dsm_sobject":      dataSourceSobject(),
+			"dsm_sobject_info": dataSourceSobjectInfo(),
+			"dsm_plugin":       dataSourcePlugin()
 		},
 		ConfigureContextFunc: configureProvider,
 	}
