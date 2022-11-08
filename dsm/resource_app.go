@@ -226,7 +226,8 @@ func resourceUpdateApp(ctx context.Context, d *schema.ResourceData, m interface{
 	}
 	if d.HasChange("other_group") {
 		old_group, new_group := d.GetChange("other_group")
-		add_group_ids, del_group_ids := compute_add_and_del_groups(old_group, new_group)
+		// compute_add_and_del_arrays function is in common.go
+		add_group_ids, del_group_ids := compute_add_and_del_arrays(old_group, new_group)
 		//Add the groups to be deleted
 		if len(del_group_ids) > 0 {
 			app_object["del_groups"] = del_group_ids
@@ -336,50 +337,4 @@ func form_group_permissions(permissions interface{}) map[string]interface{} {
 	}
 
 	return add_group_perms
-}
-
-// computes the add and delete groups during patch request - Ravi Gopal
-func compute_add_and_del_groups(old_group interface{}, new_group interface{}) ([]string, []string) {
-
-	/*
-	* Compares old state and new state
-	* segregates the groups to be added and groups to be deleted.
-	 */
-	old_group_set := old_group.([]interface{})
-	new_group_set := new_group.([]interface{})
-
-	old_group_ids := make([]string, len(old_group_set))
-	for i, v := range old_group_set {
-		old_group_ids[i] = v.(string)
-	}
-	new_group_ids := make([]string, len(new_group_set))
-	for i, v := range new_group_set {
-		new_group_ids[i] = v.(string)
-	}
-
-	new_group_bool := make([]bool, len(new_group_set))
-
-	var del_group_ids []string
-	var add_group_ids []string
-
-	for i := 0; i < len(old_group_ids); i++ {
-		exist := false
-		for j := 0; j < len(new_group_ids); j++ {
-			if new_group_ids[j] == old_group_ids[i] {
-				exist = true
-				new_group_bool[j] = true
-				break
-			}
-		}
-		if !exist {
-			del_group_ids = append(del_group_ids, old_group_ids[i])
-		}
-	}
-	for i := 0; i < len(new_group_bool); i++ {
-		if !(new_group_bool[i]) {
-			add_group_ids = append(add_group_ids, new_group_ids[i])
-		}
-	}
-
-	return add_group_ids, del_group_ids
 }

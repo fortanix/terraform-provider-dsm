@@ -66,8 +66,6 @@ resource "dsm_app" "app" {
 }
 ```
 
-```
-
 ## Argument Reference
 
 The following arguments are supported in the `dsm_app` resource block:

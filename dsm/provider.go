@@ -94,6 +94,7 @@ func Provider() *schema.Provider {
 			"dsm_gcp_ekm_sa":          resourceGcpEkmSa(),
 			"dsm_acc_quorum_policy":   resourceAccountQuorumPolicy(),
 			"dsm_acc_crypto_policy":   resourceAccountCryptoPolicy(),
+			"dsm_plugin":              resourcePlugin(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"dsm_aws_group":    dataSourceAWSGroup(),
@@ -106,6 +107,7 @@ func Provider() *schema.Provider {
 			"dsm_app":          dataSourceApp(),
 			"dsm_sobject":      dataSourceSobject(),
 			"dsm_sobject_info": dataSourceSobjectInfo(),
+			"dsm_plugin":       dataSourcePlugin(),
 		},
 		ConfigureContextFunc: configureProvider,
 	}
