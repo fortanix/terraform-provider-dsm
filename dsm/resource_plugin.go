@@ -30,7 +30,7 @@ Create Plugin:
 		1) ID will set as approval_request_id and plugin_id as req["request_id"]. User should approve from UI currently
 		2) Once user is approved, when user tries to do any change or apply it will read all the plugins
 		   and gets the plugin that matches the plugin name.
-		3) Adds the plugin_id and Id as req["plugin_id"] and approval_request_id as null.
+		3) Adds the plugin_id, Id as req["plugin_id"] and approval_request_id as null.
 	* if approval_policy is not configured in any given groups configured,then it will create a plugin.
 
 Update Plugin:
@@ -40,7 +40,7 @@ Update Plugin:
 	* if approval_policy is configured in any given groups configured,then it will redirect to approval_requests API.
 		1) approval_request_id will set as request_id. User should approve from UI currently
 		2) Once user is approved, when user tries to do any change or apply it will apply the new changes in state
-		   and makes approval_request_id as null
+		   and changes approval_request_id as null
 	* if approval_policy is not configured in any given groups configured,then it will create a plugin.
 
 
