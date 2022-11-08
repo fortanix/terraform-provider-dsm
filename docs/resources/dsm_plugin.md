@@ -69,3 +69,4 @@ The following attributes are stored in the `dsm_plugin` resource block:
 * **code**: Plugin code that will be executed in DSM
 * **plugin_type**: Type of the plugin
 * **enabled**: Whether this plugin is enabled
+* * **approval\_request\_id**: If a plugin creation requires approval, then request id will be stored here.

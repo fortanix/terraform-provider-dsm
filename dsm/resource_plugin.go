@@ -15,7 +15,36 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
  )
+/*
 
+When there is an approval policy configured in plugin, then the request should be
+redirected to approval_requests API.
+
+Algorithm:
+
+Create Plugin:
+
+1) Read the inputs
+2) Read each group and check if there is approval_policy
+	* if approval_policy is configured in any given groups configured,then it will redirect to approval_requests API.
+		1) ID will set as approval_request_id and plugin_id as req["request_id"]. User should approve from UI currently
+		2) Once user is approved, when user tries to do any change or apply it will read all the plugins
+		   and gets the plugin that matches the plugin name.
+		3) Adds the plugin_id and Id as req["plugin_id"] and approval_request_id as null.
+	* if approval_policy is not configured in any given groups configured,then it will create a plugin.
+
+Update Plugin:
+
+1) Read the inputs
+2) Read each group and check if there is approval_policy
+	* if approval_policy is configured in any given groups configured,then it will redirect to approval_requests API.
+		1) approval_request_id will set as request_id. User should approve from UI currently
+		2) Once user is approved, when user tries to do any change or apply it will apply the new changes in state
+		   and makes approval_request_id as null
+	* if approval_policy is not configured in any given groups configured,then it will create a plugin.
+
+
+*/
 // [-] Define Plugin
 func resourcePlugin() *schema.Resource {
 	return &schema.Resource{
@@ -78,15 +107,20 @@ func resourcePlugin() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"approval_request_id" : {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 	}
 }
-var endpoint = "sys/v1/plugins"
+var plugin_endpoint = "sys/v1/plugins"
+var approval_endpoint = "sys/v1/approval_requests"
 
- // Create
+// Create
 func resourceCreatePlugin(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics{
 	var diags diag.Diagnostics
 
@@ -109,57 +143,105 @@ func resourceCreatePlugin(ctx context.Context, d *schema.ResourceData, m interfa
 	if err := d.Get("enabled").(bool); err {
 		plugin["enabled"] = d.Get("enabled")
 	}
+	// Checks if any group has approval policy
 	isapprovalPolicy := isApprovalPolicy(d.Get("groups").([]interface{}), m)
+	// If approval policy exists then it redirects to approval_request API
 	if (isapprovalPolicy) {
-		approval_request_body := map[string]interface{}{
-			"operation": endpoint,
-			"body":      plugin,
-			"method":    "POST",
-		}
-		req, err := m.(*api_client).APICallBody("POST", "sys/v1/approval_requests", approval_request_body)
-		if err != nil {
-			diags = append(diags, diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  "[DSM SDK] Unable to call DSM provider API client",
-				Detail:   fmt.Sprintf("[E]: API: POST %s: sys/v1/approval_requests", err),
-			})
-		} else {
-			diags = append(diags, diag.Diagnostic{
-				Severity: diag.Warning,
-				Summary:  "This plugin creation requires approval request. Please get the approval from required users in UI.",
-				Detail:   fmt.Sprintf("[E]: API: POST %s: sys/v1/plugins", req["request_id"]),
-			})
-		}
-		return diags
-	} else {
-		req, err := m.(*api_client).APICallBody("POST", endpoint, plugin)
-		if err != nil {
-			diags = append(diags, diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  "[DSM SDK] Unable to call DSM provider API client",
-				Detail:   fmt.Sprintf("[E]: API: POST %s: %v", endpoint, err),
-			})
-			return diags
-		}
-		d.SetId(req["plugin_id"].(string))
-		return resourceReadPlugin(ctx, d, m)
+		return approvalRequestCall(plugin, d, m, "POST")
 	}
+	req, err := m.(*api_client).APICallBody("POST", plugin_endpoint, plugin)
+	if err != nil {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "[DSM SDK] Unable to call DSM provider API client",
+			Detail:   fmt.Sprintf("[E]: API: POST %s: %v", plugin_endpoint, err),
+		})
+		return diags
+	}
+	d.SetId(req["plugin_id"].(string))
+	return resourceReadPlugin(ctx, d, m)
 }
 
 // Read
 func resourceReadPlugin(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
-	req, _, err := m.(*api_client).APICall("GET", fmt.Sprintf(endpoint + "/%s", d.Id()))
+	// This will be the case when approval_request API is triggered during create
+	if pid := d.Get("plugin_id").(string); len(pid) == 0 && len(d.Get("approval_request_id").(string)) > 0{
+		// Checks whether approval_request_id is approved or not
+		req, statuscode, _ := m.(*api_client).APICall("GET", fmt.Sprintf(approval_endpoint + "/%s", d.Id()))
+		if statuscode == 200 {
+			if req["status"] == "APPROVED" {
+				req, _ := m.(*api_client).APICallList("GET", fmt.Sprintf(plugin_endpoint))
+				for _, data := range req {
+					if data.(map[string]interface{})["name"].(string) == d.Get("name").(string) {
+						// If plugin available the changes ID as plugin_id
+						// and approval_request_id as ""
+						d.SetId(data.(map[string]interface{})["plugin_id"].(string))
+						d.Set("approval_request_id", "")
+						break
+					}
+				}
+			} else if req["status"] == "PENDING" {
+				 diags = append(diags, diag.Diagnostic{
+					Severity: diag.Warning,
+					Summary:  "Plugin " + d.Get("name").(string) + " is not yet approved or denied from the required users." +
+							  "request_id is: " + d.Id(),
+					Detail:   fmt.Sprintf("[W]: API: GET %s: %s", plugin_endpoint, d.Get("name").(string)),
+				 })
+				return diags
+			} else if req["status"] == "DENIED" {
+				diags = append(diags, diag.Diagnostic{
+					Severity: diag.Error,
+					Summary:  "Plugin " + d.Get("name").(string) + " is denied from the required user." +
+							  "To create a new plugin change the name or delete it from state and recreate it.",
+					Detail:   fmt.Sprintf("[W]: API: GET %s: %s", plugin_endpoint, d.Get("name").(string)),
+				})
+				return diags
+			}
+		} else {
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "Failed to load the request_id " + d.Id(),
+				Detail:   fmt.Sprintf("[E]: API: GET %s: %s", approval_endpoint, d.Id()),
+			})
+			return diags
+		}
+	}
+	// This will be executed during update
+	if approval_rq_id := d.Get("approval_request_id").(string); len(approval_rq_id) > 0{
+		req, statuscode, _ := m.(*api_client).APICall("GET", fmt.Sprintf(approval_endpoint + "/%s", approval_rq_id))
+		if statuscode == 200 {
+			// When it is approved or denied it will make approval_request_id as null
+			// And reads the plugin
+			if req["status"] != "PENDING" {
+				 d.Set("approval_request_id", "")
+			} else {
+				diags = append(diags, diag.Diagnostic{
+					Severity: diag.Warning,
+					Summary:  "Plugin " + d.Get("name").(string) + " is not yet approved or denied from the required users." +
+							  "request_id is: " + approval_rq_id,
+					Detail:   fmt.Sprintf("[W]: API: GET %s: %s", plugin_endpoint, d.Get("name").(string)),
+				})
+				return diags
+			}
+		} else {
+			d.Set("approval_request_id", "")
+		}
+	}
+	// reads the plugin
+	req, _, err := m.(*api_client).APICall("GET", fmt.Sprintf(plugin_endpoint + "/%s", d.Id()))
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "[DSM SDK] Unable to call DSM provider API client",
-			Detail:   fmt.Sprintf("[E]: API: GET sys/v1/apps: %v", err),
+			Detail:   fmt.Sprintf("[E]: API: GET %s: %v", plugin_endpoint, err),
 		})
 		return diags
 	}
 	if err := d.Set("name", req["name"].(string)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("description", req["description"].(string)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("plugin_id", req["plugin_id"].(string)); err != nil {
@@ -196,10 +278,9 @@ func resourceReadPlugin(ctx context.Context, d *schema.ResourceData, m interface
 // Update
 func resourceUpdatePlugin(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+
 	plugin := make(map[string]interface{})
-	if d.HasChange("name") {
-		plugin["name"] = d.Get("name").(string)
-	}
+	plugin["name"] = d.Get("name").(string)
 	if d.HasChange("description") {
 		plugin["description"] = d.Get("description").(string)
 	}
@@ -229,12 +310,16 @@ func resourceUpdatePlugin(ctx context.Context, d *schema.ResourceData, m interfa
 	if d.HasChange("plugin_type") {
 		plugin["plugin_type"] = d.Get("plugin_type")
 	}
-	_, err := m.(*api_client).APICallBody("PATCH", fmt.Sprintf(endpoint + "/%s", d.Id()), plugin)
+	isapprovalPolicy := isApprovalPolicy(d.Get("groups").([]interface{}), m)
+	if (isapprovalPolicy) {
+		return approvalRequestCall(plugin, d, m, "PATCH")
+	}
+	_, err := m.(*api_client).APICallBody("PATCH", fmt.Sprintf(plugin_endpoint + "/%s", d.Id()), plugin)
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "[DSM SDK] Unable to call DSM provider API client",
-			Detail:   fmt.Sprintf("[E]: API: PATCH %s: %v", endpoint, err),
+			Detail:   fmt.Sprintf("[E]: API: PATCH %s: %v", plugin_endpoint, err),
 		})
 		return diags
 	}
@@ -245,20 +330,60 @@ func resourceUpdatePlugin(ctx context.Context, d *schema.ResourceData, m interfa
 func resourceDeletePlugin(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	_, statuscode, err := m.(*api_client).APICall("DELETE", fmt.Sprintf(endpoint + "/%s", d.Id()))
-	if (err != nil) && (statuscode != 404) {
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "[DSM SDK] Unable to call DSM provider API client",
-			Detail:   fmt.Sprintf("[E]: API: DELETE sys/v1/apps: %v", err),
-		})
-		return diags
+	if len(d.Get("approval_request_id").(string)) > 0 {
+		m.(*api_client).APICall("POST", fmt.Sprintf(approval_endpoint + "/%s/deny", d.Id()))
+	}
+	if len(d.Get("plugin_id").(string)) > 0 {
+		_, statuscode, err := m.(*api_client).APICall("DELETE", fmt.Sprintf(plugin_endpoint + "/%s", d.Id()))
+		if (err != nil) && (statuscode != 404) {
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "[DSM SDK] Unable to call DSM provider API client",
+				Detail:   fmt.Sprintf("[E]: API: DELETE %s: %v", plugin_endpoint, err),
+			})
+			return diags
+		}
 	}
 	d.SetId("")
 	return nil
 }
 
-// Read Group
+// Approval request call
+func approvalRequestCall(body interface{}, d *schema.ResourceData, m interface{}, method string) diag.Diagnostics{
+	var diags diag.Diagnostics
+
+	operation := plugin_endpoint
+	if method == "PATCH" {
+		operation = plugin_endpoint + "/" + d.Id()
+	}
+	approval_request_body := map[string]interface{}{
+		"operation": operation,
+		"body":      body,
+		"method":    method,
+	}
+		req, err := m.(*api_client).APICallBody("POST", approval_endpoint, approval_request_body)
+	if err != nil {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "[DSM SDK] Unable to call DSM provider API client",
+			Detail:   fmt.Sprintf("[E]: API: POST %s %s", approval_endpoint, err),
+		})
+	} else {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  "This plugin creation requires approval request. Please get the approval from required users in UI.",
+			Detail:   fmt.Sprintf("[W]: API: POST %s, request_id for the plugin: %s", plugin_endpoint, req["request_id"]),
+		})
+		// sets ID as request_id
+		if method == "POST" {
+			d.SetId(req["request_id"].(string))
+		}
+		d.Set("approval_request_id", req["request_id"])
+	}
+	return diags
+}
+
+// Read each group and check if there is an approval policy
 func isApprovalPolicy(group_ids ([]interface{}), m interface{}) bool {
 	group_ids_arr := make([]string, len(group_ids))
 	for i, v := range group_ids {
