@@ -71,9 +71,15 @@ func resourceCreateGroup(ctx context.Context, d *schema.ResourceData, m interfac
 	}
 	if _, ok := d.GetOk("hmg"); ok {
 		var hmg_object []json.RawMessage
-		hmg_object[0] = json.RawMessage(d.Get("hmg").(string))
+		hmg_object = append(hmg_object, json.RawMessage(d.Get("hmg").(string)))
 		group_object["add_hmg"] = hmg_object
 	}
+
+	if debug_output {
+		jj, _ := json.Marshal(group_object)
+		tflog.Warn(ctx, fmt.Sprintf("Create Group Object: %s", jj))
+	}
+
 	resp, err := m.(*api_client).APICallBody("POST", "sys/v1/groups", group_object)
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
@@ -97,7 +103,8 @@ func resourceCreateGroup(ctx context.Context, d *schema.ResourceData, m interfac
 func resourceUpdateGroup(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	var approval_policy_new json.RawMessage = nil
-	var hmg_object_new []json.RawMessage
+	var hmg_new json.RawMessage
+	hmg_object := make(map[string]interface{})
 	description_new := ""
 	name_new := ""
 
@@ -111,24 +118,48 @@ func resourceUpdateGroup(ctx context.Context, d *schema.ResourceData, m interfac
 	}
 
 	if d.HasChange("name") {
-		name_new = d.Get("name").(string)
+		old, new := d.GetChange("name")
+		name_new = new.(string)
+		d.Set("name", old)
 	}
 
-	if _, ok := d.GetOk("hmg"); ok {
-		hmg_object_new[0] = json.RawMessage(d.Get("hmg").(string))
+	if hmg, ok := d.GetOk("hmg"); ok {
+		hmg_new = json.RawMessage(hmg.(string))
+		d.Set("hmg", nil)
 	}
 
-	dataSourceGroupRead(ctx, d, m)
+	read_diags := resourceReadGroup(ctx, d, m)
+	if read_diags != nil {
+		return read_diags
+	}
+
+	if hmg, ok := d.GetOk("hmg"); ok {
+		hmg_id := substr(hmg.(string), 4, 36)
+		if debug_output {
+			tflog.Warn(ctx, fmt.Sprintf("HMG id: %s", hmg_id))
+		}
+		hmg_object[hmg_id] = hmg_new
+	}
 
 	group_object := make(map[string]interface{})
 	group_id := d.Get("group_id").(string)
+	if group_id == "" {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "[DSM Provider: Group] Unable to find group name",
+			Detail:   fmt.Sprintf("[U]: Group not found: %s", name_new),
+		})
+		return diags
+	}
 	operation := "PATCH"
 	url := fmt.Sprintf("sys/v1/groups/%s", group_id)
 
 	if debug_output {
-		tflog.Warn(ctx, fmt.Sprintf("Update operation group id: ->%s<-", group_id))
-		tflog.Warn(ctx, fmt.Sprintf("New Approval Policy: ->%s<-", approval_policy_new))
-		tflog.Warn(ctx, fmt.Sprintf("Old Approval Policy: ->%s<-", json.RawMessage(d.Get("approval_policy").(string))))
+		tflog.Warn(ctx, fmt.Sprintf("Update operation group id: %s", group_id))
+		tflog.Warn(ctx, fmt.Sprintf("New Approval Policy: %s", approval_policy_new))
+		tflog.Warn(ctx, fmt.Sprintf("Old Approval Policy: %s", json.RawMessage(d.Get("approval_policy").(string))))
+		tflog.Warn(ctx, fmt.Sprintf("New HMG object: %s", hmg_object))
+		tflog.Warn(ctx, fmt.Sprintf("Old HMG: %s", d.Get("hmg").(string)))
 	}
 
 	if _, ok := d.GetOk("approval_policy"); ok {
@@ -147,7 +178,7 @@ func resourceUpdateGroup(ctx context.Context, d *schema.ResourceData, m interfac
 		if name_new != "" {
 			body_object["name"] = name_new
 		}
-		body_object["mod_hmg"] = hmg_object_new
+		body_object["mod_hmg"] = hmg_object
 		group_object["body"] = body_object
 		operation = "POST"
 		url = "sys/v1/approval_requests"
@@ -165,12 +196,12 @@ func resourceUpdateGroup(ctx context.Context, d *schema.ResourceData, m interfac
 		if name_new != "" {
 			group_object["name"] = name_new
 		}
-		group_object["mod_hmg"] = hmg_object_new
+		group_object["mod_hmg"] = hmg_object
 	}
 
 	if debug_output {
 		jj, _ := json.Marshal(group_object)
-		tflog.Warn(ctx, fmt.Sprintf("Group Object: %s", jj))
+		tflog.Warn(ctx, fmt.Sprintf("Update Group Object: %s", jj))
 	}
 
 	resp, err := m.(*api_client).APICallBody(operation, url, group_object)
@@ -267,4 +298,29 @@ func resourceDeleteGroup(ctx context.Context, d *schema.ResourceData, m interfac
 
 	d.SetId("")
 	return nil
+}
+
+/*
+// Get the keys of the map
+func keys[K comparable, V any](m map[K]V) []K {
+	keys := make([]K, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	return keys
+}
+*/
+
+func substr(input string, start int, length int) string {
+	asRunes := []rune(input)
+
+	if start >= len(asRunes) {
+		return ""
+	}
+
+	if start+length > len(asRunes) {
+		length = len(asRunes) - start
+	}
+
+	return string(asRunes[start : start+length])
 }

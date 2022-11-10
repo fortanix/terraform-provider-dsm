@@ -66,6 +66,14 @@ func resourceCreateGroupCryptoPolicy(ctx context.Context, d *schema.ResourceData
 
 	group_crypto_policy_object := make(map[string]interface{})
 	group_id := d.Get("group_id").(string)
+	if group_id == "" {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "[DSM Provider: Group Crypto Policy] Unable to find group name",
+			Detail:   fmt.Sprintf("[C & U]: Group not found: %s", d.Get("name").(string)),
+		})
+		return diags
+	}
 	if debug_output {
 		tflog.Warn(ctx, fmt.Sprintf("Group id: ->%s<-", group_id))
 	}
