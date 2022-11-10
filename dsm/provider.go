@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-const debug_output = true
+const debug_output = false
 
 // [-] Define Provider
 func Provider() *schema.Provider {

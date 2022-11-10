@@ -107,6 +107,7 @@ func resourceUpdateGroup(ctx context.Context, d *schema.ResourceData, m interfac
 	hmg_object := make(map[string]interface{})
 	description_new := ""
 	name_new := ""
+	hmg_present := false
 
 	if approval_policy, ok := d.GetOk("approval_policy"); ok {
 		approval_policy_new = json.RawMessage(approval_policy.(string))
@@ -139,6 +140,7 @@ func resourceUpdateGroup(ctx context.Context, d *schema.ResourceData, m interfac
 			tflog.Warn(ctx, fmt.Sprintf("HMG id: %s", hmg_id))
 		}
 		hmg_object[hmg_id] = hmg_new
+		hmg_present = true
 	}
 
 	group_object := make(map[string]interface{})
@@ -178,7 +180,9 @@ func resourceUpdateGroup(ctx context.Context, d *schema.ResourceData, m interfac
 		if name_new != "" {
 			body_object["name"] = name_new
 		}
-		body_object["mod_hmg"] = hmg_object
+		if hmg_present {
+			body_object["mod_hmg"] = hmg_object
+		}
 		group_object["body"] = body_object
 		operation = "POST"
 		url = "sys/v1/approval_requests"
@@ -196,7 +200,9 @@ func resourceUpdateGroup(ctx context.Context, d *schema.ResourceData, m interfac
 		if name_new != "" {
 			group_object["name"] = name_new
 		}
-		group_object["mod_hmg"] = hmg_object
+		if hmg_present {
+			group_object["mod_hmg"] = hmg_object
+		}
 	}
 
 	if debug_output {

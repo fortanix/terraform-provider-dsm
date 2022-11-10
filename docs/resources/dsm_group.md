@@ -11,7 +11,6 @@ resource "dsm_group" "group" {
     name = <group_name>
     description = <group_description>
     approval_policy = <group_quorum_policy_definition>
-    cryptographic_policy = <group_cryptographic_policy_definition>
     hmg = <group_HMS/KMS_definition>
 }
 ```
@@ -37,5 +36,4 @@ The following attributes are stored in the `dsm_group` resource block:
   * **app**: If the group was created by a app, the computed value will be the matching app id
 * **description**: The Fortanix DSM group object description
 * **approval_policy**: The Fortanix DSM group object quorum approval policy definition as a JSON string
-* **cryptographic_policy**: The Fortanix DSM group object cryptographic policy definition as a JSON string
 * **hmg**: The Fortanix DSM group object HMS/KMS definition as a JSON string
