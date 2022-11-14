@@ -1,19 +1,3 @@
-terraform {
-  required_providers {
-    dsm = {
-      version = "0.5.18"
-      source  = "fortanix.com/fortanix/dsm"
-    }
-  }
-}
-
-provider "dsm" {
-  endpoint = "https://sdkms.fortanix.com"
-  username = "abc@abc.com"
-  password = "xxxxxxxxxxxxxx"
-  acct_id  = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-}
-
 variable "approval_policy" {
    type = any
    description = "The policy document. This is a JSON formatted string."

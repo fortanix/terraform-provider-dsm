@@ -30,4 +30,6 @@ The following attributes are stored in the `dsm_group` data source block:
   * **user**: If the group was created by a user, the computed value will be the matching user id
   * **app**: If the group was created by a app, the computed value will be the matching app id
 * **description**: The group object description from Fortanix DSM
-
+* **approval_policy**: The Fortanix DSM group object quorum approval policy definition as a JSON string
+* **cryptographic_policy**: The Fortanix DSM group object cryptographic policy definition as a JSON string
+* **hmg**: The Fortanix DSM group object HMS/KMS definition as a JSON string
