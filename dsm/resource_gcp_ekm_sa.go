@@ -13,6 +13,7 @@ package dsm
 import (
 	"context"
 	"fmt"
+//	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -55,6 +56,29 @@ func resourceGcpEkmSa() *schema.Resource {
 				Optional: true,
 				Default:  "",
 			},
+			"other_group": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"other_group_permissions": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+			},
+			"mod_group_permissions": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+			},
 		},
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -69,15 +93,12 @@ func resourceCreateGcpEkmSa(ctx context.Context, d *schema.ResourceData, m inter
 	app_object := map[string]interface{}{
 		"name":          d.Get("name").(string),
 		"default_group": d.Get("default_group").(string),
-		"add_groups": map[string]interface{}{
-			d.Get("default_group").(string): []string{"SIGN", "VERIFY", "ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "DERIVEKEY", "MACGENERATE", "MACVERIFY", "EXPORT", "MANAGE", "AGREEKEY", "AUDIT"},
-		},
 		"app_type":    "default",
 		"description": d.Get("description").(string),
 	}
-
+	// add groups and it's permissions
+	formAddGroups(d, app_object)
 	// add GCP specifics
-
 	gcp_perm := map[string]interface{}{
 		"allow":                []string{"CUSTOMER_INITIATED_SUPPORT", "CUSTOMER_INITIATED_ACCESS", "GOOGLE_INITIATED_SERVICE", "GOOGLE_INITIATED_REVIEW", "GOOGLE_INITIATED_SYSTEM_OPERATION", "THIRD_PARTY_DATA_REQUEST", "REASON_UNSPECIFIED", "REASON_NOT_EXPECTED", "MODIFIED_CUSTOMER_INITIATED_ACCESS"},
 		"allow_missing_reason": true,
@@ -144,7 +165,42 @@ func resourceReadGcpEkmSa(ctx context.Context, d *schema.ResourceData, m interfa
 
 // [U]: Update GcpEkmSa
 func resourceUpdateGcpEkmSa(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	return nil
+	var diags diag.Diagnostics
+
+	app_object := make(map[string]interface{})
+	app_object["description"] = d.Get("description")
+	app_object["name"] = d.Get("name")
+	if d.HasChange("default_group") {
+		if default_group := d.Get("default_group").(string); len(default_group) > 0 {
+			app_object["default_group"] = d.Get("default_group")
+		}
+	}
+	//Modifies the existing groups
+	if d.HasChange("mod_group_permissions") {
+		err := getChangesInGroupPermissions(d, app_object)
+		if err != nil {
+			return err
+		}
+	}
+	if d.HasChange("other_group") {
+		getChangesInOtherGroups(d, app_object)
+	}
+	if d.HasChange("description") {
+		app_object["description"] = d.Get("description")
+	}
+	if len(app_object) > 0 {
+		req, err := m.(*api_client).APICallBody("PATCH", fmt.Sprintf("sys/v1/apps/%s", d.Id()), app_object)
+		if err != nil {
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "[DSM SDK] Unable to call DSM provider API client",
+				Detail:   fmt.Sprintf("[E]: API: POST sys/v1/apps: %v", d.Get("mod_group_permissions")),
+			})
+			return diags
+		}
+		d.SetId(req["app_id"].(string))
+	}
+	return resourceReadGcpEkmSa(ctx, d, m)
 }
 
 // [D]: Delete GcpEkmSa
@@ -160,7 +216,6 @@ func resourceDeleteGcpEkmSa(ctx context.Context, d *schema.ResourceData, m inter
 		})
 		return diags
 	}
-
 	d.SetId("")
 	return nil
 }
