@@ -138,3 +138,17 @@ func compute_add_and_del_arrays(old_array interface{}, new_array interface{}) ([
 
 	return add_array_ids, del_array_ids
 }
+
+func substr(input string, start int, length int) string {
+        asRunes := []rune(input)
+
+        if start >= len(asRunes) {
+                return ""
+        }
+
+        if start+length > len(asRunes) {
+                length = len(asRunes) - start
+        }
+
+        return string(asRunes[start : start+length])
+}
