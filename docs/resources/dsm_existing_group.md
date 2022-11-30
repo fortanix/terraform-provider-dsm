@@ -1,13 +1,13 @@
-# dsm\_group
+# dsm\_existing\_group
 
-## dsm\_group
+## dsm\_existing\_group
 
 Returns the Fortanix DSM group object from the cluster as a Resource.
 
 ## Usage Reference
 
 ```
-resource "dsm_group" "group" {
+resource "dsm_existing_group" "existing_group" {
     name = <group_name>
     description = <group_description>
     approval_policy = <group_quorum_policy_definition>
@@ -17,7 +17,7 @@ resource "dsm_group" "group" {
 
 ## Argument Reference
 
-The following arguments are supported in the `dsm_group` resource block:
+The following arguments are supported in the `dsm_existing_group` resource block:
 
 * **name**: The Fortanix DSM group object name.
 * _**description (optional)**_: The Fortanix DSM group object description
@@ -26,7 +26,7 @@ The following arguments are supported in the `dsm_group` resource block:
 
 ## Attribute Reference
 
-The following attributes are stored in the `dsm_group` resource block:
+The following attributes are stored in the `dsm_existing_group` resource block:
 
 * **id**: Unique ID of object from Terraform (matches the `group_id` from resource block)
 * **group\_id**: Group object ID from Fortanix DSM
