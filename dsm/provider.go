@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-const debug_output = true
+const debug_output = false
 
 // [-] Define Provider
 func Provider() *schema.Provider {
@@ -87,6 +87,7 @@ func Provider() *schema.Provider {
 			"dsm_azure_group":         resourceAzureGroup(),
 			"dsm_secret":              resourceSecret(),
 			"dsm_group":               resourceGroup(),
+			"dsm_existing_group":      resourceExistingGroup(),
 			"dsm_group_user_role":     resourceGroupUserRole(),
 			"dsm_group_crypto_policy": resourceGroupCryptoPolicy(),
 			"dsm_app":                 resourceApp(),

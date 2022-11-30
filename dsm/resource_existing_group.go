@@ -11,12 +11,12 @@ import (
 )
 
 // [-] Define Group
-func resourceGroup() *schema.Resource {
+func resourceExistingGroup() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceCreateGroup,
-		ReadContext:   resourceReadGroup,
-		UpdateContext: resourceUpdateGroup,
-		DeleteContext: resourceDeleteGroup,
+		CreateContext: resourceCreateExistingGroup,
+		ReadContext:   resourceReadExistingGroup,
+		UpdateContext: resourceUpdateExistingGroup,
+		DeleteContext: resourceDeleteExistingGroup,
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
@@ -56,51 +56,13 @@ func resourceGroup() *schema.Resource {
 	}
 }
 
-// [C]: Create Group
-func resourceCreateGroup(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	group_object := make(map[string]interface{})
-
-	group_object["name"] = d.Get("name").(string)
-	if _, ok := d.GetOk("description"); ok {
-		group_object["description"] = d.Get("description").(string)
-	}
-	if _, ok := d.GetOk("approval_policy"); ok {
-		group_object["approval_policy"] = json.RawMessage(d.Get("approval_policy").(string))
-	}
-	if _, ok := d.GetOk("hmg"); ok {
-		var hmg_object []json.RawMessage
-		hmg_object = append(hmg_object, json.RawMessage(d.Get("hmg").(string)))
-		group_object["add_hmg"] = hmg_object
-	}
-
-	if debug_output {
-		jj, _ := json.Marshal(group_object)
-		tflog.Warn(ctx, fmt.Sprintf("Create Group Object: %s", jj))
-	}
-
-	resp, err := m.(*api_client).APICallBody("POST", "sys/v1/groups", group_object)
-	if err != nil {
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "[DSM SDK] Unable to call DSM provider API client",
-			Detail:   fmt.Sprintf("[E]: API: POST sys/v1/groups: %v", err),
-		})
-		return diags
-	}
-
-	if debug_output {
-		resp_json, _ := json.Marshal(resp)
-		tflog.Warn(ctx, fmt.Sprintf("[U]: API response for group create operation: %s", resp_json))
-	}
-
-	d.SetId(resp["group_id"].(string))
-	return resourceReadGroup(ctx, d, m)
+// [C]: Create Group - Not applicable for managing existing groups
+func resourceCreateExistingGroup(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	return nil
 }
 
 // [U]: Update Group
-func resourceUpdateGroup(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceUpdateExistingGroup(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	var approval_policy_new json.RawMessage = nil
 	var hmg_new json.RawMessage
@@ -238,7 +200,7 @@ func resourceUpdateGroup(ctx context.Context, d *schema.ResourceData, m interfac
 }
 
 // [R]: Read Group
-func resourceReadGroup(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceReadExistingGroup(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	req, statuscode, err := m.(*api_client).APICall("GET", fmt.Sprintf("sys/v1/groups/%s", d.Id()))
@@ -285,31 +247,7 @@ func resourceReadGroup(ctx context.Context, d *schema.ResourceData, m interface{
 	return diags
 }
 
-// [D]: Delete Group
-func resourceDeleteGroup(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	dataSourceGroupRead(ctx, d, m)
-	group_id := d.Get("group_id").(string)
-
-	_, statuscode, err := m.(*api_client).APICall("DELETE", fmt.Sprintf("sys/v1/groups/%s", group_id))
-	if err != nil {
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "[DSM SDK] Unable to call DSM provider API client",
-			Detail:   fmt.Sprintf("[E]: API: DELETE sys/v1/groups/%s %d: %v", group_id, statuscode, err),
-		})
-		return diags
-	}
-	if statuscode == 400 {
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "[DSM SDK] Call to DSM provider API client failed",
-			Detail:   fmt.Sprintf("[E]: API: DELETE sys/v1/groups/%s Group is not empty", group_id),
-		})
-		return diags
-	}
-
-	d.SetId("")
+// [D]: Delete Group - Not much helpful for managing existing groups
+func resourceDeleteExistingGroup(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	return nil
 }

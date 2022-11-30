@@ -154,6 +154,10 @@ func resourceSobject() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"value": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 		},
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -197,6 +201,10 @@ func createSO(ctx context.Context, d *schema.ResourceData, m interface{}) diag.D
 		"obj_type":    obj_type,
 		"group_id":    d.Get("group_id").(string),
 		"description": d.Get("description").(string),
+	}
+
+	if _, ok := d.GetOk("value"); ok {
+		security_object["value"] = d.Get("value").(string)
 	}
 
 	if obj_type == "EC" {
@@ -488,6 +496,12 @@ func resourceUpdateSobject(ctx context.Context, d *schema.ResourceData, m interf
 	security_object["description"] = d.Get("description")
 	if d.HasChange("key_ops") {
 		security_object["key_ops"] = d.Get("key_ops")
+	}
+	if d.HasChange("description") {
+		security_object["description"] = d.Get("description")
+	}
+	if d.HasChange("name") {
+		security_object["name"] = d.Get("name")
 	}
 	if d.HasChange("custom_metadata") {
 		security_object["custom_metadata"] = d.Get("custom_metadata").(map[string]interface{})
