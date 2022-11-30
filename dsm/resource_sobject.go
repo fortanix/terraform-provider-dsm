@@ -492,6 +492,8 @@ func resourceUpdateSobject(ctx context.Context, d *schema.ResourceData, m interf
 		}
 		security_object["rsa"] = rsa_obj
 	}
+	security_object["name"] = d.Get("name")
+	security_object["description"] = d.Get("description")
 	if d.HasChange("key_ops") {
 		security_object["key_ops"] = d.Get("key_ops")
 	}

@@ -34,7 +34,7 @@ resource "dsm_app" "app" {
 }
 ```
 
-## Update the groups
+## Update the App
 
 ```
 
@@ -66,8 +66,6 @@ resource "dsm_app" "app" {
 }
 ```
 
-```
-
 ## Argument Reference
 
 The following arguments are supported in the `dsm_app` resource block:
@@ -81,7 +79,7 @@ The following arguments are supported in the `dsm_app` resource block:
 * _**other_group_permissions(optional)**_: Incase if you want to change the default permissions of a new group.
 * _**mod_group_permissions (optional)**_: To modify the permissions of any existing group
 
-
+```
    other_group_permissions example:
    
    A variable should be declared as locals. Here it is named as app_other_group_permissions. Please follow the below 
@@ -125,7 +123,7 @@ The following arguments are supported in the `dsm_app` resource block:
    }
    
    mod_group_permissions = local.app_mod_group_permissions
-
+```
 
 
 ## Attribute Reference
