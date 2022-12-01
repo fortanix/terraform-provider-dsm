@@ -107,6 +107,10 @@ func resourceSobject() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"ssh_pub_key": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"custom_metadata": {
 				Type:     schema.TypeMap,
 				Optional: true,
@@ -195,6 +199,7 @@ func createSO(ctx context.Context, d *schema.ResourceData, m interface{}) diag.D
 	key_size := d.Get("key_size").(int)
 	obj_type := d.Get("obj_type").(string)
 	elliptic_curve := d.Get("elliptic_curve").(string)
+	method := "POST"
 
 	security_object := map[string]interface{}{
 		"name":        d.Get("name").(string),
@@ -205,27 +210,29 @@ func createSO(ctx context.Context, d *schema.ResourceData, m interface{}) diag.D
 
 	if _, ok := d.GetOk("value"); ok {
 		security_object["value"] = d.Get("value").(string)
-	}
-
-	if obj_type == "EC" {
-		if key_size > 0 || len(elliptic_curve) == 0 {
+		method = "PUT"
+	} else {
+		if obj_type == "EC" {
+			if key_size > 0 || len(elliptic_curve) == 0 {
+				diags = append(diags, diag.Diagnostic{
+					Severity: diag.Error,
+					Detail:   fmt.Sprintf("key_size should not be specified and elliptic_curve should be specified for %s", obj_type),
+				})
+				return diags
+			} else {
+				security_object["elliptic_curve"] = elliptic_curve
+			}
+		} else if key_size == 0 || len(elliptic_curve) > 0 {
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Error,
-				Detail:   fmt.Sprintf("key_size should not be specified and elliptic_curve should be specified for %s", obj_type),
+				Detail:   fmt.Sprintf("key_size should be specified and elliptic_curve should not be specified for %s", obj_type),
 			})
 			return diags
 		} else {
-			security_object["elliptic_curve"] = elliptic_curve
+			security_object["key_size"] = key_size
 		}
-	} else if key_size == 0 || len(elliptic_curve) > 0 {
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Detail:   fmt.Sprintf("key_size should be specified and elliptic_curve should not be specified for %s", obj_type),
-		})
-		return diags
-	} else {
-		security_object["key_size"] = key_size
 	}
+
 	if rfcdate := d.Get("expiry_date").(string); len(rfcdate) > 0 {
 		layoutRFC := "2006-01-02T15:04:05Z"
 		layoutDSM := "20060102T150405Z"
@@ -264,7 +271,7 @@ func createSO(ctx context.Context, d *schema.ResourceData, m interface{}) diag.D
 		security_object["name"] = d.Get("rotate_from").(string)
 		endpoint = "crypto/v1/keys/rekey"
 	}
-	req, err := m.(*api_client).APICallBody("POST", endpoint, security_object)
+	req, err := m.(*api_client).APICallBody(method, endpoint, security_object)
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
@@ -516,16 +523,19 @@ func resourceUpdateSobject(ctx context.Context, d *schema.ResourceData, m interf
 		})
 		return diags
 	}
-	if d.HasChange("elliptic_curve") {
-		old_ec, _ := d.GetChange("elliptic_curve")
-		d.Set("elliptic_curve", old_ec)
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "elliptic_curve cannot modify on update",
-			Detail:   fmt.Sprintf("[E]: API: PATCH crypto/v1/keys: elliptic_curve cannot change on update. Please retain it to old value: %s", old_ec),
-		})
-		return diags
-	}
+
+	/*
+		if d.HasChange("elliptic_curve") {
+			old_ec, new_ec := d.GetChange("elliptic_curve")
+			d.Set("elliptic_curve", old_ec)
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "elliptic_curve cannot modify on update",
+				Detail:   fmt.Sprintf("[E]: API: PATCH crypto/v1/keys: elliptic_curve cannot change on update. Please retain it to old value: %s -> %s", old_ec, new_ec),
+			})
+			return diags
+		}
+	*/
 
 	key_ops := make([]string, len(req["key_ops"].([]interface{})))
 	if err := d.Get("key_ops").([]interface{}); len(err) > 0 {

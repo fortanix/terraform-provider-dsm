@@ -25,6 +25,7 @@ resource "dsm_sobject" "sobject" {
     }
     rsa             = <rsaOptions_string_format>
     elliptic_curve  = <elliptic_curve>
+    value = <imported sobject content>
 }
 ```
 
@@ -48,6 +49,7 @@ The following arguments are supported in the `dsm_sobject` resource block:
   * **DSM** - To rotate from a DSM local key. The key material of new key will be stored in DSM.
 * _**rotate_from(optional)**_  = Name of the security object to be rotated from
 * _**elliptic_curve**_  = Standardized elliptic curve. It should be given only when the obj_type is EC.
+* _**value**_  = Sobject content when importing content.
 
 ## Attribute Reference
 
@@ -68,6 +70,7 @@ The following attributes are stored in the `dsm_sobject` resource block:
   * **user**: If the security object was created by a user, the computed value will be the matching user id
   * **app**: If the security object was created by a app, the computed value will be the matching app id
 * **description**: Security object description
+* **pub\_key**: Public key (if "RSA” `obj_type` is specified)
 * **ssh\_pub\_key**: Open SSH public key (if "RSA” `obj_type` is specified)
 * **state**: state of the secret (`None`, `PreActive`, `Active`, `Deactivated`, `Compromised`, `Destroyed`, `Deleted`)
 * **expiry\_date**: The security object expiry date in RFC format
