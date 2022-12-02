@@ -339,14 +339,16 @@ func resourceReadSobject(ctx context.Context, d *schema.ResourceData, m interfac
 		if err := d.Set("obj_type", req["obj_type"].(string)); err != nil {
 			return diag.FromErr(err)
 		}
-		if _, ok := req["key_size"]; ok {
-			if err := d.Set("key_size", int(req["key_size"].(float64))); err != nil {
-				return diag.FromErr(err)
+		if req["origin"] != "External" {
+			if _, ok := req["key_size"]; ok {
+				if err := d.Set("key_size", int(req["key_size"].(float64))); err != nil {
+					return diag.FromErr(err)
+				}
 			}
-		}
-		if _, ok := req["elliptic_curve"]; ok {
-			if err := d.Set("elliptic_curve", req["elliptic_curve"].(string)); err != nil {
-				return diag.FromErr(err)
+			if _, ok := req["elliptic_curve"]; ok {
+				if err := d.Set("elliptic_curve", req["elliptic_curve"].(string)); err != nil {
+					return diag.FromErr(err)
+				}
 			}
 		}
 		if err := d.Set("kid", req["kid"].(string)); err != nil {
@@ -523,19 +525,16 @@ func resourceUpdateSobject(ctx context.Context, d *schema.ResourceData, m interf
 		})
 		return diags
 	}
-
-	/*
-		if d.HasChange("elliptic_curve") {
-			old_ec, new_ec := d.GetChange("elliptic_curve")
-			d.Set("elliptic_curve", old_ec)
-			diags = append(diags, diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  "elliptic_curve cannot modify on update",
-				Detail:   fmt.Sprintf("[E]: API: PATCH crypto/v1/keys: elliptic_curve cannot change on update. Please retain it to old value: %s -> %s", old_ec, new_ec),
-			})
-			return diags
-		}
-	*/
+	if d.HasChange("elliptic_curve") {
+		old_ec, new_ec := d.GetChange("elliptic_curve")
+		d.Set("elliptic_curve", old_ec)
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "elliptic_curve cannot modify on update",
+			Detail:   fmt.Sprintf("[E]: API: PATCH crypto/v1/keys: elliptic_curve cannot change on update. Please retain it to old value: %s -> %s", old_ec, new_ec),
+		})
+		return diags
+	}
 
 	key_ops := make([]string, len(req["key_ops"].([]interface{})))
 	if err := d.Get("key_ops").([]interface{}); len(err) > 0 {
