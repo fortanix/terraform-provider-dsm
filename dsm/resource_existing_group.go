@@ -58,7 +58,13 @@ func resourceExistingGroup() *schema.Resource {
 
 // [C]: Create Group - Not applicable for managing existing groups
 func resourceCreateExistingGroup(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	return nil
+	read_diags := dataSourceGroupRead(ctx, d, m)
+	if read_diags != nil {
+		return read_diags
+	}
+	group_id := d.Get("group_id").(string)
+	d.SetId(group_id)
+	return resourceReadExistingGroup(ctx, d, m)
 }
 
 // [U]: Update Group
@@ -196,7 +202,7 @@ func resourceUpdateExistingGroup(ctx context.Context, d *schema.ResourceData, m 
 	}
 
 	d.SetId(group_id)
-	return resourceReadGroup(ctx, d, m)
+	return resourceReadExistingGroup(ctx, d, m)
 }
 
 // [R]: Read Group

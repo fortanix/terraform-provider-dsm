@@ -2,7 +2,7 @@
 
 ## dsm\_existing\_group
 
-Returns the Fortanix DSM group object from the cluster as a Resource.
+Returns the existing Fortanix DSM group object from the cluster as a Resource.
 
 ## Usage Reference
 
@@ -38,3 +38,6 @@ The following attributes are stored in the `dsm_existing_group` resource block:
 * **description**: The Fortanix DSM group object description
 * **approval_policy**: The Fortanix DSM group object quorum approval policy definition as a JSON string
 * **hmg**: The Fortanix DSM group object HMS/KMS definition as a JSON string
+
+## Important Note
+Define the resource with existing group properties when creating. Then you can change those values to update the resource. Deletion is not supported. 
