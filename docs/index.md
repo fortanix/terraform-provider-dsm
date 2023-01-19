@@ -88,6 +88,7 @@ provider "dsm" {
     aws_profile = <AWS access key and secret>
     aws_region <AWS region>
     azure_region <Azure region>
+    ldap_name = <ldap_name>
 
 }
 ```
@@ -106,5 +107,5 @@ The following arguments are supported in the `dsm` provider block:
 *	**aws\_profile**: The AWS Access Key and Secret Access Key for programmatic (API) access to AWS Services
 *	_**aws\_region (optional)**_: The AWS region from which keys should be imported, by default it’s us-east-1 if not specified
 *	_**azure\_region (optional)**_: The regions where Fortanix DSM is supported. The default is us-east if not specified
-
+*   _**ldap\_name (optional)**_: LDAP Name if LDAP authentication is required.
 
