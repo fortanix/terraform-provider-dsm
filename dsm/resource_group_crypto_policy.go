@@ -60,7 +60,10 @@ func resourceGroupCryptoPolicy() *schema.Resource {
 func resourceCreateGroupCryptoPolicy(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	cryptographic_policy := json.RawMessage(d.Get("cryptographic_policy").(string))
+	cryptographic_policy, errjson := json.Marshal(d.Get("cryptographic_policy"))
+	if errjson != nil {
+		return diag.FromErr(errjson)
+	}
 
 	dataSourceGroupRead(ctx, d, m)
 
@@ -157,12 +160,18 @@ func resourceReadGroupCryptoPolicy(ctx context.Context, d *schema.ResourceData, 
 		}
 	}
 	if _, ok := req["approval_policy"]; ok {
-		if err := d.Set("approval_policy", fmt.Sprintf("%v", req["approval_policy"])); err != nil {
+		jsonString, err := json.Marshal(req["approval_policy"])
+		if err == nil {
+			d.Set("approval_policy", jsonString)
+		} else {
 			return diag.FromErr(err)
 		}
 	}
 	if _, ok := req["cryptographic_policy"]; ok {
-		if err := d.Set("cryptographic_policy", fmt.Sprintf("%v", req["cryptographic_policy"])); err != nil {
+		jsonString, err := json.Marshal(req["cryptographic_policy"])
+		if err == nil {
+			d.Set("cryptographic_policy", jsonString)
+		} else {
 			return diag.FromErr(err)
 		}
 	} else {

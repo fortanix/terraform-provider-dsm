@@ -10,6 +10,7 @@ package dsm
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -94,17 +95,26 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, m interfac
 				}
 			}
 			if approval_policy, ok := data.(map[string]interface{})["approval_policy"]; ok {
-				if err := d.Set("approval_policy", fmt.Sprintf("%v", approval_policy)); err != nil {
+				jsonString, err := json.Marshal(approval_policy)
+				if err == nil {
+					d.Set("approval_policy", jsonString)
+				} else {
 					return diag.FromErr(err)
 				}
 			}
 			if cryptographic_policy, ok := data.(map[string]interface{})["cryptographic_policy"]; ok {
-				if err := d.Set("cryptographic_policy", fmt.Sprintf("%v", cryptographic_policy)); err != nil {
+				jsonString, err := json.Marshal(cryptographic_policy)
+				if err == nil {
+					d.Set("cryptographic_policy", jsonString)
+				} else {
 					return diag.FromErr(err)
 				}
 			}
 			if hmg, ok := data.(map[string]interface{})["hmg"]; ok {
-				if err := d.Set("hmg", fmt.Sprintf("%v", hmg)); err != nil {
+				jsonString, err := json.Marshal(hmg)
+				if err == nil {
+					d.Set("hmg", jsonString)
+				} else {
 					return diag.FromErr(err)
 				}
 			}

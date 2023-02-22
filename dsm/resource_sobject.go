@@ -477,6 +477,7 @@ func resourceReadSobject(ctx context.Context, d *schema.ResourceData, m interfac
 // [U]: Terraform Func: resourceUpdateSobject
 func resourceUpdateSobject(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	var has_changed = false
 
 	// already has been replaced so "rotate" and "rotate_from" does not apply
 	_, replacement := d.GetOk("replacement")
@@ -500,30 +501,23 @@ func resourceUpdateSobject(ctx context.Context, d *schema.ResourceData, m interf
 			return diags
 		}
 		security_object["rsa"] = rsa_obj
+		has_changed = true
 	}
-	security_object["name"] = d.Get("name")
-	security_object["description"] = d.Get("description")
 	if d.HasChange("key_ops") {
 		security_object["key_ops"] = d.Get("key_ops")
+		has_changed = true
 	}
 	if d.HasChange("description") {
 		security_object["description"] = d.Get("description")
+		has_changed = true
 	}
 	if d.HasChange("name") {
 		security_object["name"] = d.Get("name")
+		has_changed = true
 	}
 	if d.HasChange("custom_metadata") {
 		security_object["custom_metadata"] = d.Get("custom_metadata").(map[string]interface{})
-	}
-
-	req, err := m.(*api_client).APICallBody("PATCH", fmt.Sprintf("crypto/v1/keys/%s", d.Id()), security_object)
-	if err != nil {
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "[DSM SDK] Unable to call DSM provider API client",
-			Detail:   fmt.Sprintf("[E]: API: PATCH crypto/v1/keys: %v", err),
-		})
-		return diags
+		has_changed = true
 	}
 	if d.HasChange("elliptic_curve") {
 		old_ec, new_ec := d.GetChange("elliptic_curve")
@@ -536,27 +530,39 @@ func resourceUpdateSobject(ctx context.Context, d *schema.ResourceData, m interf
 		return diags
 	}
 
-	key_ops := make([]string, len(req["key_ops"].([]interface{})))
-	if err := d.Get("key_ops").([]interface{}); len(err) > 0 {
-		if len(d.Get("key_ops").([]interface{})) == len(req["key_ops"].([]interface{})) {
-			for idx, key_op := range d.Get("key_ops").([]interface{}) {
-				key_ops[idx] = fmt.Sprint(key_op)
-			}
-		} else {
+	if has_changed {
+		req, err := m.(*api_client).APICallBody("PATCH", fmt.Sprintf("crypto/v1/keys/%s", d.Id()), security_object)
+		if err != nil {
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "[DSM SDK] Unable to call DSM provider API client",
-				Detail:   "[E]: API: PATCH crypto/v1/keys: Sync issue from State and DSM",
+				Detail:   fmt.Sprintf("[E]: API: PATCH crypto/v1/keys: %v", err),
 			})
 			return diags
 		}
-	} else {
-		for idx, key_op := range req["key_ops"].([]interface{}) {
-			key_ops[idx] = fmt.Sprint(key_op)
+
+		key_ops := make([]string, len(req["key_ops"].([]interface{})))
+		if err := d.Get("key_ops").([]interface{}); len(err) > 0 {
+			if len(d.Get("key_ops").([]interface{})) == len(req["key_ops"].([]interface{})) {
+				for idx, key_op := range d.Get("key_ops").([]interface{}) {
+					key_ops[idx] = fmt.Sprint(key_op)
+				}
+			} else {
+				diags = append(diags, diag.Diagnostic{
+					Severity: diag.Error,
+					Summary:  "[DSM SDK] Error in processing DSM provider API response key_ops",
+					Detail:   "[E]: API: PATCH crypto/v1/keys: Sync issue from State and DSM",
+				})
+				return diags
+			}
+		} else {
+			for idx, key_op := range req["key_ops"].([]interface{}) {
+				key_ops[idx] = fmt.Sprint(key_op)
+			}
 		}
-	}
-	if err := d.Set("key_ops", key_ops); err != nil {
-		return diag.FromErr(err)
+		if err := d.Set("key_ops", key_ops); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 
 	return resourceReadSobject(ctx, d, m)

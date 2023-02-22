@@ -9,16 +9,13 @@
 package dsm
 
 import (
-	//"crypto/rsa"
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
-	//"encoding/pem"
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-
 	"golang.org/x/crypto/ssh"
 )
 
@@ -99,7 +96,7 @@ func compute_add_and_del_arrays(old_array interface{}, new_array interface{}) ([
 	/*
 	* Compares old state and new state
 	* segregates the arrays to be added and arrays to be deleted.
-	*/
+	 */
 	old_array_set := old_array.([]interface{})
 	new_array_set := new_array.([]interface{})
 
@@ -140,15 +137,15 @@ func compute_add_and_del_arrays(old_array interface{}, new_array interface{}) ([
 }
 
 func substr(input string, start int, length int) string {
-        asRunes := []rune(input)
+	asRunes := []rune(input)
 
-        if start >= len(asRunes) {
-                return ""
-        }
+	if start >= len(asRunes) {
+		return ""
+	}
 
-        if start+length > len(asRunes) {
-                length = len(asRunes) - start
-        }
+	if start+length > len(asRunes) {
+		length = len(asRunes) - start
+	}
 
-        return string(asRunes[start : start+length])
+	return string(asRunes[start : start+length])
 }
