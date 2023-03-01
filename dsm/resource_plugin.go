@@ -14,8 +14,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-)
-
+ )
 /*
 
 When there is an approval policy configured in plugin, then the request should be
@@ -60,17 +59,17 @@ func resourcePlugin() *schema.Resource {
 			},
 			"plugin_id": {
 				Type:     schema.TypeString,
-				Computed: true,
+				 Computed: true,
 			},
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "",
+				Default: "",
 			},
 			"plugin_type": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "standard",
+				Default: "standard",
 			},
 			"default_group": {
 				Type:     schema.TypeString,
@@ -86,18 +85,18 @@ func resourcePlugin() *schema.Resource {
 			"language": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "LUA",
+				Default: "LUA",
 			},
 			"code": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			"acct_id": {
+				 Type:     schema.TypeString,
+				 Required: true,
+			 },
+			 "enabled": {
+				 Type:     schema.TypeBool,
+				 Optional: true,
+				 Default: true,
+			 },
+			 "acct_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -108,22 +107,21 @@ func resourcePlugin() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"approval_request_id": {
+			"approval_request_id" : {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 		},
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			State: schema.ImportStatePassthrough,
 		},
 	}
 }
-
 var plugin_endpoint = "sys/v1/plugins"
 var approval_endpoint = "sys/v1/approval_requests"
 
 // Create
-func resourceCreatePlugin(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceCreatePlugin(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics{
 	var diags diag.Diagnostics
 
 	plugin := map[string]interface{}{
@@ -148,7 +146,7 @@ func resourceCreatePlugin(ctx context.Context, d *schema.ResourceData, m interfa
 	// Checks if any group has approval policy
 	isapprovalPolicy := isApprovalPolicy(d.Get("groups").([]interface{}), m)
 	// If approval policy exists then it redirects to approval_request API
-	if isapprovalPolicy {
+	if (isapprovalPolicy) {
 		return approvalRequestCall(plugin, d, m, "POST")
 	}
 	req, err := m.(*api_client).APICallBody("POST", plugin_endpoint, plugin)
@@ -168,12 +166,12 @@ func resourceCreatePlugin(ctx context.Context, d *schema.ResourceData, m interfa
 func resourceReadPlugin(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	// This will be the case when approval_request API is triggered during create
-	if pid := d.Get("plugin_id").(string); len(pid) == 0 && len(d.Get("approval_request_id").(string)) > 0 {
+	if pid := d.Get("plugin_id").(string); len(pid) == 0 && len(d.Get("approval_request_id").(string)) > 0{
 		// Checks whether approval_request_id is approved or not
-		req, statuscode, _ := m.(*api_client).APICall("GET", fmt.Sprintf(approval_endpoint+"/%s", d.Id()))
+		req, statuscode, _ := m.(*api_client).APICall("GET", fmt.Sprintf(approval_endpoint + "/%s", d.Id()))
 		if statuscode == 200 {
 			if req["status"] == "APPROVED" {
-				req, _ := m.(*api_client).APICallList("GET", fmt.Sprint(plugin_endpoint))
+				req, _ := m.(*api_client).APICallList("GET", fmt.Sprintf(plugin_endpoint))
 				for _, data := range req {
 					if data.(map[string]interface{})["name"].(string) == d.Get("name").(string) {
 						// If plugin available the changes ID as plugin_id
@@ -184,19 +182,19 @@ func resourceReadPlugin(ctx context.Context, d *schema.ResourceData, m interface
 					}
 				}
 			} else if req["status"] == "PENDING" {
-				diags = append(diags, diag.Diagnostic{
+				 diags = append(diags, diag.Diagnostic{
 					Severity: diag.Warning,
-					Summary: "Plugin " + d.Get("name").(string) + " is not yet approved or denied from the required users." +
-						"request_id is: " + d.Id(),
-					Detail: fmt.Sprintf("[W]: API: GET %s: %s", plugin_endpoint, d.Get("name").(string)),
-				})
+					Summary:  "Plugin " + d.Get("name").(string) + " is not yet approved or denied from the required users." +
+							  "request_id is: " + d.Id(),
+					Detail:   fmt.Sprintf("[W]: API: GET %s: %s", plugin_endpoint, d.Get("name").(string)),
+				 })
 				return diags
 			} else if req["status"] == "DENIED" {
 				diags = append(diags, diag.Diagnostic{
 					Severity: diag.Error,
-					Summary: "Plugin " + d.Get("name").(string) + " is denied from the required user." +
-						"To create a new plugin change the name or delete it from state and recreate it.",
-					Detail: fmt.Sprintf("[W]: API: GET %s: %s", plugin_endpoint, d.Get("name").(string)),
+					Summary:  "Plugin " + d.Get("name").(string) + " is denied from the required user." +
+							  "To create a new plugin change the name or delete it from state and recreate it.",
+					Detail:   fmt.Sprintf("[W]: API: GET %s: %s", plugin_endpoint, d.Get("name").(string)),
 				})
 				return diags
 			}
@@ -210,19 +208,19 @@ func resourceReadPlugin(ctx context.Context, d *schema.ResourceData, m interface
 		}
 	}
 	// This will be executed during update
-	if approval_rq_id := d.Get("approval_request_id").(string); len(approval_rq_id) > 0 {
-		req, statuscode, _ := m.(*api_client).APICall("GET", fmt.Sprintf(approval_endpoint+"/%s", approval_rq_id))
+	if approval_rq_id := d.Get("approval_request_id").(string); len(approval_rq_id) > 0{
+		req, statuscode, _ := m.(*api_client).APICall("GET", fmt.Sprintf(approval_endpoint + "/%s", approval_rq_id))
 		if statuscode == 200 {
 			// When it is approved or denied it will make approval_request_id as null
 			// And reads the plugin
 			if req["status"] != "PENDING" {
-				d.Set("approval_request_id", "")
+				 d.Set("approval_request_id", "")
 			} else {
 				diags = append(diags, diag.Diagnostic{
 					Severity: diag.Warning,
-					Summary: "Plugin " + d.Get("name").(string) + " is not yet approved or denied from the required users." +
-						"request_id is: " + approval_rq_id,
-					Detail: fmt.Sprintf("[W]: API: GET %s: %s", plugin_endpoint, d.Get("name").(string)),
+					Summary:  "Plugin " + d.Get("name").(string) + " is not yet approved or denied from the required users." +
+							  "request_id is: " + approval_rq_id,
+					Detail:   fmt.Sprintf("[W]: API: GET %s: %s", plugin_endpoint, d.Get("name").(string)),
 				})
 				return diags
 			}
@@ -231,7 +229,7 @@ func resourceReadPlugin(ctx context.Context, d *schema.ResourceData, m interface
 		}
 	}
 	// reads the plugin
-	req, _, err := m.(*api_client).APICall("GET", fmt.Sprintf(plugin_endpoint+"/%s", d.Id()))
+	req, _, err := m.(*api_client).APICall("GET", fmt.Sprintf(plugin_endpoint + "/%s", d.Id()))
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
@@ -313,10 +311,10 @@ func resourceUpdatePlugin(ctx context.Context, d *schema.ResourceData, m interfa
 		plugin["plugin_type"] = d.Get("plugin_type")
 	}
 	isapprovalPolicy := isApprovalPolicy(d.Get("groups").([]interface{}), m)
-	if isapprovalPolicy {
+	if (isapprovalPolicy) {
 		return approvalRequestCall(plugin, d, m, "PATCH")
 	}
-	_, err := m.(*api_client).APICallBody("PATCH", fmt.Sprintf(plugin_endpoint+"/%s", d.Id()), plugin)
+	_, err := m.(*api_client).APICallBody("PATCH", fmt.Sprintf(plugin_endpoint + "/%s", d.Id()), plugin)
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
@@ -333,10 +331,10 @@ func resourceDeletePlugin(ctx context.Context, d *schema.ResourceData, m interfa
 	var diags diag.Diagnostics
 
 	if len(d.Get("approval_request_id").(string)) > 0 {
-		m.(*api_client).APICall("POST", fmt.Sprintf(approval_endpoint+"/%s/deny", d.Id()))
+		m.(*api_client).APICall("POST", fmt.Sprintf(approval_endpoint + "/%s/deny", d.Id()))
 	}
 	if len(d.Get("plugin_id").(string)) > 0 {
-		_, statuscode, err := m.(*api_client).APICall("DELETE", fmt.Sprintf(plugin_endpoint+"/%s", d.Id()))
+		_, statuscode, err := m.(*api_client).APICall("DELETE", fmt.Sprintf(plugin_endpoint + "/%s", d.Id()))
 		if (err != nil) && (statuscode != 404) {
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Error,
@@ -351,7 +349,7 @@ func resourceDeletePlugin(ctx context.Context, d *schema.ResourceData, m interfa
 }
 
 // Approval request call
-func approvalRequestCall(body interface{}, d *schema.ResourceData, m interface{}, method string) diag.Diagnostics {
+func approvalRequestCall(body interface{}, d *schema.ResourceData, m interface{}, method string) diag.Diagnostics{
 	var diags diag.Diagnostics
 
 	operation := plugin_endpoint
@@ -363,12 +361,12 @@ func approvalRequestCall(body interface{}, d *schema.ResourceData, m interface{}
 		"body":      body,
 		"method":    method,
 	}
-	req, err := m.(*api_client).APICallBody("POST", approval_endpoint, approval_request_body)
+		req, err := m.(*api_client).APICallBody("POST", approval_endpoint, approval_request_body)
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "[DSM SDK] Unable to call DSM provider API client",
-			Detail:   fmt.Sprintf("[E]: API: POST %s %v", approval_endpoint, err),
+			Detail:   fmt.Sprintf("[E]: API: POST %s %s", approval_endpoint, err),
 		})
 	} else {
 		diags = append(diags, diag.Diagnostic{
@@ -386,14 +384,14 @@ func approvalRequestCall(body interface{}, d *schema.ResourceData, m interface{}
 }
 
 // Read each group and check if there is an approval policy
-func isApprovalPolicy(group_ids []interface{}, m interface{}) bool {
+func isApprovalPolicy(group_ids ([]interface{}), m interface{}) bool {
 	group_ids_arr := make([]string, len(group_ids))
 	for i, v := range group_ids {
 		group_ids_arr[i] = v.(string)
 	}
 	for _, group_id := range group_ids_arr {
 		req, statuscode, _ := m.(*api_client).APICall("GET", fmt.Sprintf("sys/v1/groups/%s", group_id))
-		if statuscode == 200 {
+		if (statuscode == 200) {
 			if _, ok := req["approval_policy"]; ok {
 				return true
 			}

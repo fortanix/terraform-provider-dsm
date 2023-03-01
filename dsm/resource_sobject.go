@@ -1,11 +1,3 @@
-// **********
-// Terraform Provider - SDKMS: resource: security object
-// **********
-//       - Author:    fyoo at fortanix dot com
-//       - Version:   0.5.1
-//       - Date:      27/11/2020
-// **********
-
 package dsm
 
 import (
@@ -14,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -531,6 +524,9 @@ func resourceUpdateSobject(ctx context.Context, d *schema.ResourceData, m interf
 	}
 
 	if has_changed {
+		if debug_output {
+			tflog.Warn(ctx, "Sobject has changed, calling API")
+		}
 		req, err := m.(*api_client).APICallBody("PATCH", fmt.Sprintf("crypto/v1/keys/%s", d.Id()), security_object)
 		if err != nil {
 			diags = append(diags, diag.Diagnostic{

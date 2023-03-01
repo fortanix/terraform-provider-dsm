@@ -41,10 +41,7 @@ func resourceAccountCryptoPolicy() *schema.Resource {
 func resourceCreateAccountCryptoPolicy(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	cryptographic_policy, err := json.Marshal(d.Get("cryptographic_policy"))
-	if err != nil {
-		return diag.FromErr(err)
-	}
+	cryptographic_policy := json.RawMessage(d.Get("cryptographic_policy").(string))
 
 	accountApprovalPolicyRead(ctx, d, m)
 
@@ -116,18 +113,12 @@ func resourceReadAccountCryptoPolicy(ctx context.Context, d *schema.ResourceData
 		return diag.FromErr(err)
 	}
 	if _, ok := req["approval_policy"]; ok {
-		jsonString, err := json.Marshal(req["approval_policy"])
-		if err == nil {
-			d.Set("approval_policy", jsonString)
-		} else {
+		if err := d.Set("approval_policy", fmt.Sprintf("%s", req["approval_policy"])); err != nil {
 			return diag.FromErr(err)
 		}
 	}
 	if _, ok := req["cryptographic_policy"]; ok {
-		jsonString, err := json.Marshal(req["cryptographic_policy"])
-		if err == nil {
-			d.Set("cryptographic_policy", jsonString)
-		} else {
+		if err := d.Set("cryptographic_policy", fmt.Sprintf("%s", req["cryptographic_policy"])); err != nil {
 			return diag.FromErr(err)
 		}
 	} else {

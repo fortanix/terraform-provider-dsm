@@ -36,14 +36,9 @@ func resourceAccountQuorumPolicy() *schema.Resource {
 func resourceCreateAccountQuorumPolicy(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	jsonString, errjson := json.Marshal(d.Get("approval_policy"))
-	if errjson == nil {
-		return diag.FromErr(errjson)
-	}
-
 	policy_object := map[string]interface{}{
 		"acct_id":         d.Get("acct_id").(string),
-		"approval_policy": string(jsonString),
+		"approval_policy": json.RawMessage(d.Get("approval_policy").(string)),
 	}
 
 	req, err := m.(*api_client).APICallBody("PATCH", fmt.Sprintf("sys/v1/accounts/%s", policy_object["acct_id"]), policy_object)
@@ -82,10 +77,7 @@ func resourceReadAccountQuorumPolicy(ctx context.Context, d *schema.ResourceData
 			return diag.FromErr(err)
 		}
 		if _, ok := req["approval_policy"]; ok {
-			jsonString, err := json.Marshal(req["approval_policy"])
-			if err == nil {
-				d.Set("approval_policy", jsonString)
-			} else {
+			if err := d.Set("approval_policy", fmt.Sprintf("%v", req["approval_policy"])); err != nil {
 				return diag.FromErr(err)
 			}
 		}

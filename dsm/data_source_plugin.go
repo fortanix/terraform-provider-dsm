@@ -14,12 +14,12 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-)
+ )
 
 // [-] Define Plugin
 func dataSourcePlugin() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceReadPlugin,
+		ReadContext:   dataSourceReadPlugin,
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
@@ -53,14 +53,14 @@ func dataSourcePlugin() *schema.Resource {
 				Computed: true,
 			},
 			"code": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"enabled": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"acct_id": {
+				 Type:     schema.TypeString,
+				 Computed: true,
+			 },
+			 "enabled": {
+				 Type:     schema.TypeBool,
+				 Computed: true,
+			 },
+			 "acct_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -73,7 +73,7 @@ func dataSourcePlugin() *schema.Resource {
 			},
 		},
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			State: schema.ImportStatePassthrough,
 		},
 	}
 }
