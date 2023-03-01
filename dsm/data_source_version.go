@@ -1,11 +1,3 @@
-// **********
-// Terraform Provider - DSM: data source: cluster version
-// **********
-//       - Author:    fyoo at fortanix dot com
-//       - Version:   0.3.7
-//       - Date:      27/11/2020
-// **********
-
 package dsm
 
 import (

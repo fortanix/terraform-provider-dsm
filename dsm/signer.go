@@ -1,11 +1,3 @@
-// **********
-// Terraform Provider - DSM: signer client
-// **********
-//       - Author:    fyoo at fortanix dot com
-//       - Version:   0.5.15
-//       - Date:      14/06/2022
-// **********
-
 package dsm
 
 import (

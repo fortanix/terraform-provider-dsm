@@ -154,24 +154,18 @@ func resourceReadGroupCryptoPolicy(ctx context.Context, d *schema.ResourceData, 
 	if err := d.Set("creator", req["creator"]); err != nil {
 		return diag.FromErr(err)
 	}
-	if _, ok := req["description"]; ok {
-		if err := d.Set("description", req["description"].(string)); err != nil {
+	if description, ok := req["description"]; ok {
+		if err := d.Set("description", description.(string)); err != nil {
 			return diag.FromErr(err)
 		}
 	}
-	if _, ok := req["approval_policy"]; ok {
-		jsonString, err := json.Marshal(req["approval_policy"])
-		if err == nil {
-			d.Set("approval_policy", jsonString)
-		} else {
+	if approval_policy, ok := req["approval_policy"]; ok {
+		if err := d.Set("approval_policy", string(json.RawMessage(approval_policy.(string)))); err != nil {
 			return diag.FromErr(err)
 		}
 	}
-	if _, ok := req["cryptographic_policy"]; ok {
-		jsonString, err := json.Marshal(req["cryptographic_policy"])
-		if err == nil {
-			d.Set("cryptographic_policy", jsonString)
-		} else {
+	if cryptographic_policy, ok := req["cryptographic_policy"]; ok {
+		if err := d.Set("cryptographic_policy", string(json.RawMessage(cryptographic_policy.(string)))); err != nil {
 			return diag.FromErr(err)
 		}
 	} else {

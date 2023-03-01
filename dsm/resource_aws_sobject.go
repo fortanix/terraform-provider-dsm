@@ -1,11 +1,3 @@
-// **********
-// Terraform Provider - DSM: resource: aws security object
-// **********
-//       - Author:    fyoo at fortanix dot com
-//       - Version:   0.5.8
-//       - Date:      27/11/2020
-// **********
-
 package dsm
 
 import (

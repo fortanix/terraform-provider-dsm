@@ -1,11 +1,3 @@
-// **********
-// Terraform Provider - DSM: data source: secret
-// **********
-//       - Author:    sanjeev at fortanix dot com
-//       - Version:   0.3.7
-//       - Date:     07/07/2022
-// **********
-
 package dsm
 
 import (

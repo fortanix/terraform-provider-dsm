@@ -1,11 +1,3 @@
-// **********
-// Terraform Provider - DSM: data source: csr
-// **********
-//       - Author:    fyoo at fortanix dot com
-//       - Version:   0.5.15
-//       - Date:      26/05/2022
-// **********
-
 package dsm
 
 import (

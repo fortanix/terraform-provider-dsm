@@ -1,6 +1,7 @@
 package dsm
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -60,29 +61,27 @@ func resourceGroup() *schema.Resource {
 func resourceCreateGroup(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
+	var approval_policy_str string = ""
+	var hmg_str string = ""
+
 	group_object := make(map[string]interface{})
 
 	group_object["name"] = d.Get("name").(string)
-	if _, ok := d.GetOk("description"); ok {
-		group_object["description"] = d.Get("description").(string)
+
+	if description, ok := d.GetOk("description"); ok {
+		group_object["description"] = description.(string)
 	}
+
 	if approval_policy, ok := d.GetOk("approval_policy"); ok {
-		jsonString, err := json.Marshal(approval_policy)
-		if err == nil {
-			group_object["approval_policy"] = jsonString
-		} else {
-			return diag.FromErr(err)
-		}
+		group_object["approval_policy"] = json.RawMessage(approval_policy.(string))
+		approval_policy_str = string(json.RawMessage(approval_policy.(string)))
 	}
+
 	if hmg, ok := d.GetOk("hmg"); ok {
-		var hmg_object [][]byte
-		jsonString, err := json.Marshal(hmg)
-		if err == nil {
-			hmg_object = append(hmg_object, jsonString)
-			group_object["add_hmg"] = hmg_object
-		} else {
-			return diag.FromErr(err)
-		}
+		var hmg_object []json.RawMessage
+		hmg_object = append(hmg_object, json.RawMessage(hmg.(string)))
+		group_object["add_hmg"] = hmg_object
+		hmg_str = string(json.RawMessage(hmg.(string)))
 	}
 
 	if debug_output {
@@ -106,73 +105,84 @@ func resourceCreateGroup(ctx context.Context, d *schema.ResourceData, m interfac
 	}
 
 	d.SetId(resp["group_id"].(string))
-	return resourceReadGroup(ctx, d, m)
+	return resourceReadGroup2(ctx, d, m, approval_policy_str, hmg_str)
 }
 
 // [U]: Update Group
 func resourceUpdateGroup(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	var approval_policy_new []byte
-	var hmg_new []byte
-	var errjson error
+
 	var has_changed = false
 	hmg_object := make(map[string]interface{})
-	description_new := ""
-	name_new := ""
 	hmg_present := false
 
-	if d.HasChange("approval_policy") {
-		if approval_policy, ok := d.GetOk("approval_policy"); ok {
-			approval_policy_new, errjson = json.Marshal(approval_policy)
-			if errjson != nil {
-				diags = append(diags, diag.Diagnostic{
-					Severity: diag.Error,
-					Summary:  "[DSM SDK] Unable to Marshall approval_policy input",
-					Detail:   fmt.Sprintf("[U]: approval_policy input: %v err: %s", approval_policy, errjson),
-				})
-				return diags
-			} else {
-				d.Set("approval_policy", nil)
+	var approval_policy_str string = ""
+	var hmg_str string = ""
+
+	if d.HasChange("description") || d.HasChange("name") {
+		has_changed = true
+	}
+
+	if approval_policy, ok := d.GetOk("approval_policy"); ok {
+		approval_policy_str = string(json.RawMessage(approval_policy.(string)))
+		if d.HasChange("approval_policy") {
+			old_approval_policy, new_approval_policy := d.GetChange("approval_policy")
+
+			old_approval_policy2 := []byte(old_approval_policy.(string))
+			new_approval_policy2 := []byte(new_approval_policy.(string))
+
+			res := bytes.Compare(old_approval_policy2, new_approval_policy2)
+
+			if res != 0 {
 				has_changed = true
+				if debug_output {
+					approval_policy_new := json.RawMessage(new_approval_policy.(string))
+					rawIn, _ := approval_policy_new.MarshalJSON()
+					buffer := new(bytes.Buffer)
+					if err := json.Compact(buffer, rawIn); err != nil {
+						return diag.FromErr(err)
+					}
+					approval_policy_new2 := buffer.Bytes()
+
+					tflog.Warn(ctx, fmt.Sprintf("Update Group Object approval_policy_new: %s", approval_policy_new2))
+					tflog.Warn(ctx, fmt.Sprintf("Update Group Object old approval_policy: %s", old_approval_policy2))
+					tflog.Warn(ctx, fmt.Sprintf("Update Group Object new approval_policy: %s", new_approval_policy2))
+				}
+			} else {
+				if debug_output {
+					tflog.Warn(ctx, fmt.Sprintf("Update Group Object no change in %s", d.Get("name")))
+				}
 			}
 		}
 	}
 
-	if d.HasChange("description") {
-		if description, ok := d.GetOk("description"); ok {
-			description_new = description.(string)
-			has_changed = true
-		}
-	}
+	if hmg, ok := d.GetOk("hmg"); ok {
+		hmg_str = string(json.RawMessage(hmg.(string)))
+		if d.HasChange("hmg") {
+			old_hmg, new_hmg := d.GetChange("hmg")
+			old_hmg2 := []byte(old_hmg.(string))
+			new_hmg2 := []byte(new_hmg.(string))
+			res := bytes.Compare(old_hmg2, new_hmg2)
 
-	if d.HasChange("name") {
-		old, new := d.GetChange("name")
-		name_new = new.(string)
-		d.Set("name", old)
-		has_changed = true
-	}
-
-	if d.HasChange("hmg") {
-		if hmg, ok := d.GetOk("hmg"); ok {
-			hmg_new, errjson = json.Marshal(hmg)
-			if errjson != nil {
-				diags = append(diags, diag.Diagnostic{
-					Severity: diag.Error,
-					Summary:  "[DSM SDK] Unable to Marshall hmg input",
-					Detail:   fmt.Sprintf("[U]: hmg input: %v err: %s", hmg, errjson),
-				})
-				return diags
-			} else {
-				d.Set("hmg", nil)
+			if res != 0 {
 				has_changed = true
+				if debug_output {
+					hmg_new := json.RawMessage(new_hmg.(string))
+					tflog.Warn(ctx, fmt.Sprintf("Update Group Object hmg_new: %s", hmg_new))
+					tflog.Warn(ctx, fmt.Sprintf("Update Group Object old hmg: %s", old_hmg))
+					tflog.Warn(ctx, fmt.Sprintf("Update Group Object new hmg: %s", new_hmg))
+				}
+			} else {
+				if debug_output {
+					tflog.Warn(ctx, fmt.Sprintf("Update Group Object no change in %s", d.Get("name")))
+				}
 			}
 		}
 	}
 
 	if has_changed {
-		read_diags := resourceReadGroup(ctx, d, m)
-		if read_diags != nil {
-			return read_diags
+		if debug_output {
+			tflog.Warn(ctx, "Group object has changed, calling API")
 		}
 
 		if hmg, ok := d.GetOk("hmg"); ok {
@@ -180,54 +190,50 @@ func resourceUpdateGroup(ctx context.Context, d *schema.ResourceData, m interfac
 			if debug_output {
 				tflog.Warn(ctx, fmt.Sprintf("HMG id: %s", hmg_id))
 			}
-			hmg_object[hmg_id] = hmg_new
+			hmg_object[hmg_id] = json.RawMessage(hmg.(string))
 			hmg_present = true
 		}
 
 		group_object := make(map[string]interface{})
 		group_id := d.Get("group_id").(string)
-		if group_id == "" {
-			diags = append(diags, diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  "[DSM Provider: Group] Unable to find group name",
-				Detail:   fmt.Sprintf("[U]: Group not found: %s", name_new),
-			})
-			return diags
-		}
 		operation := "PATCH"
 		url := fmt.Sprintf("sys/v1/groups/%s", group_id)
 
-		if debug_output {
-			tflog.Warn(ctx, fmt.Sprintf("Update operation group id: %s", group_id))
-			tflog.Warn(ctx, fmt.Sprintf("New Approval Policy: %s", approval_policy_new))
-			jsonString, err := json.Marshal(d.Get("approval_policy"))
-			if err == nil {
-				tflog.Warn(ctx, fmt.Sprintf("Old Approval Policy: %s", string(jsonString)))
-			} else {
-				return diag.FromErr(err)
-			}
-			tflog.Warn(ctx, fmt.Sprintf("New HMG object: %s", hmg_object))
-			tflog.Warn(ctx, fmt.Sprintf("Old HMG: %s", d.Get("hmg").(string)))
-		}
-
-		if _, ok := d.GetOk("approval_policy"); ok {
+		if isSetApprovalPolicy(d, m) {
 			if debug_output {
 				tflog.Warn(ctx, "[U]: Approval policy is present.")
 			}
 			body_object := make(map[string]interface{})
 			group_object["method"] = "PATCH"
 			group_object["operation"] = url
-			if approval_policy_new == nil {
-				body_object["approval_policy"] = make(map[string]interface{})
-			} else {
-				body_object["approval_policy"] = approval_policy_new
+
+			if approval_policy, ok := d.GetOk("approval_policy"); ok {
+				if approval_policy == nil {
+					body_object["approval_policy"] = make(map[string]interface{})
+				} else {
+					body_object["approval_policy"] = json.RawMessage(approval_policy.(string))
+				}
 			}
-			if description_new != "" {
-				body_object["description"] = description_new
+
+			if description, ok := d.GetOk("description"); ok {
+				if description != "" {
+					body_object["description"] = description
+				}
 			}
-			if name_new != "" {
-				body_object["name"] = name_new
+
+			if name, ok := d.GetOk("name"); ok {
+				if name != "" {
+					body_object["name"] = name
+				} else {
+					diags = append(diags, diag.Diagnostic{
+						Severity: diag.Error,
+						Summary:  "[Name check]",
+						Detail:   "Group name can not be null",
+					})
+					return diags
+				}
 			}
+
 			if hmg_present {
 				body_object["mod_hmg"] = hmg_object
 			}
@@ -239,17 +245,34 @@ func resourceUpdateGroup(ctx context.Context, d *schema.ResourceData, m interfac
 				tflog.Warn(ctx, "[U]: Approval policy is not set.")
 			}
 			group_object["group_id"] = group_id
-			if approval_policy_new == nil {
-				group_object["approval_policy"] = make(map[string]interface{})
-			} else {
-				group_object["approval_policy"] = approval_policy_new
+
+			if approval_policy, ok := d.GetOk("approval_policy"); ok {
+				if approval_policy == nil {
+					group_object["approval_policy"] = make(map[string]interface{})
+				} else {
+					group_object["approval_policy"] = json.RawMessage(approval_policy.(string))
+				}
 			}
-			if description_new != "" {
-				group_object["description"] = description_new
+
+			if description, ok := d.GetOk("description"); ok {
+				if description != "" {
+					group_object["description"] = description
+				}
 			}
-			if name_new != "" {
-				group_object["name"] = name_new
+
+			if name, ok := d.GetOk("name"); ok {
+				if name != "" {
+					group_object["name"] = name
+				} else {
+					diags = append(diags, diag.Diagnostic{
+						Severity: diag.Error,
+						Summary:  "[Name check]",
+						Detail:   "Group name can not be null",
+					})
+					return diags
+				}
 			}
+
 			if hmg_present {
 				group_object["mod_hmg"] = hmg_object
 			}
@@ -275,10 +298,12 @@ func resourceUpdateGroup(ctx context.Context, d *schema.ResourceData, m interfac
 			tflog.Warn(ctx, fmt.Sprintf("[U]: API response for group update operation: %s", resp_json))
 		}
 
-		d.SetId(group_id)
+		//d.SetId(group_id)
+		//d.Set("approval_policy", approval_policy_old)
+		//d.Set("hmg", hmg_old)
 
 	}
-	return resourceReadGroup(ctx, d, m)
+	return resourceReadGroup2(ctx, d, m, approval_policy_str, hmg_str)
 }
 
 // [R]: Read Group
@@ -293,7 +318,7 @@ func resourceReadGroup(ctx context.Context, d *schema.ResourceData, m interface{
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "[DSM SDK] Unable to call DSM provider API client",
-				Detail:   fmt.Sprintf("[E]: API: GET sys/v1/groups: %v", err),
+				Detail:   fmt.Sprintf("[E]: API: GET sys/v1/groups/%s: %v", d.Id(), err),
 			})
 			return diags
 		}
@@ -310,26 +335,65 @@ func resourceReadGroup(ctx context.Context, d *schema.ResourceData, m interface{
 		if err := d.Set("creator", req["creator"]); err != nil {
 			return diag.FromErr(err)
 		}
-		if _, ok := req["description"]; ok {
-			if err := d.Set("description", req["description"].(string)); err != nil {
+		if description, ok := req["description"]; ok {
+			if err := d.Set("description", description.(string)); err != nil {
 				return diag.FromErr(err)
 			}
 		}
-		if _, ok := req["approval_policy"]; ok {
-			jsonString, err := json.Marshal(req["approval_policy"])
-			if err == nil {
-				d.Set("approval_policy", jsonString)
-			} else {
+		//if approval_policy, ok := req["approval_policy"]; ok {
+		//	if err := d.Set("approval_policy", approval_policy.(string)); err != nil {
+		//		return diag.FromErr(err)
+		//	}
+		//}
+		//if hmg, ok := req["hmg"]; ok {
+		//	if err := d.Set("hmg", hmg.(string)); err != nil {
+		//		return diag.FromErr(err)
+		//	}
+		//}
+
+	}
+	return diags
+}
+
+// [R]: Read Group 2
+func resourceReadGroup2(ctx context.Context, d *schema.ResourceData, m interface{}, approval_policy string, hmg string) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	req, statuscode, err := m.(*api_client).APICall("GET", fmt.Sprintf("sys/v1/groups/%s", d.Id()))
+	if statuscode == 404 {
+		d.SetId("")
+	} else {
+		if err != nil {
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "[DSM SDK] Unable to call DSM provider API client",
+				Detail:   fmt.Sprintf("[E]: API: GET sys/v1/groups/%s: %v", d.Id(), err),
+			})
+			return diags
+		}
+
+		if err := d.Set("name", req["name"].(string)); err != nil {
+			return diag.FromErr(err)
+		}
+		if err := d.Set("group_id", req["group_id"].(string)); err != nil {
+			return diag.FromErr(err)
+		}
+		if err := d.Set("acct_id", req["acct_id"].(string)); err != nil {
+			return diag.FromErr(err)
+		}
+		if err := d.Set("creator", req["creator"]); err != nil {
+			return diag.FromErr(err)
+		}
+		if description, ok := req["description"]; ok {
+			if err := d.Set("description", description.(string)); err != nil {
 				return diag.FromErr(err)
 			}
 		}
-		if _, ok := req["hmg"]; ok {
-			jsonString, err := json.Marshal(req["hmg"])
-			if err == nil {
-				d.Set("hmg", jsonString)
-			} else {
-				return diag.FromErr(err)
-			}
+		if err := d.Set("approval_policy", approval_policy); err != nil {
+			return diag.FromErr(err)
+		}
+		if err := d.Set("hmg", hmg); err != nil {
+			return diag.FromErr(err)
 		}
 	}
 	return diags
@@ -362,4 +426,15 @@ func resourceDeleteGroup(ctx context.Context, d *schema.ResourceData, m interfac
 
 	d.SetId("")
 	return nil
+}
+
+// [R]: Check Approval Policy presence
+func isSetApprovalPolicy(d *schema.ResourceData, m interface{}) bool {
+	req, statuscode, _ := m.(*api_client).APICall("GET", fmt.Sprintf("sys/v1/groups/%s", d.Id()))
+	if statuscode == 200 {
+		if _, ok := req["approval_policy"]; ok {
+			return true
+		}
+	}
+	return false
 }

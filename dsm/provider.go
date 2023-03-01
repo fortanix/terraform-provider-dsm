@@ -1,11 +1,3 @@
-// **********
-// Terraform Provider - DSM: provider
-// **********
-//       - Author:    fyoo at fortanix dot com
-//       - Version:   0.5.7
-//       - Date:      27/07/2021
-// **********
-
 package dsm
 
 import (
@@ -124,9 +116,9 @@ func configureProvider(ctx context.Context, d *schema.ResourceData) (interface{}
 
 	// Create new API client
 	newclient, err := NewAPIClient(d.Get("endpoint").(string), d.Get("port").(int), d.Get("username").(string),
-	                               d.Get("password").(string), d.Get("api_key").(string), d.Get("acct_id").(string),
-	                               d.Get("aws_profile").(string), d.Get("aws_region").(string), d.Get("azure_region").(string),
-	                               d.Get("insecure").(bool), d.Get("timeout").(int), d.Get("ldap_name").(string))
+		d.Get("password").(string), d.Get("api_key").(string), d.Get("acct_id").(string),
+		d.Get("aws_profile").(string), d.Get("aws_region").(string), d.Get("azure_region").(string),
+		d.Get("insecure").(bool), d.Get("timeout").(int), d.Get("ldap_name").(string))
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,

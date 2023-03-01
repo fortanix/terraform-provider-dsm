@@ -1,11 +1,3 @@
-// **********
-// Terraform Provider - DSM: data source: app
-// **********
-//       - Author:    aman.ahuja@fortanix.com
-//       - Version:   0.5.16
-//       - Date:      28/07/2022
-// **********
-
 package dsm
 
 import (

@@ -1,11 +1,3 @@
-// **********
-// Terraform Provider - DSM: data source: aws kms group
-// **********
-//       - Author:    fyoo at fortanix dot com
-//       - Version:   0.5.0
-//       - Date:      05/01/2021
-// **********
-
 package dsm
 
 import (

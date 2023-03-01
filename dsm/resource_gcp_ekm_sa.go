@@ -1,19 +1,10 @@
-// **********
-// Terraform Provider - DSM: resource: gcp_ekm_sa
-// **********
-//       - Author:    fyoo at fortanix dot com
-//       - Version:   0.3.7
-//       - Date:      27/07/2021
-//       - Changelog:
-//                  - Initial release to support resource for app with GCP EKM SA
-// **********
-
 package dsm
 
 import (
 	"context"
 	"fmt"
-//	"strings"
+
+	//	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -93,8 +84,8 @@ func resourceCreateGcpEkmSa(ctx context.Context, d *schema.ResourceData, m inter
 	app_object := map[string]interface{}{
 		"name":          d.Get("name").(string),
 		"default_group": d.Get("default_group").(string),
-		"app_type":    "default",
-		"description": d.Get("description").(string),
+		"app_type":      "default",
+		"description":   d.Get("description").(string),
 	}
 	// add groups and it's permissions
 	formAddGroups(d, app_object)

@@ -289,7 +289,7 @@ func (obj *api_client) APICallBody(method string, url string, body map[string]in
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "[Conversion] Unable to marshal request body",
+			Summary:  "[Conversion] Unable to marshal request body (APICallBody)",
 			Detail:   fmt.Sprintf("[Conversion] Body: %s - Err: %v", body, err),
 		})
 		return nil, diags
@@ -300,7 +300,7 @@ func (obj *api_client) APICallBody(method string, url string, body map[string]in
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "[DSM SDK]: Unable to prepare DSM provider API client",
+			Summary:  "[DSM SDK]: Unable to prepare DSM provider API client (APICallBody)",
 			Detail:   fmt.Sprintf("[E]: API: %s %s: %s", method, url, err),
 		})
 	} else {
@@ -311,13 +311,13 @@ func (obj *api_client) APICallBody(method string, url string, body map[string]in
 			if r != nil {
 				diags = append(diags, diag.Diagnostic{
 					Severity: diag.Error,
-					Summary:  "[DSM SDK]: Unable to call DSM provider API client",
+					Summary:  "[DSM SDK]: Unable to call DSM provider API client (APICallBody)",
 					Detail:   fmt.Sprintf("[E]: API: %s %s %d: %s", method, url, r.StatusCode, err),
 				})
 			} else {
 				diags = append(diags, diag.Diagnostic{
 					Severity: diag.Error,
-					Summary:  "[DSM SDK]: Unable to call DSM provider API client",
+					Summary:  "[DSM SDK]: Unable to call DSM provider API client (APICallBody)",
 					Detail:   fmt.Sprintf("[E]: API: %s %s: %s", method, url, err),
 				})
 			}
@@ -327,7 +327,7 @@ func (obj *api_client) APICallBody(method string, url string, body map[string]in
 			if err != nil {
 				diags = append(diags, diag.Diagnostic{
 					Severity: diag.Error,
-					Summary:  "[DSM SDK]: Unable to read DSM provider API response",
+					Summary:  "[DSM SDK]: Unable to read DSM provider API response (APICallBody)",
 					Detail:   fmt.Sprintf("[E]: API: %s %s %d: %s", method, url, r.StatusCode, err),
 				})
 			} else {
@@ -338,13 +338,13 @@ func (obj *api_client) APICallBody(method string, url string, body map[string]in
 						bodyString := string(bodyBytes)
 						diags = append(diags, diag.Diagnostic{
 							Severity: diag.Error,
-							Summary:  "[DSM SDK]: Call DSM provider API returned non-JSON",
+							Summary:  "[DSM SDK]: Call DSM provider API returned non-JSON (APICallBody)",
 							Detail:   fmt.Sprintf("[E]: API: %s %s %d: %s", method, url, r.StatusCode, bodyString),
 						})
 					} else {
 						diags = append(diags, diag.Diagnostic{
 							Severity: diag.Error,
-							Summary:  "[DSM SDK]: Call DSM provider API returned error",
+							Summary:  "[DSM SDK]: Call DSM provider API returned error (APICallBody)",
 							Detail:   fmt.Sprintf("[E]: API: %s %s %d: %s", method, url, r.StatusCode, resp),
 						})
 					}
@@ -382,7 +382,7 @@ func (obj *api_client) APICall(method string, url string) (map[string]interface{
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "[DSM SDK]: Unable to prepare DSM provider API client",
+			Summary:  "[DSM SDK]: Unable to prepare DSM provider API client (APICall)",
 			Detail:   fmt.Sprintf("[E]: API: %s %s: %s", method, url, err),
 		})
 	} else {
@@ -392,7 +392,7 @@ func (obj *api_client) APICall(method string, url string) (map[string]interface{
 		if err != nil {
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Error,
-				Summary:  "[DSM SDK]: Unable to call DSM provider API client",
+				Summary:  "[DSM SDK]: Unable to call DSM provider API client (APICall)",
 				Detail:   fmt.Sprintf("[E]: API: %s %s: %s", method, url, err),
 			})
 		} else {
@@ -406,7 +406,7 @@ func (obj *api_client) APICall(method string, url string) (map[string]interface{
 				} else {
 					diags = append(diags, diag.Diagnostic{
 						Severity: diag.Error,
-						Summary:  "[DSM SDK]: DSM provider API call failed",
+						Summary:  "[DSM SDK]: DSM provider API call failed (APICall)",
 						Detail:   fmt.Sprintf("[E]: API: %s %s: %d", method, url, r.StatusCode),
 					})
 					return nil, r.StatusCode, diags
@@ -417,7 +417,7 @@ func (obj *api_client) APICall(method string, url string) (map[string]interface{
 			if err != nil {
 				diags = append(diags, diag.Diagnostic{
 					Severity: diag.Error,
-					Summary:  "[DSM SDK]: Unable to read DSM provider API response",
+					Summary:  "[DSM SDK]: Unable to read DSM provider API response (APICall)",
 					Detail:   fmt.Sprintf("[E]: API: %s %s %d: %s", method, url, r.StatusCode, err),
 				})
 			} else {
@@ -428,13 +428,13 @@ func (obj *api_client) APICall(method string, url string) (map[string]interface{
 						bodyString := string(bodyBytes)
 						diags = append(diags, diag.Diagnostic{
 							Severity: diag.Error,
-							Summary:  "[DSM SDK]: Call DSM provider API returned non-JSON",
+							Summary:  "[DSM SDK]: Call DSM provider API returned non-JSON (APICall)",
 							Detail:   fmt.Sprintf("[E]: API: %s %s %d: %s", method, url, r.StatusCode, bodyString),
 						})
 					} else {
 						diags = append(diags, diag.Diagnostic{
 							Severity: diag.Error,
-							Summary:  "[DSM SDK]: Call DSM provider API returned error",
+							Summary:  "[DSM SDK]: Call DSM provider API returned error (APICall)",
 							Detail:   fmt.Sprintf("[E]: API: %s %s: %s", method, url, resp),
 						})
 					}
@@ -472,7 +472,7 @@ func (obj *api_client) APICallList(method string, url string) ([]interface{}, di
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "[DSM SDK]: Unable to prepare DSM provider API client",
+			Summary:  "[DSM SDK]: Unable to prepare DSM provider API client (APICallList)",
 			Detail:   fmt.Sprintf("[E]: API: %s %s: %s", method, url, err),
 		})
 		return nil, diags
@@ -483,7 +483,7 @@ func (obj *api_client) APICallList(method string, url string) ([]interface{}, di
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "[DSM SDK]: Unable to call DSM provider API client",
+			Summary:  "[DSM SDK]: Unable to call DSM provider API client (APICallList)",
 			Detail:   fmt.Sprintf("[E]: API: %s %s: %s", method, url, err),
 		})
 		return nil, diags
@@ -499,7 +499,7 @@ func (obj *api_client) APICallList(method string, url string) ([]interface{}, di
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "[DSM SDK]: Unable to read DSM provider API response body",
+			Summary:  "[DSM SDK]: Unable to read DSM provider API response body (APICallList)",
 			Detail:   fmt.Sprintf("[E]: API: %s %s: %s", method, url, err),
 		})
 		return nil, diags
@@ -512,7 +512,7 @@ func (obj *api_client) APICallList(method string, url string) ([]interface{}, di
 		if err != nil {
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Error,
-				Summary:  "[DSM SDK]: Unable to unmarshall DSM provider API response body",
+				Summary:  "[DSM SDK]: Unable to unmarshall DSM provider API response body (APICallList)",
 				Detail:   fmt.Sprintf("[E]: API: %s %s: %s -> %s", method, url, err, bodybytes),
 			})
 			return nil, diags
@@ -523,7 +523,7 @@ func (obj *api_client) APICallList(method string, url string) ([]interface{}, di
 		if err != nil {
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Error,
-				Summary:  "[DSM SDK]: Unable to unmarshall DSM provider API response body",
+				Summary:  "[DSM SDK]: Unable to unmarshall DSM provider API response body (APICallList)",
 				Detail:   fmt.Sprintf("[E]: API: %s %s: %s -> %s", method, url, err, bodybytes),
 			})
 			return nil, diags
@@ -553,7 +553,7 @@ func (obj *api_client) FindPluginId(plugin_name string) ([]byte, diag.Diagnostic
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "[DSM SDK]: Unable to prepare DSM provider API client",
+			Summary:  "[DSM SDK]: Unable to prepare DSM provider API client (FindPluginId)",
 			Detail:   fmt.Sprintf("[E]: API: GET sys/v1/plugins: %s", err),
 		})
 	} else {
@@ -563,7 +563,7 @@ func (obj *api_client) FindPluginId(plugin_name string) ([]byte, diag.Diagnostic
 		if err != nil {
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Error,
-				Summary:  "[DSM SDK]: Unable to call DSM provider API client",
+				Summary:  "[DSM SDK]: Unable to call DSM provider API client (FindPluginId)",
 				Detail:   fmt.Sprintf("[E]: API: GET sys/v1/plugins: %s", err),
 			})
 		} else {
@@ -573,7 +573,7 @@ func (obj *api_client) FindPluginId(plugin_name string) ([]byte, diag.Diagnostic
 			if err != nil {
 				diags = append(diags, diag.Diagnostic{
 					Severity: diag.Error,
-					Summary:  "[DSM SDK]: Unable to read DSM provider API response",
+					Summary:  "[DSM SDK]: Unable to read DSM provider API response (FindPluginId)",
 					Detail:   fmt.Sprintf("[E]: API: GET sys/v1/plugins: %s", err),
 				})
 			} else {
@@ -582,7 +582,7 @@ func (obj *api_client) FindPluginId(plugin_name string) ([]byte, diag.Diagnostic
 				if err != nil {
 					diags = append(diags, diag.Diagnostic{
 						Severity: diag.Error,
-						Summary:  "[DSM SDK]: Unable to unmarshal provider API response body",
+						Summary:  "[DSM SDK]: Unable to unmarshal provider API response body (FindPluginId)",
 						Detail:   fmt.Sprintf("[E]: API: GET sys/v1/plugins: %s", err),
 					})
 				}
@@ -596,7 +596,7 @@ func (obj *api_client) FindPluginId(plugin_name string) ([]byte, diag.Diagnostic
 				if resp == "" {
 					diags = append(diags, diag.Diagnostic{
 						Severity: diag.Error,
-						Summary:  "[DSM SDK]: Unable to find Terraform Plugin through DSM provider",
+						Summary:  "[DSM SDK]: Unable to find Terraform Plugin through DSM provider (FindPluginId)",
 						Detail:   "[E]: API: GET sys/v1/plugins",
 					})
 				} else {
