@@ -76,38 +76,44 @@ func NewClient(rl *rate.Limiter) *FXHTTPClient {
 
 // LDAP Authentication
 func getLDAPBody(endpoint string, ldap_name string, password string, user_email string, c *FXHTTPClient) (map[string]interface{}, error) {
-    ldap_req, err := retryablehttp.NewRequest("POST", fmt.Sprintf("%s/sys/v1/session/auth/discover", endpoint), nil)
-    ldap_discover := make(map[string]interface{})
-    ldap_discover["user_email"] = user_email
-    reqBody, err := json.Marshal(ldap_discover)
-    ldap_req.SetBody(reqBody)
-    ldap_req.Close = true
-    r, err := c.Do(ldap_req)
-    if err != nil {
-        return nil, err
-    }
-    var ldap_array []interface{}
-    err = json.NewDecoder(r.Body).Decode(&ldap_array)
-    if err != nil {
-        return nil, err
-    }
-    var ldap_id string
-    for _, ldap := range ldap_array {
-        current_ldap := ldap.(map[string]interface{})
-        if _, ok := current_ldap["name"]; ok && current_ldap["name"].(string) == ldap_name {
-            ldap_id = current_ldap["idp_id"].(string)
-            break
-        }
-    }
-    if len(ldap_id) == 0  {
-        return nil, fmt.Errorf("No authorization methods found for the LDAP name %s.", ldap_name)
-    }
-    ldap_body := make(map[string]interface{})
-    ldap_body["email"] = user_email
-    ldap_body["idp_id"] = ldap_id
-    ldap_body["method"] = "ldap-basic-auth"
-    ldap_body["password"] = password
-    return ldap_body, nil
+	ldap_req, err := retryablehttp.NewRequest("POST", fmt.Sprintf("%s/sys/v1/session/auth/discover", endpoint), nil)
+	if err != nil {
+		return nil, err
+	}
+	ldap_discover := make(map[string]interface{})
+	ldap_discover["user_email"] = user_email
+	reqBody, err := json.Marshal(ldap_discover)
+	if err != nil {
+		return nil, err
+	}
+	ldap_req.SetBody(reqBody)
+	ldap_req.Close = true
+	r, err := c.Do(ldap_req)
+	if err != nil {
+		return nil, err
+	}
+	var ldap_array []interface{}
+	err = json.NewDecoder(r.Body).Decode(&ldap_array)
+	if err != nil {
+		return nil, err
+	}
+	var ldap_id string
+	for _, ldap := range ldap_array {
+		current_ldap := ldap.(map[string]interface{})
+		if _, ok := current_ldap["name"]; ok && current_ldap["name"].(string) == ldap_name {
+			ldap_id = current_ldap["idp_id"].(string)
+			break
+		}
+	}
+	if len(ldap_id) == 0 {
+		return nil, fmt.Errorf("no authorization methods found for the LDAP name %s", ldap_name)
+	}
+	ldap_body := make(map[string]interface{})
+	ldap_body["email"] = user_email
+	ldap_body["idp_id"] = ldap_id
+	ldap_body["method"] = "ldap-basic-auth"
+	ldap_body["password"] = password
+	return ldap_body, nil
 }
 
 // [-]: set api_client state
@@ -131,7 +137,7 @@ func NewAPIClient(endpoint string, port int, username string, password string, a
 	if len(ldap_name) > 0 {
 		ldap_resp, err := getLDAPBody(endpoint, ldap_name, password, username, client)
 		if err != nil {
-		    return nil, err
+			return nil, err
 		}
 		ldap_body = ldap_resp
 	}

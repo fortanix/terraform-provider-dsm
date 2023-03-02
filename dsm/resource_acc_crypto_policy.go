@@ -15,7 +15,7 @@ func resourceAccountCryptoPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceCreateAccountCryptoPolicy,
 		ReadContext:   resourceReadAccountCryptoPolicy,
-		UpdateContext: resourceCreateAccountCryptoPolicy,
+		UpdateContext: resourceUpdateAccountCryptoPolicy,
 		DeleteContext: resourceDeleteAccountCryptoPolicy,
 		Schema: map[string]*schema.Schema{
 			"acct_id": {
@@ -37,7 +37,7 @@ func resourceAccountCryptoPolicy() *schema.Resource {
 	}
 }
 
-// [C & U]: Create and Update Account Crypto Policy
+// [C]: Create Account Crypto Policy
 func resourceCreateAccountCryptoPolicy(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
@@ -83,7 +83,16 @@ func resourceCreateAccountCryptoPolicy(ctx context.Context, d *schema.ResourceDa
 	}
 
 	d.SetId(acct_id)
-	return resourceReadAccountCryptoPolicy(ctx, d, m)
+	return diags
+}
+
+// [U]: Update Account Crypto Policy
+func resourceUpdateAccountCryptoPolicy(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	if d.HasChange("approval_policy") || d.HasChange("cryptographic_policy") {
+		return resourceCreateAccountCryptoPolicy(ctx, d, m)
+	}
+
+	return nil
 }
 
 // [R]: Read Account Crypto Policy
@@ -115,15 +124,6 @@ func resourceReadAccountCryptoPolicy(ctx context.Context, d *schema.ResourceData
 	if _, ok := req["approval_policy"]; ok {
 		if err := d.Set("approval_policy", fmt.Sprintf("%s", req["approval_policy"])); err != nil {
 			return diag.FromErr(err)
-		}
-	}
-	if _, ok := req["cryptographic_policy"]; ok {
-		if err := d.Set("cryptographic_policy", fmt.Sprintf("%s", req["cryptographic_policy"])); err != nil {
-			return diag.FromErr(err)
-		}
-	} else {
-		if debug_output {
-			tflog.Warn(ctx, "[R]: Expected cryptographic policy but found none. Operation might be pending if a quorum policy has been set.")
 		}
 	}
 

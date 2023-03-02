@@ -15,7 +15,7 @@ func resourceGroupCryptoPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceCreateGroupCryptoPolicy,
 		ReadContext:   resourceReadGroupCryptoPolicy,
-		UpdateContext: resourceCreateGroupCryptoPolicy,
+		UpdateContext: resourceUpdateGroupCryptoPolicy,
 		DeleteContext: resourceDeleteGroupCryptoPolicy,
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -56,16 +56,15 @@ func resourceGroupCryptoPolicy() *schema.Resource {
 	}
 }
 
-// [C & U]: Create and Update Group Crypto Policy
+// [C]: Create Group Crypto Policy
 func resourceCreateGroupCryptoPolicy(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	cryptographic_policy := json.RawMessage(d.Get("cryptographic_policy").(string))
 
-	dataSourceGroupRead(ctx, d, m)
+	isSetApprovalPolicy, group_id := dataSourceGroupGetData(d, m)
 
 	group_crypto_policy_object := make(map[string]interface{})
-	group_id := d.Get("group_id").(string)
 	if group_id == "" {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
@@ -80,7 +79,7 @@ func resourceCreateGroupCryptoPolicy(ctx context.Context, d *schema.ResourceData
 	operation := "PATCH"
 	url := fmt.Sprintf("sys/v1/groups/%s", group_id)
 
-	if _, ok := d.GetOk("approval_policy"); ok {
+	if isSetApprovalPolicy {
 		if debug_output {
 			tflog.Warn(ctx, "[C & U]: Approval policy is present.")
 		}
@@ -113,7 +112,16 @@ func resourceCreateGroupCryptoPolicy(ctx context.Context, d *schema.ResourceData
 	}
 
 	d.SetId(group_id)
-	return resourceReadGroupCryptoPolicy(ctx, d, m)
+	return diags
+}
+
+// [U]: Update Group Crypto Policy
+func resourceUpdateGroupCryptoPolicy(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	if d.HasChange("name") || d.HasChange("cryptographic_policy") {
+		return resourceCreateGroupCryptoPolicy(ctx, d, m)
+	}
+
+	return nil
 }
 
 // [R]: Read Group Crypto Policy
@@ -156,20 +164,6 @@ func resourceReadGroupCryptoPolicy(ctx context.Context, d *schema.ResourceData, 
 			return diag.FromErr(err)
 		}
 	}
-	if _, ok := req["approval_policy"]; ok {
-		if err := d.Set("approval_policy", fmt.Sprintf("%v", req["approval_policy"])); err != nil {
-			return diag.FromErr(err)
-		}
-	}
-	if _, ok := req["cryptographic_policy"]; ok {
-		if err := d.Set("cryptographic_policy", fmt.Sprintf("%v", req["cryptographic_policy"])); err != nil {
-			return diag.FromErr(err)
-		}
-	} else {
-		if debug_output {
-			tflog.Warn(ctx, "[R]: Expected cryptographic policy but found none. Operation might be pending if a quorum policy has been set.")
-		}
-	}
 
 	return diags
 }
@@ -178,17 +172,16 @@ func resourceReadGroupCryptoPolicy(ctx context.Context, d *schema.ResourceData, 
 func resourceDeleteGroupCryptoPolicy(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	dataSourceGroupRead(ctx, d, m)
+	isSetApprovalPolicy, group_id := dataSourceGroupGetData(d, m)
 
 	group_crypto_policy_object := make(map[string]interface{})
-	group_id := d.Get("group_id").(string)
 	cryptographic_policy := "remove"
 	operation := "PATCH"
 	url := fmt.Sprintf("sys/v1/groups/%s", group_id)
 
-	if approval_policy, ok := d.GetOk("approval_policy"); ok {
+	if isSetApprovalPolicy {
 		if debug_output {
-			tflog.Warn(ctx, fmt.Sprintf("[D]: Approval policy is present: %s", approval_policy))
+			tflog.Warn(ctx, "[D]: Approval policy is present.")
 		}
 		group_crypto_policy_object["method"] = "PATCH"
 		group_crypto_policy_object["operation"] = url
@@ -197,7 +190,7 @@ func resourceDeleteGroupCryptoPolicy(ctx context.Context, d *schema.ResourceData
 		url = "sys/v1/approval_requests"
 	} else {
 		if debug_output {
-			tflog.Warn(ctx, fmt.Sprintf("[D]: Approval policy is not set: %s", approval_policy))
+			tflog.Warn(ctx, "[D]: Approval policy is not set.")
 		}
 		group_crypto_policy_object["group_id"] = group_id
 		group_crypto_policy_object["cryptographic_policy"] = cryptographic_policy
@@ -220,4 +213,25 @@ func resourceDeleteGroupCryptoPolicy(ctx context.Context, d *schema.ResourceData
 
 	d.SetId(group_id)
 	return nil
+}
+
+func dataSourceGroupGetData(d *schema.ResourceData, m interface{}) (bool, string) {
+
+	req, err := m.(*api_client).APICallList("GET", "sys/v1/groups")
+	if err != nil {
+		return false, ""
+	}
+
+	group_id := ""
+	flag := false
+	for _, data := range req {
+		if data.(map[string]interface{})["name"].(string) == d.Get("name").(string) {
+			group_id = data.(map[string]interface{})["group_id"].(string)
+			if _, ok := data.(map[string]interface{})["approval_policy"]; ok {
+				flag = true
+			}
+		}
+	}
+
+	return flag, group_id
 }
