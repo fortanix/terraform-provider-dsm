@@ -63,6 +63,10 @@ func resourceAWSGroup() *schema.Resource {
 				Optional:  true,
 				Sensitive: true,
 			},
+			"hmg_id": {
+				Type:      schema.TypeString,
+				Computed:  true,
+			},
 		},
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -167,7 +171,8 @@ func resourceReadAWSGroup(ctx context.Context, d *schema.ResourceData, m interfa
 			d.Set("creator", creatorInt)
 			d.Set("region", m.(*api_client).aws_region)
 			// FYOO: there is only one HMG per AWSGroup
-			for _, value := range awsgroup.Hmg {
+			for key, value := range awsgroup.Hmg {
+				d.Set("hmg_id", key)
 				d.Set("access_key", value.Access_key)
 			}
 			// FYOO: remove sensitive information
@@ -184,8 +189,39 @@ func resourceReadAWSGroup(ctx context.Context, d *schema.ResourceData, m interfa
 // [U]: Update AWS Group
 func resourceUpdateAWSGroup(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	d.Set("secret_key", "")
-	return diags
+
+	group_object := map[string]interface{}{
+		"group_id": d.Id(),
+	}
+
+	hmg_id := d.Get("hmg_id").(string)
+	group_object["mod_hmg"] = map[string]interface{}{
+			hmg_id : map[string]interface{}{
+				"access_key": d.Get("access_key"),
+				"secret_key": d.Get("secret_key"),
+				"id":         hmg_id,
+				"url":        fmt.Sprintf("kms.%s.amazonaws.com", m.(*api_client).aws_region),
+				"kind":       "AWSKMS",
+				"hsm_order":  0,
+				"tls": map[string]interface{}{
+					"mode":              "required",
+					"validate_hostname": false,
+					"ca": map[string]interface{}{
+						"ca_set": "global_roots",
+					},
+				},
+			},
+	}
+	_, err := m.(*api_client).APICallBody("PATCH", "sys/v1/groups/" + d.Id(), group_object)
+	if err != nil {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "[DSM SDK] Unable to call DSM provider API client",
+			Detail:   fmt.Sprintf("[E]: API: PATCH sys/v1/groups/%s: %v", d.Id(), err),
+		})
+		return diags
+	}
+	return resourceReadAWSGroup(ctx, d, m)
 }
 
 // [D]: Delete AWS Group

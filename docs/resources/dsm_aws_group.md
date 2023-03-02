@@ -37,3 +37,4 @@ The following attributes are stored in the `dsm_aws_group` resource block:
 * **region**: The AWS region mapped to the group from which keys are imported
 * **description**: The AWS KMS group object description
 * **access\_key**: The Access Key ID used to communicate with AWS KMS
+* **hmg\_id**: The unique HMG ID from fortanix DSM
