@@ -128,6 +128,10 @@ func resourceSobject() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"google_access_reason_policy": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -250,6 +254,20 @@ func createSO(ctx context.Context, d *schema.ResourceData, m interface{}) diag.D
 			return diags
 		}
 		security_object["rsa"] = rsa_obj
+	}
+
+	// get the google_access_reason_policy from the request add it to security_object
+	if err := d.Get("google_access_reason_policy").(string); len(err) > 0 {
+		kaj_obj, er := unmarshalStringToJson(d.Get("google_access_reason_policy").(string))
+		if er != nil {
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "Invalid json string format for the field 'google_access_reason_policy'",
+				Detail:   fmt.Sprintf("[E] : Input: google_access_reason_policy: %s", err),
+			})
+			return diags
+		}
+		security_object["google_access_reason_policy"] = kaj_obj
 	}
 
 	if err := d.Get("fpe_radix"); err != 0 {
