@@ -362,6 +362,13 @@ func resourceReadSobject(ctx context.Context, d *schema.ResourceData, m interfac
 				}
 			}
 		}
+		// read "google_access_key_policy from req"
+		if _, ok := req["google_access_key_policy"]; ok {
+			if err := d.Set("google_access_key_policy", req["google_access_key_policy"]); err != nil {
+				return diag.FromErr(err)
+			}
+		}
+
 		if err := d.Set("kid", req["kid"].(string)); err != nil {
 			return diag.FromErr(err)
 		}
@@ -514,6 +521,21 @@ func resourceUpdateSobject(ctx context.Context, d *schema.ResourceData, m interf
 		security_object["rsa"] = rsa_obj
 		has_changed = true
 	}
+
+	if d.HasChange("google_access_reason_policy") {
+		kaj_obj, err := unmarshalStringToJson(d.Get("google_access_reason_policy").(string))
+		if err != nil {
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "Invalid json string format for the field 'google_access_reason_policy'",
+				Detail:   fmt.Sprintf("[E] : Input: google_access_reason_policy: %s", err),
+			})
+			return diags
+		}
+		security_object["google_access_reason_policy"] = kaj_obj
+		has_changed = true
+	}
+
 	if d.HasChange("key_ops") {
 		security_object["key_ops"] = d.Get("key_ops")
 		has_changed = true
