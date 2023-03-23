@@ -128,8 +128,16 @@ func resourceSobject() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"google_access_reason_policy": {
-				Type:     schema.TypeString,
+
+			"allowed_key_justifications_policy": {
+				Type: schema.TypeList,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+				Optional: true,
+			},
+			"allowed_missing_justifications": {
+				Type:     schema.TypeBool,
 				Optional: true,
 			},
 			"description": {
@@ -256,19 +264,17 @@ func createSO(ctx context.Context, d *schema.ResourceData, m interface{}) diag.D
 		security_object["rsa"] = rsa_obj
 	}
 
-	// get the google_access_reason_policy from the request add it to security_object
-	if err := d.Get("google_access_reason_policy").(string); len(err) > 0 {
-		kaj_obj, er := unmarshalStringToJson(d.Get("google_access_reason_policy").(string))
-		if er != nil {
-			diags = append(diags, diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  "Invalid json string format for the field 'google_access_reason_policy'",
-				Detail:   fmt.Sprintf("[E] : Input: google_access_reason_policy: %s", err),
-			})
-			return diags
-		}
-		security_object["google_access_reason_policy"] = kaj_obj
+	google_access_reason_policy := make(map[string]interface{})
+
+	if err := d.Get("allowed_key_justifications_policy"); err != 0 {
+		google_access_reason_policy["allow"] = d.Get("allowed_key_justifications_policy")
+
 	}
+	if err := d.Get("allowed_missing_justifications"); err != 0 {
+		google_access_reason_policy["allow_missing_reason"] = d.Get("allowed_missing_justifications")
+	}
+
+	security_object["google_access_reason_policy"] = google_access_reason_policy
 
 	if err := d.Get("fpe_radix"); err != 0 {
 		security_object["fpe"] = map[string]interface{}{
@@ -362,7 +368,6 @@ func resourceReadSobject(ctx context.Context, d *schema.ResourceData, m interfac
 				}
 			}
 		}
-		// read "google_access_key_policy from req"
 		if _, ok := req["google_access_key_policy"]; ok {
 			if err := d.Set("google_access_key_policy", req["google_access_key_policy"]); err != nil {
 				return diag.FromErr(err)
@@ -522,18 +527,16 @@ func resourceUpdateSobject(ctx context.Context, d *schema.ResourceData, m interf
 		has_changed = true
 	}
 
-	if d.HasChange("google_access_reason_policy") {
-		kaj_obj, err := unmarshalStringToJson(d.Get("google_access_reason_policy").(string))
-		if err != nil {
-			diags = append(diags, diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  "Invalid json string format for the field 'google_access_reason_policy'",
-				Detail:   fmt.Sprintf("[E] : Input: google_access_reason_policy: %s", err),
-			})
-			return diags
-		}
-		security_object["google_access_reason_policy"] = kaj_obj
+	if d.HasChanges("allowed_key_justifications_policy", "allowed_missing_justifications") {
+
+		google_access_reason_policy := make(map[string]interface{})
+
+		google_access_reason_policy["allow"] = d.Get("allowed_key_justifications_policy")
+		google_access_reason_policy["allow_missing_reason"] = d.Get("allowed_missing_justifications")
+
 		has_changed = true
+
+		security_object["google_access_reason_policy"] = google_access_reason_policy
 	}
 
 	if d.HasChange("key_ops") {
