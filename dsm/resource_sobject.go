@@ -128,7 +128,6 @@ func resourceSobject() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-
 			"allowed_key_justifications_policy": {
 				Type: schema.TypeList,
 				Elem: &schema.Schema{
@@ -263,19 +262,23 @@ func createSO(ctx context.Context, d *schema.ResourceData, m interface{}) diag.D
 		}
 		security_object["rsa"] = rsa_obj
 	}
+	allowed_key_justifications_policy := d.Get("allowed_key_justifications_policy")
+	allowed_missing_justifications := d.Get("allowed_missing_justifications")
 
-	google_access_reason_policy := make(map[string]interface{})
-
-	if err := d.Get("allowed_key_justifications_policy"); err != 0 {
-		google_access_reason_policy["allow"] = d.Get("allowed_key_justifications_policy")
-
+	if allowed_key_justifications_policy != nil && allowed_missing_justifications != nil {
+		security_object["google_access_reason_policy"] = map[string]interface{}{
+			"allow":                allowed_key_justifications_policy,
+			"allow_missing_reason": allowed_missing_justifications,
+		}
+	} else if allowed_key_justifications_policy != nil {
+		security_object["google_access_reason_policy"] = map[string]interface{}{
+			"allow": allowed_key_justifications_policy,
+		}
+	} else if allowed_missing_justifications != nil {
+		security_object["google_access_reason_policy"] = map[string]interface{}{
+			"allow_missing_reason": allowed_missing_justifications,
+		}
 	}
-	if err := d.Get("allowed_missing_justifications"); err != 0 {
-		google_access_reason_policy["allow_missing_reason"] = d.Get("allowed_missing_justifications")
-	}
-
-	security_object["google_access_reason_policy"] = google_access_reason_policy
-
 	if err := d.Get("fpe_radix"); err != 0 {
 		security_object["fpe"] = map[string]interface{}{
 			"radix": d.Get("fpe_radix").(int),
@@ -368,12 +371,15 @@ func resourceReadSobject(ctx context.Context, d *schema.ResourceData, m interfac
 				}
 			}
 		}
-		if _, ok := req["google_access_key_policy"]; ok {
-			if err := d.Set("google_access_key_policy", req["google_access_key_policy"]); err != nil {
+		if _, ok := req["google_access_reason_policy"]; ok {
+			google_access_reason_policy := req["google_access_reason_policy"].(map[string]interface{})
+			if err := d.Set("allowed_key_justifications_policy", google_access_reason_policy["allow"]); err != nil {
+				return diag.FromErr(err)
+			}
+			if err := d.Set("allowed_missing_justifications", google_access_reason_policy["allow_missing_reason"]); err != nil {
 				return diag.FromErr(err)
 			}
 		}
-
 		if err := d.Set("kid", req["kid"].(string)); err != nil {
 			return diag.FromErr(err)
 		}
