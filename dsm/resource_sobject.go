@@ -128,6 +128,17 @@ func resourceSobject() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"allowed_key_justifications_policy": {
+				Type: schema.TypeList,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+				Optional: true,
+			},
+			"allowed_missing_justifications": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -251,7 +262,23 @@ func createSO(ctx context.Context, d *schema.ResourceData, m interface{}) diag.D
 		}
 		security_object["rsa"] = rsa_obj
 	}
+	allowed_key_justifications_policy := d.Get("allowed_key_justifications_policy")
+	allowed_missing_justifications := d.Get("allowed_missing_justifications")
 
+	if allowed_key_justifications_policy != nil && allowed_missing_justifications != nil {
+		security_object["google_access_reason_policy"] = map[string]interface{}{
+			"allow":                allowed_key_justifications_policy,
+			"allow_missing_reason": allowed_missing_justifications,
+		}
+	} else if allowed_key_justifications_policy != nil {
+		security_object["google_access_reason_policy"] = map[string]interface{}{
+			"allow": allowed_key_justifications_policy,
+		}
+	} else if allowed_missing_justifications != nil {
+		security_object["google_access_reason_policy"] = map[string]interface{}{
+			"allow_missing_reason": allowed_missing_justifications,
+		}
+	}
 	if err := d.Get("fpe_radix"); err != 0 {
 		security_object["fpe"] = map[string]interface{}{
 			"radix": d.Get("fpe_radix").(int),
@@ -342,6 +369,15 @@ func resourceReadSobject(ctx context.Context, d *schema.ResourceData, m interfac
 				if err := d.Set("elliptic_curve", req["elliptic_curve"].(string)); err != nil {
 					return diag.FromErr(err)
 				}
+			}
+		}
+		if _, ok := req["google_access_reason_policy"]; ok {
+			google_access_reason_policy := req["google_access_reason_policy"].(map[string]interface{})
+			if err := d.Set("allowed_key_justifications_policy", google_access_reason_policy["allow"]); err != nil {
+				return diag.FromErr(err)
+			}
+			if err := d.Set("allowed_missing_justifications", google_access_reason_policy["allow_missing_reason"]); err != nil {
+				return diag.FromErr(err)
 			}
 		}
 		if err := d.Set("kid", req["kid"].(string)); err != nil {
@@ -496,6 +532,19 @@ func resourceUpdateSobject(ctx context.Context, d *schema.ResourceData, m interf
 		security_object["rsa"] = rsa_obj
 		has_changed = true
 	}
+
+	if d.HasChanges("allowed_key_justifications_policy", "allowed_missing_justifications") {
+
+		google_access_reason_policy := make(map[string]interface{})
+
+		google_access_reason_policy["allow"] = d.Get("allowed_key_justifications_policy")
+		google_access_reason_policy["allow_missing_reason"] = d.Get("allowed_missing_justifications")
+
+		has_changed = true
+
+		security_object["google_access_reason_policy"] = google_access_reason_policy
+	}
+
 	if d.HasChange("key_ops") {
 		security_object["key_ops"] = d.Get("key_ops")
 		has_changed = true
