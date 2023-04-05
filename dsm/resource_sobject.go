@@ -262,23 +262,47 @@ func createSO(ctx context.Context, d *schema.ResourceData, m interface{}) diag.D
 		}
 		security_object["rsa"] = rsa_obj
 	}
-	allowed_key_justifications_policy := d.Get("allowed_key_justifications_policy")
-	allowed_missing_justifications := d.Get("allowed_missing_justifications")
+	// allowed_key_justifications_policy := d.Get("allowed_key_justifications_policy")
+	// allowed_missing_justifications := d.Get("allowed_missing_justifications")
 
-	if allowed_key_justifications_policy != nil && allowed_missing_justifications != nil {
-		security_object["google_access_reason_policy"] = map[string]interface{}{
-			"allow":                allowed_key_justifications_policy,
-			"allow_missing_reason": allowed_missing_justifications,
+	// if allowed_key_justifications_policy != nil && allowed_missing_justifications != nil {
+	// 	security_object["google_access_reason_policy"] = map[string]interface{}{
+	// 		"allow":                allowed_key_justifications_policy,
+	// 		"allow_missing_reason": allowed_missing_justifications,
+	// 	}
+	// } else if allowed_key_justifications_policy != nil {
+	// 	security_object["google_access_reason_policy"] = map[string]interface{}{
+	// 		"allow": allowed_key_justifications_policy,
+	// 	}
+	// } else if allowed_missing_justifications != nil {
+	// 	security_object["google_access_reason_policy"] = map[string]interface{}{
+	// 		"allow_missing_reason": allowed_missing_justifications,
+	// 	}
+	// }
+	allowed_key_justifications_policy, ok := d.GetOk("allowed_key_justifications_policy")
+	allowed_missing_justifications, ok2 := d.GetOkExists("allowed_missing_justifications")
+
+	if ok && ok2 {
+		if allowed_key_justifications_policy != nil && allowed_missing_justifications != nil {
+			security_object["google_access_reason_policy"] = map[string]interface{}{
+				"allow":                allowed_key_justifications_policy,
+				"allow_missing_reason": allowed_missing_justifications,
+			}
 		}
-	} else if allowed_key_justifications_policy != nil {
-		security_object["google_access_reason_policy"] = map[string]interface{}{
-			"allow": allowed_key_justifications_policy,
+	} else if ok {
+		if allowed_key_justifications_policy != nil {
+			security_object["google_access_reason_policy"] = map[string]interface{}{
+				"allow": allowed_key_justifications_policy,
+			}
 		}
-	} else if allowed_missing_justifications != nil {
-		security_object["google_access_reason_policy"] = map[string]interface{}{
-			"allow_missing_reason": allowed_missing_justifications,
+	} else if ok2 {
+		if allowed_missing_justifications != nil {
+			security_object["google_access_reason_policy"] = map[string]interface{}{
+				"allow_missing_reason": allowed_missing_justifications,
+			}
 		}
 	}
+
 	if err := d.Get("fpe_radix"); err != 0 {
 		security_object["fpe"] = map[string]interface{}{
 			"radix": d.Get("fpe_radix").(int),
@@ -533,17 +557,161 @@ func resourceUpdateSobject(ctx context.Context, d *schema.ResourceData, m interf
 		has_changed = true
 	}
 
+	// if d.HasChanges("allowed_key_justifications_policy", "allowed_missing_justifications") {
+
+	// 	google_access_reason_policy := make(map[string]interface{})
+
+	// 	google_access_reason_policy["allow"] = d.Get("allowed_key_justifications_policy")
+	// 	google_access_reason_policy["allow_missing_reason"] = d.Get("allowed_missing_justifications")
+
+	// 	has_changed = true
+
+	// 	security_object["google_access_reason_policy"] = google_access_reason_policy
+	// }
+
+	// 1
 	if d.HasChanges("allowed_key_justifications_policy", "allowed_missing_justifications") {
 
 		google_access_reason_policy := make(map[string]interface{})
 
-		google_access_reason_policy["allow"] = d.Get("allowed_key_justifications_policy")
-		google_access_reason_policy["allow_missing_reason"] = d.Get("allowed_missing_justifications")
+		allowed_key_justifications_policy := d.Get("allowed_key_justifications_policy").([]interface{})
+		allowed_missing_justifications := d.Get("allowed_missing_justifications").(bool)
+
+		if len(allowed_key_justifications_policy) > 0 || allowed_missing_justifications {
+
+			google_access_reason_policy["allow"] = allowed_key_justifications_policy
+			google_access_reason_policy["allow_missing_reason"] = allowed_missing_justifications
+			security_object["google_access_reason_policy"] = google_access_reason_policy
+
+		} else if len(allowed_key_justifications_policy) == 0 && allowed_missing_justifications == false {
+			// to handle the case where both are passed as empty array and false
+			google_access_reason_policy["allow"] = allowed_key_justifications_policy
+			google_access_reason_policy["allow_missing_reason"] = allowed_missing_justifications
+			security_object["google_access_reason_policy"] = google_access_reason_policy
+
+		} else {
+			// hanlde the case where both are commented out in terraform
+			security_object["google_access_reason_policy"] = "remove"
+		}
 
 		has_changed = true
-
-		security_object["google_access_reason_policy"] = google_access_reason_policy
 	}
+
+	// if d.HasChanges("allowed_key_justifications_policy", "allowed_missing_justifications") {
+	// 	google_access_reason_policy := make(map[string]interface{})
+
+	// 	allowed_key_justifications_policy, ok := d.GetOk("allowed_key_justifications_policy")
+	// 	allowed_missing_justifications, ok2 := d.GetOkExists("allowed_missing_justifications")
+
+	// 	if !ok && !ok2 {
+	// 		security_object["google_access_reason_policy"] = "remove"
+	// 	} else {
+	// 		google_access_reason_policy["allow"] = allowed_key_justifications_policy
+	// 		google_access_reason_policy["allow_missing_reason"] = allowed_missing_justifications
+	// 		security_object["google_access_reason_policy"] = google_access_reason_policy
+	// 	}
+	// 	has_changed = true
+	// }
+
+	// 2
+	// if d.HasChanges("allowed_key_justifications_policy", "allowed_missing_justifications") {
+	// 	google_access_reason_policy := make(map[string]interface{})
+
+	// 	if d.HasChange("allowed_key_justifications_policy") {
+	// 		if allowed_key_justifications_policy, ok := d.GetOk("allowed_key_justifications_policy"); ok {
+	// 			if allowed_key_justifications_policy != nil {
+	// 				google_access_reason_policy["allow"] = allowed_key_justifications_policy
+	// 			}
+	// 		}
+	// 		google_access_reason_policy["allow_missing_reason"] = d.Get("allowed_missing_justifications")
+	// 	}
+
+	// 	if d.HasChange("allowed_missing_justifications") {
+	// 		if allowed_missing_justifications, ok := d.GetOkExists("allowed_missing_justifications"); ok {
+	// 			google_access_reason_policy["allow_missing_reason"] = allowed_missing_justifications
+	// 			google_access_reason_policy["allow"] = d.Get("allowed_key_justifications_policy")
+	// 		}
+	// 	}
+
+	// 	// check if google_access_reason_policy is empty and delete it from security_object
+	// 	// if len(google_access_reason_policy) == 0 {
+	// 	// 	delete(security_object, "google_access_reason_policy")
+	// 	// } else if google_access_reason_policy["allow"] == nil && google_access_reason_policy["allow_missing_reason"] == nil {
+	// 	// 	delete(security_object, "google_access_reason_policy")
+	// 	// } else {
+	// 	// 	security_object["google_access_reason_policy"] = google_access_reason_policy
+	// 	// }
+
+	// 	if len(google_access_reason_policy) > 0 {
+	// 		security_object["google_access_reason_policy"] = google_access_reason_policy
+	// 	}
+
+	// 	has_changed = true
+	// }
+
+	// 3
+
+	// allowedKeyJustificationsPolicy, allowedKeyJustificationsPolicyExists := d.GetOk("allowed_key_justifications_policy")
+	// allowedMissingJustifications, allowedMissingJustificationsExists := d.GetOk("allowed_missing_justifications")
+
+	// if allowedKeyJustificationsPolicyExists || allowedMissingJustificationsExists {
+	// 	googleAccessReasonPolicy := make(map[string]interface{})
+
+	// 	if allowedKeyJustificationsPolicyExists {
+	// 		if allowedKeyJustificationsPolicy == nil || allowedKeyJustificationsPolicy == "null" {
+	// 			googleAccessReasonPolicy["allow"] = nil
+	// 		} else {
+	// 			googleAccessReasonPolicy["allow"] = allowedKeyJustificationsPolicy
+	// 		}
+	// 	}
+
+	// 	if allowedMissingJustificationsExists {
+	// 		if allowedMissingJustifications == nil || allowedMissingJustifications == "null" {
+	// 			googleAccessReasonPolicy["allow_missing_reason"] = nil
+	// 		} else {
+	// 			googleAccessReasonPolicy["allow_missing_reason"] = allowedMissingJustifications
+	// 		}
+	// 	}
+
+	// 	security_object["google_access_reason_policy"] = googleAccessReasonPolicy
+	// } else {
+	// 	delete(security_object, "google_access_reason_policy")
+	// }
+
+	// 4
+
+	// if d.HasChange("allowed_key_justifications_policy") || d.HasChange("allowed_missing_justifications") {
+	// 	googleAccessReasonPolicy := make(map[string]interface{})
+
+	// 	if d.HasChange("allowed_key_justifications_policy") {
+	// 		if d.Get("allowed_key_justifications_policy") == nil || d.Get("allowed_key_justifications_policy") == "" {
+	// 			googleAccessReasonPolicy["allow"] = nil
+	// 		} else {
+	// 			googleAccessReasonPolicy["allow"] = d.Get("allowed_key_justifications_policy")
+	// 		}
+	// 	} else {
+	// 		googleAccessReasonPolicy["allow"] = d.Get("allowed_key_justifications_policy")
+	// 	}
+
+	// 	if d.HasChange("allowed_missing_justifications") {
+	// 		if d.Get("allowed_missing_justifications") == nil || d.Get("allowed_missing_justifications") == "" {
+	// 			googleAccessReasonPolicy["allow_missing_reason"] = nil
+	// 		} else {
+	// 			googleAccessReasonPolicy["allow_missing_reason"] = d.Get("allowed_missing_justifications")
+	// 		}
+	// 	} else {
+	// 		googleAccessReasonPolicy["allow_missing_reason"], _ = d.GetOkExists("allowed_missing_justifications")
+	// 	}
+
+	// 	if googleAccessReasonPolicy["allow"] == nil && googleAccessReasonPolicy["allow_missing_reason"] == nil {
+	// 		// make a new variable call google_access_reason_policy and set it to a string call "remove"
+	// 		// then set security_object["google_access_reason_policy"] = google_access_reason_policy
+	// 		security_object["google_access_reason_policy"] = "remove"
+	// 	} else {
+	// 		security_object["google_access_reason_policy"] = googleAccessReasonPolicy
+	// 	}
+	// 	has_changed = true
+	// }
 
 	if d.HasChange("key_ops") {
 		security_object["key_ops"] = d.Get("key_ops")
