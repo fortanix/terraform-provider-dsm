@@ -262,23 +262,30 @@ func createSO(ctx context.Context, d *schema.ResourceData, m interface{}) diag.D
 		}
 		security_object["rsa"] = rsa_obj
 	}
-	allowed_key_justifications_policy := d.Get("allowed_key_justifications_policy")
-	allowed_missing_justifications := d.Get("allowed_missing_justifications")
+	allowed_key_justifications_policy, ok := d.GetOk("allowed_key_justifications_policy")
+	allowed_missing_justifications, ok2 := d.GetOkExists("allowed_missing_justifications")
 
-	if allowed_key_justifications_policy != nil && allowed_missing_justifications != nil {
-		security_object["google_access_reason_policy"] = map[string]interface{}{
-			"allow":                allowed_key_justifications_policy,
-			"allow_missing_reason": allowed_missing_justifications,
+	if ok && ok2 {
+		if allowed_key_justifications_policy != nil && allowed_missing_justifications != nil {
+			security_object["google_access_reason_policy"] = map[string]interface{}{
+				"allow":                allowed_key_justifications_policy,
+				"allow_missing_reason": allowed_missing_justifications,
+			}
 		}
-	} else if allowed_key_justifications_policy != nil {
-		security_object["google_access_reason_policy"] = map[string]interface{}{
-			"allow": allowed_key_justifications_policy,
+	} else if ok {
+		if allowed_key_justifications_policy != nil {
+			security_object["google_access_reason_policy"] = map[string]interface{}{
+				"allow": allowed_key_justifications_policy,
+			}
 		}
-	} else if allowed_missing_justifications != nil {
-		security_object["google_access_reason_policy"] = map[string]interface{}{
-			"allow_missing_reason": allowed_missing_justifications,
+	} else if ok2 {
+		if allowed_missing_justifications != nil {
+			security_object["google_access_reason_policy"] = map[string]interface{}{
+				"allow_missing_reason": allowed_missing_justifications,
+			}
 		}
 	}
+
 	if err := d.Get("fpe_radix"); err != 0 {
 		security_object["fpe"] = map[string]interface{}{
 			"radix": d.Get("fpe_radix").(int),
@@ -532,7 +539,6 @@ func resourceUpdateSobject(ctx context.Context, d *schema.ResourceData, m interf
 		security_object["rsa"] = rsa_obj
 		has_changed = true
 	}
-
 	if d.HasChanges("allowed_key_justifications_policy", "allowed_missing_justifications") {
 
 		google_access_reason_policy := make(map[string]interface{})
@@ -544,7 +550,6 @@ func resourceUpdateSobject(ctx context.Context, d *schema.ResourceData, m interf
 
 		security_object["google_access_reason_policy"] = google_access_reason_policy
 	}
-
 	if d.HasChange("key_ops") {
 		security_object["key_ops"] = d.Get("key_ops")
 		has_changed = true
