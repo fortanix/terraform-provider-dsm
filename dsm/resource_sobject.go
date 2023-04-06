@@ -540,20 +540,15 @@ func resourceUpdateSobject(ctx context.Context, d *schema.ResourceData, m interf
 		has_changed = true
 	}
 	if d.HasChanges("allowed_key_justifications_policy", "allowed_missing_justifications") {
+
 		google_access_reason_policy := make(map[string]interface{})
-		allowed_key_justifications_policy, ok1 := d.GetOk("allowed_key_justifications_policy")
-		allowed_missing_justifications, ok2 := d.GetOk("allowed_missing_justifications")
 
-		if !ok1 && !ok2 {
-			security_object["google_access_reason_policy"] = "remove"
-
-		} else {
-			google_access_reason_policy["allow"] = allowed_key_justifications_policy
-			google_access_reason_policy["allow_missing_reason"] = allowed_missing_justifications
-			security_object["google_access_reason_policy"] = google_access_reason_policy
-		}
+		google_access_reason_policy["allow"] = d.Get("allowed_key_justifications_policy")
+		google_access_reason_policy["allow_missing_reason"] = d.Get("allowed_missing_justifications")
 
 		has_changed = true
+
+		security_object["google_access_reason_policy"] = google_access_reason_policy
 	}
 	if d.HasChange("key_ops") {
 		security_object["key_ops"] = d.Get("key_ops")
