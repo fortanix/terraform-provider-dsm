@@ -107,6 +107,7 @@ func resourceCreateGroup(ctx context.Context, d *schema.ResourceData, m interfac
 	}
 
 	d.SetId(resp["group_id"].(string))
+	d.Set("group_id", resp["group_id"].(string))
 	return diags
 }
 
