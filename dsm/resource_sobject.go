@@ -169,7 +169,7 @@ func resourceSobject() *schema.Resource {
 			"subgroup_size": {
 				Type:     schema.TypeInt,
 				Optional: true,
-			}
+			},
 			"hash_alg": {
 				Type:     schema.TypeString,
 				Optional: true,
