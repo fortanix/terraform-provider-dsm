@@ -166,6 +166,15 @@ func resourceSobject() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"subgroup_size": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
+			"hash_alg": {
+				Type:     schema.TypeString,
+				Optional: true,
+			}
+
 		},
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -203,6 +212,8 @@ func createSO(ctx context.Context, d *schema.ResourceData, m interface{}) diag.D
 	key_size := d.Get("key_size").(int)
 	obj_type := d.Get("obj_type").(string)
 	elliptic_curve := d.Get("elliptic_curve").(string)
+	hash_alg := d.Get("hash_alg").(string)
+	subgroup_size := d.Get("subgroup_size").(string)
 	method := "POST"
 
 	security_object := map[string]interface{}{
@@ -216,7 +227,7 @@ func createSO(ctx context.Context, d *schema.ResourceData, m interface{}) diag.D
 		security_object["value"] = d.Get("value").(string)
 		method = "PUT"
 	} else {
-		if obj_type == "EC" {
+		if obj_type == "EC" || obj_type == "ECKCDSA" {
 			if key_size > 0 || len(elliptic_curve) == 0 {
 				diags = append(diags, diag.Diagnostic{
 					Severity: diag.Error,
@@ -294,6 +305,23 @@ func createSO(ctx context.Context, d *schema.ResourceData, m interface{}) diag.D
 	if err := d.Get("custom_metadata").(map[string]interface{}); len(err) > 0 {
 		security_object["custom_metadata"] = err
 	}
+	
+	if hash_alg != nil && subgroup_size != nil && obj_type == "KCDSA" {
+		security_object["kcdsa"] = map[string]interface{}
+			"hash_alg":             hash_alg,
+			"subgroup_size":		subgroup_size
+	}
+	else if hash_alg != nil && obj_type == "ECKCDSA" {
+		security_object["eckcdsa"] = map[string]interface{}{
+			"hash_alg":             hash_alg,
+		}
+	}
+	else if subgroup_size != nil && obj_type == "DSA" {
+		security_object["dsa"] = map[string]interface{}{
+			"subgroup_size":        	subgroup_size,
+		}
+	}
+
 	if err := d.Get("rotate").(string); len(err) > 0 {
 		security_object["name"] = d.Get("rotate_from").(string)
 		endpoint = "crypto/v1/keys/rekey"
@@ -366,6 +394,7 @@ func resourceReadSobject(ctx context.Context, d *schema.ResourceData, m interfac
 		if err := d.Set("obj_type", req["obj_type"].(string)); err != nil {
 			return diag.FromErr(err)
 		}
+		obj_type = req["obj_type"].(string)
 		if req["origin"] != "External" {
 			if _, ok := req["key_size"]; ok {
 				if err := d.Set("key_size", int(req["key_size"].(float64))); err != nil {
@@ -502,6 +531,34 @@ func resourceReadSobject(ctx context.Context, d *schema.ResourceData, m interfac
 				}
 			}
 		}
+		if obj_type == "DSA" {
+			if _,ok := req["dsa"]; ok {
+				dsa := req["dsa"].(map[string]interface{})
+				if err := d.Set("subgroup_size", dsa["subgroup_size"]); err != nil {
+					return diag.FromErr(err)
+				}
+			}
+		}
+		else if obj_type == "KCDSA" {
+			if _,ok := req["kcdsa"]; ok {
+				kcdsa := req["kcdsa"].(map[string]interface{})
+				if err := d.Set("subgroup_size", kcdsa["subgroup_size"]); err != nil {
+					return diag.FromErr(err)
+				}
+				if err := d.Set("hash_alg", dsa["hash_alg"]); err != nil {
+					return diag.FromErr(err)
+				}
+			}
+		}
+		else if obj_type == "ECKCDSA" {
+			if _,ok := req["eckcdsa"]; ok {
+				eckcdsa := req["eckcdsa"].(map[string]interface{})
+				if err := d.Set("hash_alg", dsa["hash_alg"]); err != nil {
+					return diag.FromErr(err)
+				}
+			}
+		}
+		}
 
 		// FYOO: clear values that are irrelevant
 		d.Set("rotate", "")
@@ -565,6 +622,26 @@ func resourceUpdateSobject(ctx context.Context, d *schema.ResourceData, m interf
 	if d.HasChange("custom_metadata") {
 		security_object["custom_metadata"] = d.Get("custom_metadata").(map[string]interface{})
 		has_changed = true
+	}
+	if d.HasChange("hash_alg") {
+		old_ha, new_ha := d.GetChange("hash_alg")
+		d.Set("hash_alg", old_ec)
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "hash_alg cannot modify on update",
+			Detail:   fmt.Sprintf("[E]: API: PATCH crypto/v1/keys: hash_alg cannot change on update. Please retain it to old value: %s -> %s", old_ha, new_ha),
+		})
+		return diags
+	}
+	if d.HasChange("subgroup_size") {
+		old_sz, new_sz := d.GetChange("dsa")
+		d.Set("subgroup_size", old_ec)
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "dsa cannot modify on update",
+			Detail:   fmt.Sprintf("[E]: API: PATCH crypto/v1/keys: subgroup_size cannot change on update. Please retain it to old value: %s -> %s", old_sz, new_sz),
+		})
+		return diags
 	}
 	if d.HasChange("elliptic_curve") {
 		old_ec, new_ec := d.GetChange("elliptic_curve")

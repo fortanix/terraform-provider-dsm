@@ -28,6 +28,8 @@ resource "dsm_sobject" "sobject" {
     rsa             = <rsaOptions_string_format>
     elliptic_curve  = <elliptic_curve>
     value = <imported sobject content>
+    hash_alg = <HashAlgorithm>
+    subgroup_size = <subgroup_size_value>
 }
 ```
 
@@ -54,6 +56,8 @@ The following arguments are supported in the `dsm_sobject` resource block:
 * _**value**_  = Sobject content when importing content.
 * _**allowed\_key\_justifications\_policy (optional)**_: The security object key justification policies for GCP External Key Manager.
 * _**allowed\_missing\_justifications (optional)**_: The security object allows missing justifications even if not provided.
+* _**hash\_alg**_ = Hashing Algorithm for KCDSA and ECKCDSA
+* _**subgroup\_size**_ = Subgroup Size for DSA and ECKCDSA
 
 ## Attribute Reference
 
@@ -83,3 +87,6 @@ The following attributes are stored in the `dsm_sobject` resource block:
 * **elliptic\_curve**: Standardized elliptic curve.
 * _**allowed\_key\_justifications\_policy (optional)**_: The security object key justification policies for GCP External Key Manager. The allowed permissions are:  `CUSTOMER_INITIATED_SUPPORT` , `CUSTOMER_INITIATED_ACCESS`, `GOOGLE_INITIATED_SERVICE`, `GOOGLE_INITIATED_REVIEW`, `GOOGLE_INITIATED_SYSTEM_OPERATION`,  `THIRD_PARTY_DATA_REQUEST`,`REASON_NOT_EXPECTED`, `REASON_UNSPECIFIED`, `MODIFIED_CUSTOMER_INITIATED_ACCESS`, `MODIFIED_GOOGLE_INITIATED_SYSTEM_OPERATION`, `GOOGLE_RESPONSE_TO_PRODUCTION_ALERT`.
 * _**allowed\_missing\_justifications (optional)**_: Boolean value which allows missing justifications even if not provided to the security object. The values are `True` / `False`.
+
+* _**hash\_alg**_ = Hashing Algorithm for KCDSA and ECKCDSA. The allowed Hashing Algorithms are `SHA1`,`SHA224`, `SHA256`, `SHA384`, `SHA521`.
+* _**subgroup\_size**_ = Subgroup Size for DSA and ECKCDSA. The allowed Subgroup Sizes are `224` and `256`
