@@ -173,7 +173,7 @@ func resourceSobject() *schema.Resource {
 			"hash_alg": {
 				Type:     schema.TypeString,
 				Optional: true,
-			}
+			},
 
 		},
 		Importer: &schema.ResourceImporter{
@@ -306,20 +306,19 @@ func createSO(ctx context.Context, d *schema.ResourceData, m interface{}) diag.D
 		security_object["custom_metadata"] = err
 	}
 	
-	if hash_alg != nil && subgroup_size != nil && obj_type == "KCDSA" {
-		security_object["kcdsa"] = map[string]interface{}
-			"hash_alg":             hash_alg,
-			"subgroup_size":		subgroup_size
-	}
-	else if hash_alg != nil && obj_type == "ECKCDSA" {
-		security_object["eckcdsa"] = map[string]interface{}{
-			"hash_alg":             hash_alg,
-		}
-	}
-	else if subgroup_size != nil && obj_type == "DSA" {
-		security_object["dsa"] = map[string]interface{}{
-			"subgroup_size":        	subgroup_size,
-		}
+	if len(hash_alg) > 0 && len(subgroup_size) > 0 && obj_type == "KCDSA" {
+		kcdsa := make(map[string]interface{})
+		kcdsa["hash_alg"] = hash_alg
+		kcdsa["subgroup_size"] = subgroup_size
+		security_object["kcdsa"] = kcdsa
+	} else if len(hash_alg) > 0 && obj_type == "ECKCDSA" {
+		eckcdsa := make(map[string]interface{})
+		eckcdsa["hash_alg"] = hash_alg
+		security_object["eckcdsa"] = eckcdsa
+	} else if  len(subgroup_size) > 0 && obj_type == "DSA" {
+		dsa := make(map[string]interface{})
+		dsa["subgroup_size"] = subgroup_size
+		security_object["dsa"] = dsa
 	}
 
 	if err := d.Get("rotate").(string); len(err) > 0 {
@@ -394,7 +393,7 @@ func resourceReadSobject(ctx context.Context, d *schema.ResourceData, m interfac
 		if err := d.Set("obj_type", req["obj_type"].(string)); err != nil {
 			return diag.FromErr(err)
 		}
-		obj_type = req["obj_type"].(string)
+		obj_type := req["obj_type"].(string)
 		if req["origin"] != "External" {
 			if _, ok := req["key_size"]; ok {
 				if err := d.Set("key_size", int(req["key_size"].(float64))); err != nil {
@@ -538,22 +537,20 @@ func resourceReadSobject(ctx context.Context, d *schema.ResourceData, m interfac
 					return diag.FromErr(err)
 				}
 			}
-		}
-		else if obj_type == "KCDSA" {
+		} else if obj_type == "KCDSA" {
 			if _,ok := req["kcdsa"]; ok {
 				kcdsa := req["kcdsa"].(map[string]interface{})
 				if err := d.Set("subgroup_size", kcdsa["subgroup_size"]); err != nil {
 					return diag.FromErr(err)
 				}
-				if err := d.Set("hash_alg", dsa["hash_alg"]); err != nil {
+				if err := d.Set("hash_alg", kcdsa["hash_alg"]); err != nil {
 					return diag.FromErr(err)
 				}
 			}
-		}
-		else if obj_type == "ECKCDSA" {
+		} else if obj_type == "ECKCDSA" {
 			if _,ok := req["eckcdsa"]; ok {
 				eckcdsa := req["eckcdsa"].(map[string]interface{})
-				if err := d.Set("hash_alg", dsa["hash_alg"]); err != nil {
+				if err := d.Set("hash_alg", eckcdsa["hash_alg"]); err != nil {
 					return diag.FromErr(err)
 				}
 			}
@@ -563,8 +560,7 @@ func resourceReadSobject(ctx context.Context, d *schema.ResourceData, m interfac
 		// FYOO: clear values that are irrelevant
 		d.Set("rotate", "")
 		d.Set("rotate_from", "")
-	}
-	return diags
+		return diags
 }
 
 // [U]: Terraform Func: resourceUpdateSobject
@@ -625,7 +621,7 @@ func resourceUpdateSobject(ctx context.Context, d *schema.ResourceData, m interf
 	}
 	if d.HasChange("hash_alg") {
 		old_ha, new_ha := d.GetChange("hash_alg")
-		d.Set("hash_alg", old_ec)
+		d.Set("hash_alg", old_ha)
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "hash_alg cannot modify on update",
@@ -635,7 +631,7 @@ func resourceUpdateSobject(ctx context.Context, d *schema.ResourceData, m interf
 	}
 	if d.HasChange("subgroup_size") {
 		old_sz, new_sz := d.GetChange("dsa")
-		d.Set("subgroup_size", old_ec)
+		d.Set("subgroup_size", old_sz)
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "dsa cannot modify on update",
