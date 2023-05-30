@@ -213,7 +213,7 @@ func createSO(ctx context.Context, d *schema.ResourceData, m interface{}) diag.D
 	obj_type := d.Get("obj_type").(string)
 	elliptic_curve := d.Get("elliptic_curve").(string)
 	hash_alg := d.Get("hash_alg").(string)
-	subgroup_size := d.Get("subgroup_size").(string)
+	subgroup_size := d.Get("subgroup_size").(int)
 	method := "POST"
 
 	security_object := map[string]interface{}{
@@ -306,7 +306,7 @@ func createSO(ctx context.Context, d *schema.ResourceData, m interface{}) diag.D
 		security_object["custom_metadata"] = err
 	}
 	
-	if len(hash_alg) > 0 && len(subgroup_size) > 0 && obj_type == "KCDSA" {
+	if len(hash_alg) > 0 && obj_type == "KCDSA" {
 		kcdsa := make(map[string]interface{})
 		kcdsa["hash_alg"] = hash_alg
 		kcdsa["subgroup_size"] = subgroup_size
@@ -315,7 +315,7 @@ func createSO(ctx context.Context, d *schema.ResourceData, m interface{}) diag.D
 		eckcdsa := make(map[string]interface{})
 		eckcdsa["hash_alg"] = hash_alg
 		security_object["eckcdsa"] = eckcdsa
-	} else if  len(subgroup_size) > 0 && obj_type == "DSA" {
+	} else if obj_type == "DSA" {
 		dsa := make(map[string]interface{})
 		dsa["subgroup_size"] = subgroup_size
 		security_object["dsa"] = dsa
