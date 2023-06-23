@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -69,6 +70,17 @@ func resourceSecret() *schema.Resource {
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
+			},
+			"allowed_key_justifications_policy": {
+				Type: schema.TypeList,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+				Optional: true,
+			},
+			"allowed_missing_justifications": {
+				Type:     schema.TypeBool,
+				Optional: true,
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -173,6 +185,30 @@ func resourceCreateSecret(ctx context.Context, d *schema.ResourceData, m interfa
 		operation = "POST"
 	}
 
+	allowed_key_justifications_policy, ok := d.GetOk("allowed_key_justifications_policy")
+	allowed_missing_justifications, ok2 := d.GetOkExists("allowed_missing_justifications")
+
+	if ok && ok2 {
+		if allowed_key_justifications_policy != nil && allowed_missing_justifications != nil {
+			plugin_object["google_access_reason_policy"] = map[string]interface{}{
+				"allow":                allowed_key_justifications_policy,
+				"allow_missing_reason": allowed_missing_justifications,
+			}
+		}
+	} else if ok {
+		if allowed_key_justifications_policy != nil {
+			plugin_object["google_access_reason_policy"] = map[string]interface{}{
+				"allow": allowed_key_justifications_policy,
+			}
+		}
+	} else if ok2 {
+		if allowed_missing_justifications != nil {
+			plugin_object["google_access_reason_policy"] = map[string]interface{}{
+				"allow_missing_reason": allowed_missing_justifications,
+			}
+		}
+	}
+
 	req, err := m.(*api_client).APICallBody(operation, endpoint, plugin_object)
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
@@ -238,6 +274,15 @@ func resourceReadSecret(ctx context.Context, d *schema.ResourceData, m interface
 				return diag.FromErr(err)
 			}
 		}
+		if _, ok := res["google_access_reason_policy"]; ok {
+			google_access_reason_policy := res["google_access_reason_policy"].(map[string]interface{})
+			if err := d.Set("allowed_key_justifications_policy", google_access_reason_policy["allow"]); err != nil {
+				return diag.FromErr(err)
+			}
+			if err := d.Set("allowed_missing_justifications", google_access_reason_policy["allow_missing_reason"]); err != nil {
+				return diag.FromErr(err)
+			}
+		}
 		if err := d.Set("enabled", res["enabled"].(bool)); err != nil {
 			return diag.FromErr(err)
 		}
@@ -286,7 +331,42 @@ func resourceReadSecret(ctx context.Context, d *schema.ResourceData, m interface
 
 // [U]: Update Security Object
 func resourceUpdateSecret(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	return nil
+	var has_changed = false
+	var diags diag.Diagnostics
+
+	var plugin_object = map[string]interface{}{
+		"kid": d.Get("kid").(string),
+	}
+
+	if d.HasChanges("allowed_key_justifications_policy", "allowed_missing_justifications") {
+
+		google_access_reason_policy := make(map[string]interface{})
+
+		google_access_reason_policy["allow"] = d.Get("allowed_key_justifications_policy")
+		google_access_reason_policy["allow_missing_reason"] = d.Get("allowed_missing_justifications")
+
+		has_changed = true
+
+		plugin_object["google_access_reason_policy"] = google_access_reason_policy
+	}
+
+	if has_changed {
+		if debug_output {
+			tflog.Warn(ctx, "Sobject has changed, calling API")
+		}
+		_, err := m.(*api_client).APICallBody("PATCH", fmt.Sprintf("crypto/v1/keys/%s", d.Id()), plugin_object)
+		if err != nil {
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "[DSM SDK] Unable to call DSM provider API client",
+				Detail:   fmt.Sprintf("[E]: API: PATCH crypto/v1/keys: %v", err),
+			})
+			return diags
+		}
+	}
+
+	// return nil
+	return resourceReadSecret(ctx, d, m)
 }
 
 // [D]: Delete Security Object

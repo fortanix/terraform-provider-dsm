@@ -4,14 +4,14 @@ HOSTNAME=fortanix.com
 NAMESPACE=fortanix
 NAME=dsm
 BINARY=terraform-provider-${NAME}
-VERSION=0.5.25
+VERSION=0.5.26
 OS=linux
 ARCH=amd64
 OS_ARCH=${OS}_${ARCH}
 
 default: build
 
-fmt: 
+fmt:
 	gofmt -w $(GOFMT_FILES)
 
 build:
@@ -50,9 +50,9 @@ install: build
 	mkdir -p ~/.terraform.d/plugins/${HOSTNAME}/${NAMESPACE}/${NAME}/${VERSION}/${OS_ARCH}
 	mv ${BINARY} ~/.terraform.d/plugins/${HOSTNAME}/${NAMESPACE}/${NAME}/${VERSION}/${OS_ARCH}
 
-test: 
-	go test -i $(TEST) || exit 1                                                   
-	echo $(TEST) | xargs -t -n4 go test $(TESTARGS) -timeout=30s -parallel=4                    
+test:
+	go test -i $(TEST) || exit 1
+	echo $(TEST) | xargs -t -n4 go test $(TESTARGS) -timeout=30s -parallel=4
 
-testacc: 
-	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 120m   
+testacc:
+	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 120m
