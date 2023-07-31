@@ -3,6 +3,7 @@ package dsm
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -39,7 +40,7 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, m interface
 
 	user_id := ""
 	for _, data := range req {
-		if data.(map[string]interface{})["user_email"].(string) == d.Get("user_email").(string) {
+		if strings.ToLower(data.(map[string]interface{})["user_email"].(string)) == strings.ToLower(d.Get("user_email").(string)) {
 			user_id = data.(map[string]interface{})["user_id"].(string)
 			if err := d.Set("user_email", d.Get("user_email").(string)); err != nil {
 				return diag.FromErr(err)
