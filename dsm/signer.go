@@ -37,6 +37,7 @@ type dsmsigner struct {
 	C        string
 	O        string
 	St       string
+	E        string
 	Email    []string
 	Dnsnames []string
 	Ips      []net.IP
@@ -47,7 +48,7 @@ func (dsmsigner *dsmsigner) setProperty(propName string, propValue string) *dsms
 	return dsmsigner
 }
 
-func NewDSMSigner(kid string, dnsnames []string, ips []net.IP, email []string, cn string, ou string, l string, c string, o string, st string, api_client *api_client) (*dsmsigner, diag.Diagnostics) {
+func NewDSMSigner(kid string, dnsnames []string, ips []net.IP, email []string, cn string, ou string, l string, c string, o string, st string, e string, api_client *api_client) (*dsmsigner, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	var new_signer = &dsmsigner{
@@ -76,6 +77,9 @@ func NewDSMSigner(kid string, dnsnames []string, ips []net.IP, email []string, c
 	if len(o) > 0 {
 		new_signer.setProperty("O", o)
 	}
+	if len(e) > 0 {
+		new_signer.setProperty("E", e)
+	}
 
 	return new_signer, diags
 }
@@ -101,6 +105,15 @@ func (dsmsigner *dsmsigner) generate_csr() (string, diag.Diagnostics) {
 	}
 	if dsmsigner.Ou != "" {
 		subj.OrganizationalUnit = []string{dsmsigner.Ou}
+	}
+	if dsmsigner.E != "" {
+		subj.ExtraNames = []pkix.AttributeTypeAndValue{
+			pkix.AttributeTypeAndValue{
+				// Object Identifier for "emailAddress", ref: https://github.com/golang/go/issues/63148
+				Type:  asn1.ObjectIdentifier{1, 2, 840, 113549, 1, 9, 1},
+				Value: dsmsigner.E,
+			},
+		}
 	}
 
 	rawSubj := subj.ToRDNSequence()

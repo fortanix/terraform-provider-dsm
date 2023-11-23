@@ -60,6 +60,11 @@ func resourceCsr() *schema.Resource {
 				Optional: true,
 				Default:  "",
 			},
+			"e": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "",
+			},
 			"email": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -129,7 +134,7 @@ func resourceCreateCsr(ctx context.Context, d *schema.ResourceData, m interface{
 		emails = []string{}
 	}
 
-	newsigner, err := NewDSMSigner(d.Get("kid").(string), dnsnames, ips, emails, d.Get("cn").(string), d.Get("ou").(string), d.Get("l").(string), d.Get("c").(string), d.Get("o").(string), d.Get("st").(string), m.(*api_client))
+	newsigner, err := NewDSMSigner(d.Get("kid").(string), dnsnames, ips, emails, d.Get("cn").(string), d.Get("ou").(string), d.Get("l").(string), d.Get("c").(string), d.Get("o").(string), d.Get("st").(string), d.Get("e").(string), m.(*api_client))
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,

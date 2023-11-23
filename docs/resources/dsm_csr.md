@@ -10,7 +10,7 @@ Returns the Fortanix DSM csr sobject from the cluster as a Resource.
 resource "dsm_csr" "sobject" {
     kid   = <sobject_id>
     cn    = <Common Name for CSR>
-    email = <Email for CSR>    
+    email = [<Email for CSR>]    
 }
 ```
 
@@ -25,7 +25,8 @@ The following arguments are supported in the `dsm_csrs` resource block:
 * _**l**_ : The security object CSR Location
 * _**c**_ : The security object CSR Country
 * _**st**_ :  The security object CSR State
-* _**email**_ : Email value for CSR
+* _**e**_ : The security object CSR Email
+* _**email**_ : Email value for CSR in Subject Alternative names
 * _**cn**_: The security object CSR Common Name
 * _**dnsnames**_: The security object CSR DNS Names
 * _**ips**_: The security object CSR IPs
