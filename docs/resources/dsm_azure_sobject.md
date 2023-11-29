@@ -43,7 +43,6 @@ The following arguments are supported in the `dsm_azure_sobject` resource block:
 * _**custom\_metadata (optional)**_:  Azure CMK level metadata information
   *	**azure-key-state** – Key state within Azure KV
   * **azure-key-name** - Key name within Azure KV
-  *	Check with Frank what other custom metadata key values are allowed for Azure sobject
   
 ## Attribute Reference
 
