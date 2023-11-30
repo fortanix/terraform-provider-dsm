@@ -21,6 +21,7 @@ resource "dsm_azure_sobject" "sobject" {
     } 
     custom_metadata = {
         azure_key_state = <azure_key_state> 
+        azure-key-name = <azure_key_name>
     }
 }
 ```
@@ -41,7 +42,7 @@ The following arguments are supported in the `dsm_azure_sobject` resource block:
 * _**expiry\_date (optional)**_: The security object expiry date in RFC format
 * _**custom\_metadata (optional)**_:  Azure CMK level metadata information
   *	**azure-key-state** – Key state within Azure KV
-  *	Check with Frank what other custom metadata key values are allowed for Azure sobject
+  * **azure-key-name** - Key name within Azure KV
   
 ## Attribute Reference
 
@@ -64,3 +65,4 @@ The following attributes are stored in the `dsm_azure_sobject` resource block:
 * **expiry\_date**: The security object expiry date in RFC format from Fortanix DSM
 * _**custom\_metadata (optional)**_:  Azure CMK level metadata information
   *	**azure-key-state** – Key state within Azure KV
+  * **azure-key-name** - Key name within Azure KV
