@@ -30,6 +30,12 @@ resource "dsm_sobject" "sobject" {
     value = <imported sobject content>
     hash_alg = <HashAlgorithm>
     subgroup_size = <subgroup_size_value>
+    rotation_policy = {
+      interval_days = <number of days>
+      effective_at = "<yyyymmddThhmmssZ>"
+      deactivate_rotated_key = <true/false>
+      rotate_copied_keys = "all_external"
+    }
 }
 ```
 
@@ -58,6 +64,24 @@ The following arguments are supported in the `dsm_sobject` resource block:
 * _**allowed\_missing\_justifications (optional)**_: The security object allows missing justifications even if not provided.
 * _**hash\_alg**_ = Hashing Algorithm for KCDSA and ECKCDSA
 * _**subgroup\_size**_ = Subgroup Size for DSA and ECKCDSA
+* _**rotation_policy(optional)**_ = Policy to rotate a Security Object, configure the below parameters.
+* * _**interval_days**_ = Rotate the key for every given number of days
+* * _**interval_weeks**_ = Rotate the key for every given number of weeks
+* * _**interval_months**_ = Rotate the key for every given number of months
+* * _**interval_years**_ = Rotate the key for every given number of years
+* * _**effective_at**_ = Start of the rotation policy time
+* * _**deactivate_rotated_key**_ = Deactivate original key after rotation (true/false)
+* * _**rotate_copied_keys**_ = Enable key rotation for copied keys
+
+## Note on rotational_policy
+
+Only one of the following attributes should be used while configuring the interval in rotational_policy
+  1. interval_days
+  2. interval_weeks
+  3. interval_months
+  4. interval_years
+
+
 
 ## Attribute Reference
 
@@ -90,3 +114,4 @@ The following attributes are stored in the `dsm_sobject` resource block:
 
 * _**hash\_alg**_ = Hashing Algorithm for KCDSA and ECKCDSA. The allowed Hashing Algorithms are `SHA1`,`SHA224`, `SHA256`, `SHA384`, `SHA521`.
 * _**subgroup\_size**_ = Subgroup Size for DSA and ECKCDSA. The allowed Subgroup Sizes are `224` and `256`
+* _**rotation\_policy**_ = Policy to rotate a security object
