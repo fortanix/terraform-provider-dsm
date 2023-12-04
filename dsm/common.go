@@ -15,6 +15,7 @@ import (
 	"encoding/json"
 	//"encoding/pem"
 	"fmt"
+	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -151,4 +152,45 @@ func substr(input string, start int, length int) string {
         }
 
         return string(asRunes[start : start+length])
+}
+
+// To write/update the security object rotation_policy
+func sobj_rotation_policy_write(rp map[string]interface{}) map[string]interface{} {
+        rotation_policy := make(map[string]interface{})
+        for k, v := range  rp{
+            /* while sending the request, interval_days should be assigned as an integer.
+               Hence it is converted to integer from the string.
+            */
+            if k == "interval_days" {
+                val, _ := strconv.Atoi(v.(string))
+                rotation_policy[k] = val
+            } else if k == "deactivate_rotated_key" {
+                /* while sending the request, deactivate_rotated_key should be assigned as a boolean..
+                   Hence it is converted to boolean from the string.
+                */
+                val, _ := strconv.ParseBool(v.(string))
+                rotation_policy[k] = val
+            } else {
+                rotation_policy[k] = v
+            }
+        }
+        return rotation_policy
+}
+
+// To read the security object rotation_policy
+func sobj_rotation_policy_read(rp map[string]interface{}) map[string]interface{}  {
+        rotation_policy := make(map[string]interface{})
+        for k, v := range  rp{
+            /* while reading the rotation_policy from terraform the interval_days attribute is assigned as float64 datatype.
+               Hence it will be converted to string from float object.
+            */
+            if k == "interval_days" {
+                rotation_policy[k] = strconv.FormatFloat(v.(float64), 'f', -1, 64)
+            } else if k == "deactivate_rotated_key" {
+                rotation_policy[k] = strconv.FormatBool(v.(bool))
+            } else {
+                rotation_policy[k] = v
+            }
+        }
+        return rotation_policy
 }

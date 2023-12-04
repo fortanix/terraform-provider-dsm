@@ -23,6 +23,11 @@ resource "dsm_azure_sobject" "sobject" {
         azure_key_state = <azure_key_state> 
         azure-key-name = <azure_key_name>
     }
+    rotation_policy = {
+      interval_days = <number of days>
+      effective_at = "<yyyymmddThhmmssZ>"
+      deactivate_rotated_key = <true/false>
+    }
 }
 ```
 
@@ -43,6 +48,21 @@ The following arguments are supported in the `dsm_azure_sobject` resource block:
 * _**custom\_metadata (optional)**_:  Azure CMK level metadata information
   *	**azure-key-state** – Key state within Azure KV
   * **azure-key-name** - Key name within Azure KV
+* _**rotation_policy(optional)**_ = Policy to rotate a Security Object, configure the below parameters.
+* * _**interval_days**_ = Rotate the key for every given number of days
+* * _**interval_weeks**_ = Rotate the key for every given number of weeks
+* * _**interval_months**_ = Rotate the key for every given number of months
+* * _**interval_years**_ = Rotate the key for every given number of years
+* * _**effective_at**_ = Start of the rotation policy time
+* * _**deactivate_rotated_key**_ = Deactivate original key after rotation (true/false)
+
+## Note on rotational_policy
+
+Only one of the following attributes should be used while configuring the interval in rotational_policy
+1. interval_days
+2. interval_weeks
+3. interval_months
+4. interval_years
   
 ## Attribute Reference
 
@@ -66,3 +86,4 @@ The following attributes are stored in the `dsm_azure_sobject` resource block:
 * _**custom\_metadata (optional)**_:  Azure CMK level metadata information
   *	**azure-key-state** – Key state within Azure KV
   * **azure-key-name** - Key name within Azure KV
+* _**rotation\_policy**_ = Policy to rotate a Security Object
