@@ -69,6 +69,13 @@ func resourceSobject() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"rotation_policy": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type:     schema.TypeString,
+				},
+			},
 			// Unable to define links
 			//"links": {
 			//	Type:     schema.TypeMap,
@@ -304,6 +311,9 @@ func createSO(ctx context.Context, d *schema.ResourceData, m interface{}) diag.D
 	}
 	if err := d.Get("custom_metadata").(map[string]interface{}); len(err) > 0 {
 		security_object["custom_metadata"] = err
+	}
+	if rotation_policy := d.Get("rotation_policy").(map[string]interface{}); len(rotation_policy) > 0 {
+		security_object["rotation_policy"] = sobj_rotation_policy_write(rotation_policy)
 	}
 	
 	if len(hash_alg) > 0 && obj_type == "KCDSA" {
@@ -556,6 +566,12 @@ func resourceReadSobject(ctx context.Context, d *schema.ResourceData, m interfac
 			}
 		}
 		}
+		if _, ok := req["rotation_policy"]; ok {
+			rotation_policy := sobj_rotation_policy_read(req["rotation_policy"].(map[string]interface{}))
+			if err := d.Set("rotation_policy", rotation_policy); err != nil {
+				return diag.FromErr(err)
+			}
+		}
 
 		// FYOO: clear values that are irrelevant
 		d.Set("rotate", "")
@@ -617,6 +633,11 @@ func resourceUpdateSobject(ctx context.Context, d *schema.ResourceData, m interf
 	}
 	if d.HasChange("custom_metadata") {
 		security_object["custom_metadata"] = d.Get("custom_metadata").(map[string]interface{})
+		has_changed = true
+	}
+	if d.HasChange("rotation_policy") {
+		rotation_policy := d.Get("rotation_policy").(map[string]interface{})
+		security_object["rotation_policy"] = sobj_rotation_policy_write(rotation_policy)
 		has_changed = true
 	}
 	if d.HasChange("hash_alg") {

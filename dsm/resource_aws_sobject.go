@@ -90,6 +90,13 @@ func resourceAWSSobject() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"rotation_policy": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type:     schema.TypeString,
+				},
+			},
 			"custom_metadata": {
 				Type:     schema.TypeMap,
 				Optional: true,
@@ -202,6 +209,9 @@ func resourceCreateAWSSobject(ctx context.Context, d *schema.ResourceData, m int
 
 	if err := d.Get("custom_metadata").(map[string]interface{}); len(err) > 0 {
 		security_object["custom_metadata"] = d.Get("custom_metadata")
+	}
+	if rotation_policy := d.Get("rotation_policy").(map[string]interface{}); len(rotation_policy) > 0 {
+		security_object["rotation_policy"] = sobj_rotation_policy_write(rotation_policy)
 	}
 
 	// FYOO: Get tags
@@ -353,6 +363,12 @@ func resourceReadAWSSobject(ctx context.Context, d *schema.ResourceData, m inter
 			}
 			if newerr = d.Set("expiry_date", ddate.Format(layoutRFC)); newerr != nil {
 				return diag.FromErr(newerr)
+			}
+		}
+		if _, ok := req["rotation_policy"]; ok {
+			rotation_policy := sobj_rotation_policy_read(req["rotation_policy"].(map[string]interface{}))
+			if err := d.Set("rotation_policy", rotation_policy); err != nil {
+				return diag.FromErr(err)
 			}
 		}
 		// FYOO: clear values that are irrelevant
