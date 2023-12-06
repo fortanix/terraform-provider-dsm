@@ -74,8 +74,8 @@ The following arguments are supported in the `dsm_sobject` resource block:
 ## Note on rotational_policy
 
 Only one of the following attributes should be used while configuring the interval in rotational_policy
-1. interval_days
-2. interval_months
+  1. interval_days
+  2. interval_months
 
 ## Attribute Reference
 
