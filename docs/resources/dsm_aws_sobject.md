@@ -56,19 +56,14 @@ The following arguments are supported in the `dsm_aws_sobject` resource block:
   *	**aws-policy** - JSON format of AWS policy that should be enforced for the key.
 * * _**rotation_policy(optional)**_ = Policy to rotate a Security Object, configure the below parameters.
 * * _**interval_days**_ = Rotate the key for every given number of days
-* * _**interval_weeks**_ = Rotate the key for every given number of weeks
 * * _**interval_months**_ = Rotate the key for every given number of months
-* * _**interval_years**_ = Rotate the key for every given number of years
 * * _**effective_at**_ = Start of the rotation policy time
 
 ## Note on rotational_policy
 
 Only one of the following attributes should be used while configuring the interval in rotational_policy
 1. interval_days
-2. interval_weeks
-3. interval_months
-4. interval_years
-
+2. interval_months
 
 ## Attribute Reference
 
