@@ -77,8 +77,6 @@ Only one of the following attributes should be used while configuring the interv
   1. interval_days
   2. interval_months
 
-
-
 ## Attribute Reference
 
 The following attributes are stored in the `dsm_sobject` resource block:
