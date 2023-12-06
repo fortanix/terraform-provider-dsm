@@ -161,7 +161,7 @@ func sobj_rotation_policy_write(rp map[string]interface{}) map[string]interface{
             /* while sending the request, interval_days should be assigned as an integer.
                Hence it is converted to integer from the string.
             */
-            if k == "interval_days" {
+            if k == "interval_days" || k == "interval_months" {
                 val, _ := strconv.Atoi(v.(string))
                 rotation_policy[k] = val
             } else if k == "deactivate_rotated_key" {
@@ -184,7 +184,7 @@ func sobj_rotation_policy_read(rp map[string]interface{}) map[string]interface{}
             /* while reading the rotation_policy from terraform the interval_days attribute is assigned as float64 datatype.
                Hence it will be converted to string from float object.
             */
-            if k == "interval_days" {
+            if k == "interval_days" || k == "interval_months" {
                 rotation_policy[k] = strconv.FormatFloat(v.(float64), 'f', -1, 64)
             } else if k == "deactivate_rotated_key" {
                 rotation_policy[k] = strconv.FormatBool(v.(bool))
