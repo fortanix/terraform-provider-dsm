@@ -97,6 +97,21 @@ type AzureSobject struct {
 	Links DSMSobjectLinks
 }
 
+// [-] Structs to define DSM GCP Security Object
+type GCPSobject struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Key_size    int
+	Acct_id     string
+	Group_id    string
+	Creator     DSMCreator
+	Kid         string
+	Obj_type    string
+	Enabled     bool
+	State       string
+	Links       DSMSobjectLinks
+}
+
 // [-] Structs to define DSM definition
 type DSMCreator struct {
 	User string
