@@ -49,6 +49,10 @@ func resourceGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"hmg_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -100,14 +104,22 @@ func resourceCreateGroup(ctx context.Context, d *schema.ResourceData, m interfac
 		})
 		return diags
 	}
-
 	if debug_output {
 		resp_json, _ := json.Marshal(resp)
 		tflog.Warn(ctx, fmt.Sprintf("[U]: API response for group create operation: %s", resp_json))
 	}
-
 	d.SetId(resp["group_id"].(string))
 	d.Set("group_id", resp["group_id"].(string))
+	// set the hmg_id to update the cdc/byok attributes
+	if _, ok := resp["hmg"]; ok {
+		if hmg := resp["hmg"].(map[string]interface{}); len(hmg) > 0 {
+			for k := range hmg {
+				if err := d.Set("hmg_id", k); err != nil {
+					return diag.FromErr(err)
+				}
+			}
+		}
+	}
 	return diags
 }
 
@@ -122,21 +134,18 @@ func resourceUpdateGroup(ctx context.Context, d *schema.ResourceData, m interfac
 		if debug_output {
 			tflog.Warn(ctx, "Group object has changed, calling API")
 		}
-
 		if hmg, ok := d.GetOk("hmg"); ok {
 			hmg_id := substr(hmg.(string), 4, 36)
 			if debug_output {
 				tflog.Warn(ctx, fmt.Sprintf("HMG id: %s", hmg_id))
 			}
-			hmg_object[hmg_id] = json.RawMessage(hmg.(string))
+			hmg_object[d.Get("hmg_id").(string)] = json.RawMessage(hmg.(string))
 			hmg_present = true
 		}
-
 		group_object := make(map[string]interface{})
 		group_id := d.Get("group_id").(string)
 		operation := "PATCH"
 		url := fmt.Sprintf("sys/v1/groups/%s", group_id)
-
 		if isSetApprovalPolicy(d, m) {
 			if debug_output {
 				tflog.Warn(ctx, "[U]: Approval policy is present.")
@@ -144,7 +153,6 @@ func resourceUpdateGroup(ctx context.Context, d *schema.ResourceData, m interfac
 			body_object := make(map[string]interface{})
 			group_object["method"] = "PATCH"
 			group_object["operation"] = url
-
 			if approval_policy, ok := d.GetOk("approval_policy"); ok {
 				if approval_policy == nil {
 					body_object["approval_policy"] = make(map[string]interface{})
@@ -152,13 +160,11 @@ func resourceUpdateGroup(ctx context.Context, d *schema.ResourceData, m interfac
 					body_object["approval_policy"] = json.RawMessage(approval_policy.(string))
 				}
 			}
-
 			if description, ok := d.GetOk("description"); ok {
 				if description != "" {
 					body_object["description"] = description
 				}
 			}
-
 			if name, ok := d.GetOk("name"); ok {
 				if name != "" {
 					body_object["name"] = name
@@ -220,7 +226,6 @@ func resourceUpdateGroup(ctx context.Context, d *schema.ResourceData, m interfac
 			jj, _ := json.Marshal(group_object)
 			tflog.Warn(ctx, fmt.Sprintf("Update Group Object: %s", jj))
 		}
-
 		resp, err := m.(*api_client).APICallBody(operation, url, group_object)
 		if err != nil {
 			diags = append(diags, diag.Diagnostic{
@@ -256,7 +261,6 @@ func resourceReadGroup(ctx context.Context, d *schema.ResourceData, m interface{
 			})
 			return diags
 		}
-
 		if err := d.Set("name", req["name"].(string)); err != nil {
 			return diag.FromErr(err)
 		}
@@ -274,7 +278,6 @@ func resourceReadGroup(ctx context.Context, d *schema.ResourceData, m interface{
 				return diag.FromErr(err)
 			}
 		}
-
 	}
 	return diags
 }
