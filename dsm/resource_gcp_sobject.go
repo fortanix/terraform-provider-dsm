@@ -107,10 +107,12 @@ func resourceGCPSobject() *schema.Resource {
 			"enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Default: true,
 			},
 			"state": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Default: "Active",
 			},
 			"expiry_date": {
 				Type:     schema.TypeString,
@@ -141,7 +143,12 @@ func resourceCreateGCPSobject(ctx context.Context, d *schema.ResourceData, m int
 		}
 		security_object["deactivation_date"] = ddate.Format(layoutDSM)
 	}
-
+	if enabled, ok := d.Get("enabled").(bool); ok {
+		security_object["enabled"] = enabled
+	}
+	if err := d.Get("key_ops").([]interface{}); len(err) > 0 {
+		security_object["key_ops"] = d.Get("key_ops")
+	}
 	if err := d.Get("custom_metadata").(map[string]interface{}); len(err) > 0 {
 		security_object["custom_metadata"] = d.Get("custom_metadata")
 	}
@@ -256,24 +263,53 @@ func resourceReadGCPSobject(ctx context.Context, d *schema.ResourceData, m inter
 // [U]: Update GCP Security Object
 func resourceUpdateGCPSobject(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	update_gcp_key := make(map[string]interface{})
+
+	if d.HasChange("name") {
+		update_gcp_key["name"] = d.Get("name").(string)
+	}
+	if d.HasChange("description") {
+		update_gcp_key["description"] = d.Get("description").(string)
+	}
+	if d.HasChange("enabled") {
+		update_gcp_key["enabled"] = d.Get("enabled").(bool)
+	}
+	if d.HasChange("key_ops") {
+		update_gcp_key["key_ops"] = d.Get("key_ops")
+	}
 	if d.HasChange("rotation_policy") {
 		if err := d.Get("rotation_policy").(map[string]interface{}); len(err) > 0 {
-			update_gcp_rotation_policy := map[string]interface{}{
-				"kid": d.Id(),
-			}
-			rotation_policy := d.Get("rotation_policy").(map[string]interface{})
-			update_gcp_rotation_policy["rotation_policy"] = sobj_rotation_policy_write(rotation_policy)
-			_, err := m.(*api_client).APICallBody("PATCH", fmt.Sprintf("crypto/v1/keys/%s", d.Id()), update_gcp_rotation_policy)
-			if err != nil {
-				diags = append(diags, diag.Diagnostic{
-					Severity: diag.Error,
-					Summary:  "[DSM SDK] Unable to call DSM provider API client",
-					Detail:   fmt.Sprintf("[E]: API: PATCH crypto/v1/keys: %v", err),
-				})
-				return diags
-			}
+			update_gcp_key["rotation_policy"] = sobj_rotation_policy_write(d.Get("rotation_policy").(map[string]interface{}))
 		}
 	}
+	if d.HasChange("expiry_date") {
+		if rfcdate := d.Get("expiry_date").(string); len(rfcdate) > 0 {
+			layoutRFC := "2006-01-02T15:04:05Z"
+			layoutDSM := "20060102T150405Z"
+			ddate, newerr := time.Parse(layoutRFC, rfcdate)
+			if newerr != nil {
+				return diag.FromErr(newerr)
+			}
+			update_gcp_key["deactivation_date"] = ddate.Format(layoutDSM)
+		}
+	}
+	if d.HasChange("custom_metadata") {
+		if err := d.Get("custom_metadata").(map[string]interface{}); len(err) > 0 {
+			update_gcp_key["custom_metadata"] = d.Get("custom_metadata")
+		}
+	}
+	if len(update_gcp_key) > 0 {
+		_, err := m.(*api_client).APICallBody("PATCH", fmt.Sprintf("crypto/v1/keys/%s", d.Id()), update_gcp_key)
+		if err != nil {
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "[DSM SDK] Unable to call DSM provider API client",
+				Detail:   fmt.Sprintf("[E]: API: PATCH crypto/v1/keys: %v", err),
+			})
+			return diags
+		}
+	}
+
 	return resourceReadGCPSobject(ctx, d, m)
 }
 
