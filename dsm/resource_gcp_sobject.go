@@ -282,6 +282,22 @@ func resourceUpdateGCPSobject(ctx context.Context, d *schema.ResourceData, m int
 			update_gcp_key["rotation_policy"] = sobj_rotation_policy_write(d.Get("rotation_policy").(map[string]interface{}))
 		}
 	}
+	if d.HasChange("expiry_date") {
+		if rfcdate := d.Get("expiry_date").(string); len(rfcdate) > 0 {
+			layoutRFC := "2006-01-02T15:04:05Z"
+			layoutDSM := "20060102T150405Z"
+			ddate, newerr := time.Parse(layoutRFC, rfcdate)
+			if newerr != nil {
+				return diag.FromErr(newerr)
+			}
+			update_gcp_key["deactivation_date"] = ddate.Format(layoutDSM)
+		}
+	}
+	if d.HasChange("custom_metadata") {
+		if err := d.Get("custom_metadata").(map[string]interface{}); len(err) > 0 {
+			update_gcp_key["custom_metadata"] = d.Get("custom_metadata")
+		}
+	}
 	if len(update_gcp_key) > 0 {
 		_, err := m.(*api_client).APICallBody("PATCH", fmt.Sprintf("crypto/v1/keys/%s", d.Id()), update_gcp_key)
 		if err != nil {
