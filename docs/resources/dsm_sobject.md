@@ -17,9 +17,6 @@ resource "dsm_sobject" "sobject" {
     expiry_date     = <expiry_date_RFC_format>
     fpe_radix       = <fpe_radix>
     description     = <sobject_description>
-    key             = {        
-    kid             = <local_sobject_id>     
-    }     
     custom_metadata = {        
                     <key> = <value>    
     }
