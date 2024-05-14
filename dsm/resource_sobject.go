@@ -123,6 +123,10 @@ func resourceSobject() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
+			"fpe": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"key_ops": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -304,6 +308,16 @@ func createSO(ctx context.Context, d *schema.ResourceData, m interface{}) diag.D
 		}
 	}
 
+	if d.Get("fpe").(string) != "" && d.Get("fpe_radix").(int) != 0 {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "only one of these two can be given in the terraform configuration: fpe, fpe_radix",
+		})
+		return diags
+	}
+	if fpe_policy := d.Get("fpe").(string); len(fpe_policy) > 0 {
+		security_object["fpe"] = json.RawMessage(d.Get("fpe").(string))
+	}
 	if err := d.Get("fpe_radix"); err != 0 {
 		security_object["fpe"] = map[string]interface{}{
 			"radix": d.Get("fpe_radix").(int),
@@ -475,8 +489,14 @@ func resourceReadSobject(ctx context.Context, d *schema.ResourceData, m interfac
 			return diag.FromErr(err)
 		}
 		if err := req["fpe"]; err != nil {
-			if err := d.Set("fpe_radix", int(req["fpe"].(map[string]interface{})["radix"].(float64))); err != nil {
-				return diag.FromErr(err)
+			if req["fpe"].(map[string]interface{})["radix"] != nil && d.Get("fpe_radix") != nil {
+				if err := d.Set("fpe_radix", int(req["fpe"].(map[string]interface{})["radix"].(float64))); err != nil {
+					return diag.FromErr(err)
+				}
+			} else {
+				if err := d.Set("fpe", req["fpe"].(string)); err != nil {
+					return diag.FromErr(err)
+				}
 			}
 		}
 		// FYOO: Fix TypeList sorting error
@@ -639,6 +659,16 @@ func resourceUpdateSobject(ctx context.Context, d *schema.ResourceData, m interf
 		rotation_policy := d.Get("rotation_policy").(map[string]interface{})
 		security_object["rotation_policy"] = sobj_rotation_policy_write(rotation_policy)
 		has_changed = true
+	}
+	if d.HasChange("fpe") {
+		old_fpe, new_fpe := d.GetChange("fpe")
+		d.Set("fpe", old_fpe)
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "fpe cannot modify on update",
+			Detail:   fmt.Sprintf("[E]: API: PATCH crypto/v1/keys: fpe cannot change on update. Please retain it to old value: %s -> %s", old_fpe, new_fpe),
+		})
+		return diags
 	}
 	if d.HasChange("hash_alg") {
 		old_ha, new_ha := d.GetChange("hash_alg")
