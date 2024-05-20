@@ -77,7 +77,7 @@ This is a sample variable that specifies fpeOptions to create a Tokenization obj
     description = "The policy document. This is a JSON formatted string."
     default = <<-EOF
           { 
-    "description": "Credit card",
+            "description": "Credit card",
             "format": {
               "char_set": [
                 [
@@ -97,6 +97,8 @@ This is a sample variable that specifies fpeOptions to create a Tokenization obj
 
 This is how we can reference this fpeOptions:
   fpe = var.fpeOptionsExample
+
+Refer to the "fpeOptions" schema in https://www.fortanix.com/fortanix-restful-api-references/dsm for a better understanding of the fpe body.
 ```
 
 ## Note on rotational_policy
