@@ -327,7 +327,7 @@ func isSetApprovalPolicy(d *schema.ResourceData, m interface{}) bool {
 func set_key_undo_policy(d *schema.ResourceData, obj map[string]interface{}) {
     if key_undo_policy_window_time, ok := d.GetOk("key_undo_policy_window_time"); ok {
         key_history_policy := make(map[string]interface{})
-        key_history_policy["undo_time_window"] = key_undo_policy_window_time.(int) * 24 * 60 * 60
+        key_history_policy["undo_time_window"] = key_undo_policy_window_time.(int)
         obj["key_history_policy"] = key_history_policy
     }
 }
