@@ -24,7 +24,7 @@ The following arguments are supported in the `dsm_group` resource block:
 * _**description (optional)**_: The Fortanix DSM group object description
 * _**approval_policy (optional)**_: The Fortanix DSM group object quorum approval policy definition as a JSON string
 * _**hmg (optional)**_: The Fortanix DSM group object HMS/KMS definition as a JSON string
-* _**key_undo_policy_window_time(optional)**_: The Fortanix DSM group object key undo policy window time as an Integer(Number of days).
+* _**key_undo_policy_window_time(optional)**_: The Fortanix DSM group object key undo policy window time as an Integer(Number of seconds).
 
 ## Attribute Reference
 
@@ -40,4 +40,4 @@ The following attributes are stored in the `dsm_group` resource block:
 * **description**: The Fortanix DSM group object description
 * **approval_policy**: The Fortanix DSM group object quorum approval policy definition as a JSON string
 * **hmg**: The Fortanix DSM group object HMS/KMS definition as a JSON string
-* _**key_undo_policy_window_time**_: The Fortanix DSM group object key undo policy window time as an Integer(Number of days).
+* _**key_undo_policy_window_time**_: The Fortanix DSM group object key undo policy window time as an Integer(Number of seconds).
