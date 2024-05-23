@@ -53,6 +53,10 @@ func resourceGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"key_undo_policy_window_time": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
 		},
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -94,6 +98,7 @@ func resourceCreateGroup(ctx context.Context, d *schema.ResourceData, m interfac
 		jj, _ := json.Marshal(group_object)
 		tflog.Warn(ctx, fmt.Sprintf("Create Group Object: %s", jj))
 	}
+	set_key_undo_policy(d, group_object)
 
 	resp, err := m.(*api_client).APICallBody("POST", "sys/v1/groups", group_object)
 	if err != nil {
@@ -110,16 +115,7 @@ func resourceCreateGroup(ctx context.Context, d *schema.ResourceData, m interfac
 	}
 	d.SetId(resp["group_id"].(string))
 	d.Set("group_id", resp["group_id"].(string))
-	// set the hmg_id to update the cdc/byok attributes
-	if _, ok := resp["hmg"]; ok {
-		if hmg := resp["hmg"].(map[string]interface{}); len(hmg) > 0 {
-			for k := range hmg {
-				if err := d.Set("hmg_id", k); err != nil {
-					return diag.FromErr(err)
-				}
-			}
-		}
-	}
+	set_hmg_id(d, resp)
 	return diags
 }
 
@@ -130,7 +126,8 @@ func resourceUpdateGroup(ctx context.Context, d *schema.ResourceData, m interfac
 	hmg_object := make(map[string]interface{})
 	hmg_present := false
 
-	if d.HasChange("description") || d.HasChange("name") || d.HasChange("approval_policy") || d.HasChange("hmg") {
+	if d.HasChange("description") || d.HasChange("name") || d.HasChange("approval_policy") || d.HasChange("hmg") ||
+	                                d.HasChange("key_undo_policy_window_time") {
 		if debug_output {
 			tflog.Warn(ctx, "Group object has changed, calling API")
 		}
@@ -138,6 +135,9 @@ func resourceUpdateGroup(ctx context.Context, d *schema.ResourceData, m interfac
 			hmg_id := substr(hmg.(string), 4, 36)
 			if debug_output {
 				tflog.Warn(ctx, fmt.Sprintf("HMG id: %s", hmg_id))
+			}
+			if d.Get("hmg_id") == nil {
+			    resourceReadGroup(ctx, d, m)
 			}
 			hmg_object[d.Get("hmg_id").(string)] = json.RawMessage(hmg.(string))
 			hmg_present = true
@@ -165,6 +165,7 @@ func resourceUpdateGroup(ctx context.Context, d *schema.ResourceData, m interfac
 					body_object["description"] = description
 				}
 			}
+			set_key_undo_policy(d, group_object)
 			if name, ok := d.GetOk("name"); ok {
 				if name != "" {
 					body_object["name"] = name
@@ -197,7 +198,7 @@ func resourceUpdateGroup(ctx context.Context, d *schema.ResourceData, m interfac
 					group_object["approval_policy"] = json.RawMessage(approval_policy.(string))
 				}
 			}
-
+			set_key_undo_policy(d, group_object)
 			if description, ok := d.GetOk("description"); ok {
 				if description != "" {
 					group_object["description"] = description
@@ -278,6 +279,7 @@ func resourceReadGroup(ctx context.Context, d *schema.ResourceData, m interface{
 				return diag.FromErr(err)
 			}
 		}
+		set_hmg_id(d, req)
 	}
 	return diags
 }
@@ -320,4 +322,26 @@ func isSetApprovalPolicy(d *schema.ResourceData, m interface{}) bool {
 		}
 	}
 	return false
+}
+// handle the key undo policy for both create and update
+func set_key_undo_policy(d *schema.ResourceData, obj map[string]interface{}) {
+    if key_undo_policy_window_time, ok := d.GetOk("key_undo_policy_window_time"); ok {
+        key_history_policy := make(map[string]interface{})
+        key_history_policy["undo_time_window"] = key_undo_policy_window_time.(int)
+        obj["key_history_policy"] = key_history_policy
+    }
+}
+
+func set_hmg_id(d *schema.ResourceData, resp map[string]interface{}) diag.Diagnostics {
+    // set the hmg_id to update the cdc/byok attributes
+    if _, ok := resp["hmg"]; ok {
+        if hmg := resp["hmg"].(map[string]interface{}); len(hmg) > 0 {
+            for k := range hmg {
+                if err := d.Set("hmg_id", k); err != nil {
+                    return diag.FromErr(err)
+                }
+            }
+        }
+    }
+    return nil
 }
