@@ -101,6 +101,12 @@ This is how we can reference this fpeOptions:
 Refer to the "fpeOptions" schema in https://www.fortanix.com/fortanix-restful-api-references/dsm for a better understanding of the fpe body.
 ```
 
+## Note on FPE Options
+
+- Until **v0.5.29**, support was only provided for `radix` in `fpeOptions`, and users could specify `radix` in the `fpe_radix` object. 
+- **`fpe`**: New users are encouraged to use the `fpe` object to define all FPE options.
+- **`fpe_radix`**: Existing users who previously configured `fpe_radix` can continue to use it without changing their configuration.
+
 ## Note on rotational_policy
 
 Only one of the following attributes should be used while configuring the interval in rotational_policy

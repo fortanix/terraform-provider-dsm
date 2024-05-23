@@ -308,10 +308,13 @@ func createSO(ctx context.Context, d *schema.ResourceData, m interface{}) diag.D
 		}
 	}
 
+	// Ensuring that only one of these options (`fpe`, `fpe_radix`) is specified in the Terraform configuration to maintain backward compatibility.
+	// This prevents issues for existing users of fpe_radix.
+	// This logic was added in v0.5.30 to support the transition from `fpe_radix` to `fpe` for new users while maintaining support for existing configurations.
 	if d.Get("fpe").(string) != "" && d.Get("fpe_radix").(int) != 0 {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "only one of these two can be given in the terraform configuration: fpe, fpe_radix",
+			Summary:  "only one of these two can be given in the Terraform configuration: fpe, fpe_radix. This check ensures backward compatibility for users previously using 'fpe_radix'. New users are encouraged to use the 'fpe' object.",
 		})
 		return diags
 	}
