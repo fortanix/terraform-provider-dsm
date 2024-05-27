@@ -1,4 +1,8 @@
 ChangeLog:
+0.5.30:
+ - Fixed byok credentials update for byok groups
+ - Support fpe for security objects
+ - Support key undo policy for groups
 0.5.10:
  - Moved AWS rotation to rekey endpoint
 0.5.7:
