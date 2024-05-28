@@ -16,6 +16,7 @@ resource "dsm_sobject" "sobject" {
     enabled         = <true/false>
     expiry_date     = <expiry_date_RFC_format>
     fpe_radix       = <fpe_radix>
+    fpe             = <fpeOptions>
     description     = <sobject_description>
     custom_metadata = {        
                     <key> = <value>    
@@ -67,6 +68,44 @@ The following arguments are supported in the `dsm_sobject` resource block:
 * * _**effective_at**_ = Start of the rotation policy time
 * * _**deactivate_rotated_key**_ = Deactivate original key after rotation (true/false)
 * * _**rotate_copied_keys**_ = Enable key rotation for copied keys
+* _**fpe (optional)**_: FPE specific options. It should be given in string format like below:
+```
+This is a sample variable that specifies fpeOptions to create a Tokenization object that can tokenize credit card format data:
+
+  variable "fpeOptionsExample" {
+    type = any
+    description = "The policy document. This is a JSON formatted string."
+    default = <<-EOF
+          { 
+            "description": "Credit card",
+            "format": {
+              "char_set": [
+                [
+                  "0",
+                  "9"
+                ]
+              ],
+              "min_length": 13,
+              "max_length": 19,
+              "constraints": {
+                "luhn_check": true
+              }
+          }
+        }
+        EOF
+}
+
+This is how we can reference this fpeOptions:
+  fpe = var.fpeOptionsExample
+
+Refer to the "fpeOptions" schema in https://www.fortanix.com/fortanix-restful-api-references/dsm for a better understanding of the fpe body.
+```
+
+## Note on FPE Options
+
+- Until **v0.5.29**, support was only provided for `radix` in `fpeOptions`, and users could specify `radix` in the `fpe_radix` object. 
+- **`fpe`**: New users are encouraged to use the `fpe` object to define all FPE options.
+- **`fpe_radix`**: Existing users who previously configured `fpe_radix` can continue to use it without changing their configuration.
 
 ## Note on rotational_policy
 
@@ -99,6 +138,7 @@ The following attributes are stored in the `dsm_sobject` resource block:
 * **expiry\_date**: The security object expiry date in RFC format.
 * **custom\_metadata**: The user defined security object attributes added to the key’s metadata from Fortanix DSM.
 * **fpe\_radix**:   integer, The base for input data. The radix should be a number from 2 to 36, inclusive. Each radix corresponds to a subset of ASCII alphanumeric characters (with all letters being uppercase). For instance, a radix of 10 corresponds to a character set consisting of the digits from 0 to 9, while a character set of 16 corresponds to a character set consisting of all hexadecimal digits (with letters A-F being uppercase).
+* _**fpe (optional)**_: FPE specific options.
 * **elliptic\_curve**: Standardized elliptic curve.
 * _**allowed\_key\_justifications\_policy (optional)**_: The security object key justification policies for GCP External Key Manager. The allowed permissions are:  `CUSTOMER_INITIATED_SUPPORT` , `CUSTOMER_INITIATED_ACCESS`, `GOOGLE_INITIATED_SERVICE`, `GOOGLE_INITIATED_REVIEW`, `GOOGLE_INITIATED_SYSTEM_OPERATION`,  `THIRD_PARTY_DATA_REQUEST`,`REASON_NOT_EXPECTED`, `REASON_UNSPECIFIED`, `MODIFIED_CUSTOMER_INITIATED_ACCESS`, `MODIFIED_GOOGLE_INITIATED_SYSTEM_OPERATION`, `GOOGLE_RESPONSE_TO_PRODUCTION_ALERT`.
 * _**allowed\_missing\_justifications (optional)**_: Boolean value which allows missing justifications even if not provided to the security object. The values are `True` / `False`.
