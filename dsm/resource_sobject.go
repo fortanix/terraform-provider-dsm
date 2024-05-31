@@ -497,7 +497,11 @@ func resourceReadSobject(ctx context.Context, d *schema.ResourceData, m interfac
 					return diag.FromErr(err)
 				}
 			} else {
-				if err := d.Set("fpe", req["fpe"].(string)); err != nil {
+				fpe_bytes, ok := json.Marshal(req["fpe"].(map[string]interface{}))
+				if ok != nil {
+					return diag.FromErr(ok)
+				}
+				if err := d.Set("fpe", string(fpe_bytes)); err != nil {
 					return diag.FromErr(err)
 				}
 			}
