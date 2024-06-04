@@ -159,13 +159,20 @@ func resourceUpdateGroup(ctx context.Context, d *schema.ResourceData, m interfac
 				} else {
 					body_object["approval_policy"] = json.RawMessage(approval_policy.(string))
 				}
+			} else {
+				// Handle delete quorum policy.
+				// when approval_policy is removed from terraform body, the above 'if' condition fails.
+				// Hence user, will not be able to remove the quorum policy.
+				if (d.HasChange("approval_policy")) {
+					body_object["approval_policy"] = make(map[string]interface{})
+				}
 			}
 			if description, ok := d.GetOk("description"); ok {
 				if description != "" {
 					body_object["description"] = description
 				}
 			}
-			set_key_undo_policy(d, group_object)
+			set_key_undo_policy(d, body_object)
 			if name, ok := d.GetOk("name"); ok {
 				if name != "" {
 					body_object["name"] = name
@@ -178,7 +185,6 @@ func resourceUpdateGroup(ctx context.Context, d *schema.ResourceData, m interfac
 					return diags
 				}
 			}
-
 			if hmg_present {
 				body_object["mod_hmg"] = hmg_object
 			}
@@ -329,7 +335,13 @@ func set_key_undo_policy(d *schema.ResourceData, obj map[string]interface{}) {
         key_history_policy := make(map[string]interface{})
         key_history_policy["undo_time_window"] = key_undo_policy_window_time.(int)
         obj["key_history_policy"] = key_history_policy
-    }
+    } else if (!d.IsNewResource()) {
+		// Handle when undo policy is removed from terraform
+		// The below condition checks whether undo policy is defined or not.
+		if (d.HasChange("key_undo_policy_window_time")) {
+			obj["key_history_policy"] = "remove"
+		}
+	}
 }
 
 func set_hmg_id(d *schema.ResourceData, resp map[string]interface{}) diag.Diagnostics {
