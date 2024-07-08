@@ -19,32 +19,24 @@ import (
 func dataSourceSecret() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceSecretRead,
-		Description: "Returns the Fortanix DSM secret object from the cluster as a Data Source.",
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Description: "The secret security object name in Fortanix DSM",
 				Type:     schema.TypeString,
 				Required: true,
 			},
 			"kid": {
-				Description: "The unique ID of the secret from Fortanix DSM",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"pub_key": {
-				Description: "Public key from DSM (If applicable)",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"acct_id": {
-				Description: "The account ID from Fortanix DSM",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"creator": {
-				Description: "The creator of the security object from Fortanix DSM.\n" +
-				"   * `user`: If the security object was created by a user, the computed value will be the matching user id.\n" +
-				"   * `app`: If the security object was created by a app, the computed value will be the matching app id.",
 				Type:     schema.TypeMap,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -52,18 +44,15 @@ func dataSourceSecret() *schema.Resource {
 				},
 			},
 			"description": {
-				Description: "The Fortanix DSM security object description",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"export": {
-				Description: "Exports the secret based on the value shown. The value is either True/False",
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
 			"value": {
-				Description: "The (sensitive) value of the secret shown if exported in base64 format",
 				Type:      schema.TypeString,
 				Computed:  true,
 				Sensitive: true,
