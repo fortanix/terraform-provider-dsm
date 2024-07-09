@@ -17,12 +17,12 @@ func dataSourceUser() *schema.Resource {
 			"user_id": {
 				Description: "Unique ID to identify the user",
 				Type:     schema.TypeString,
-				Computed: true, 
+				Computed: true,
 			},
 			"user_email": {
 				Description: "Email ID of the user",
 				Type:     schema.TypeString,
-				Computed: true,
+				Required: true,
 			},
 		},
 	}
