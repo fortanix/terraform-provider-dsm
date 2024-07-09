@@ -24,32 +24,37 @@ func resourceSecret() *schema.Resource {
 		ReadContext:   resourceReadSecret,
 		UpdateContext: resourceUpdateSecret,
 		DeleteContext: resourceDeleteSecret,
+		Description: "Returns the Fortanix DSM secret security object from the cluster as a Resource.",
 		Schema: map[string]*schema.Schema{
 			"name": {
+			    Description: "The Fortanix DSM secret security object name",
 				Type:     schema.TypeString,
 				Required: true,
 			},
 			"group_id": {
+			    Description: "The Fortanix DSM security object group assignment",
 				Type:     schema.TypeString,
 				Required: true,
 			},
 			"obj_type": {
+			    Description: "The security object key type from Fortanix DSM.",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"kid": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"pub_key": {
+				Description: "Security object ID from Fortanix DSM",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"acct_id": {
+			    Description: "Account ID from Fortanix DSM",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"creator": {
+				Description: "The creator of the security object from Fortanix DSM.\n" +
+				"   * `user`: If the security object was created by a user, the computed value will be the matching user id.\n" +
+				"   * `app`: If the security object was created by a app, the computed value will be the matching app id.",
 				Type:     schema.TypeMap,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -57,6 +62,7 @@ func resourceSecret() *schema.Resource {
 				},
 			},
 			"custom_metadata": {
+			    Description: "The user defined security object attributes added to the key’s metadata",
 				Type:     schema.TypeMap,
 				Optional: true,
 				Elem: &schema.Schema{
@@ -64,6 +70,8 @@ func resourceSecret() *schema.Resource {
 				},
 			},
 			"key_ops": {
+				Description: "The security object key permission from Fortanix DSM\n" +
+				"   * Default is to allow all permissions except EXPORT",
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -71,36 +79,45 @@ func resourceSecret() *schema.Resource {
 				},
 			},
 			"description": {
+			    Description: "The Fortanix DSM security object description",
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "",
 			},
 			"enabled": {
+			    Description: "Whether the security object is Enabled or Disabled. The values are `True/False`",
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
 			"value": {
+			    Description: "The secret value in base64 format",
 				Type:      schema.TypeString,
 				Optional:  true,
 				Sensitive: true,
 			},
 			"state": {
+				Description: "The state of the secret security object.\n" +
+				"   * Allowed states are: None, PreActive, Active, Deactivated, Compromised, Destroyed, Deleted",
 				Type:     schema.TypeString,
 				Optional: true,
 			},
 			"expiry_date": {
+			    Description: " The security object expiry date in RFC format",
 				Type:     schema.TypeString,
 				Optional: true,
 			},
 			"rotate": {
+			    Description: "boolean value true/false to enable/disable rotation",
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
 			"rotate_from": {
+			    Description: "Name of the security object to be rotated from",
 				Type:     schema.TypeString,
 				Optional: true,
 			},
 			"copied_to": {
+			    Description: "List of security objects copied by the current security object.",
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -108,14 +125,17 @@ func resourceSecret() *schema.Resource {
 				},
 			},
 			"copied_from": {
+			    Description: "Security object that is copied to the current security object.",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"replacement": {
+			    Description: "Replacement of a security object",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"replaced": {
+			    Description: "Replaced by a security object",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -215,11 +235,6 @@ func resourceReadSecret(ctx context.Context, d *schema.ResourceData, m interface
 		}
 		if err := d.Set("kid", res["kid"].(string)); err != nil {
 			return diag.FromErr(err)
-		}
-		if _, ok := res["pub_key"]; ok {
-			if err := d.Set("pub_key", res["pub_key"].(string)); err != nil {
-				return diag.FromErr(err)
-			}
 		}
 		if err := d.Set("acct_id", res["acct_id"].(string)); err != nil {
 			return diag.FromErr(err)
