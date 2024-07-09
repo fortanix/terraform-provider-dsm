@@ -12,14 +12,17 @@ import (
 func dataSourceUser() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceUserRead,
+		Description: "Return the DSM user id",
 		Schema: map[string]*schema.Schema{
 			"user_id": {
+				Description: "Unique ID to identify the user",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"user_email": {
+				Description: "Email ID of the user",
 				Type:     schema.TypeString,
-				Computed: true,
+				Required: true,
 			},
 		},
 	}
