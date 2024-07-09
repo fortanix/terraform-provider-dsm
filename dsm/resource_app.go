@@ -24,20 +24,25 @@ func resourceApp() *schema.Resource {
 		ReadContext:   resourceReadApp,
 		UpdateContext: resourceUpdateApp,
 		DeleteContext: resourceDeleteApp,
+		Description: "Returns the Fortanix DSM App from the cluster as a resource",
 		Schema: map[string]*schema.Schema{
 			"name": {
+			    Description: "The Fortanix DSM App name",
 				Type:     schema.TypeString,
 				Required: true,
 			},
 			"app_id": {
+			    Description: "The unique ID of the app from Terraform",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"default_group": {
+			    Description: "The Fortanix DSM group object id to be mapped to the app by default",
 				Type:     schema.TypeString,
 				Required: true,
 			},
 			"other_group": {
+			    Description: "The Fortanix DSM group object id the app needs to be assigned to. If you want to delete the existing groups from an app, remove the ids during update.",
 				Type:     schema.TypeList,
 				Optional: true,
 				Elem: &schema.Schema{
@@ -45,10 +50,14 @@ func resourceApp() *schema.Resource {
 				},
 			},
 			"acct_id": {
+			    Description: "The account ID from Fortanix DSM",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"creator": {
+				Description: "The creator of the app from Fortanix DSM.\n" +
+				"   * `user`: If the app was created by a user, the computed value will be the matching user id.\n" +
+				"   * `app`: If the app was created by a app, the computed value will be the matching app id.",
 				Type:     schema.TypeMap,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -56,20 +65,24 @@ func resourceApp() *schema.Resource {
 				},
 			},
 			"description": {
+			    Description: "The description of the app",
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "",
 			},
 			"credential": {
+			    Description: "The Fortanix DSM App API key",
 				Type:      schema.TypeString,
 				Computed:  true,
 				Sensitive: true,
 			},
 			"new_credential": {
+			    Description: "Set this if you want to rotate/regenerate the API key. The values can be set as True/False",
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
 			"other_group_permissions": {
+			    Description: "Incase if you want to change the default permissions of a new group.",
 				Type:     schema.TypeMap,
 				Optional: true,
 				Elem: &schema.Schema{
@@ -78,6 +91,7 @@ func resourceApp() *schema.Resource {
 				},
 			},
 			"mod_group_permissions": {
+			    Description: "To modify the permissions of any existing group",
 				Type:     schema.TypeMap,
 				Optional: true,
 				Elem: &schema.Schema{
