@@ -1,4 +1,4 @@
-package dsm
+ package dsm
 
 import (
 	"context"
@@ -17,20 +17,25 @@ func resourceGroup() *schema.Resource {
 		ReadContext:   resourceReadGroup,
 		UpdateContext: resourceUpdateGroup,
 		DeleteContext: resourceDeleteGroup,
+		Description: "Returns the Fortanix DSM group object from the cluster as a Resource.",
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
+				Description: "The Fortanix DSM group object name.",
 				Required: true,
 			},
 			"group_id": {
+			    Description: "Group object ID from Fortanix DSM",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"acct_id": {
+			    Description: "Account ID from Fortanix DSM",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"creator": {
+			    Description: "Creator of the group object from Fortanix DSM",
 				Type:     schema.TypeMap,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -38,22 +43,27 @@ func resourceGroup() *schema.Resource {
 				},
 			},
 			"description": {
+			    Description: "The Fortanix DSM group object description",
 				Type:     schema.TypeString,
 				Optional: true,
 			},
 			"approval_policy": {
+			    Description: "The Fortanix DSM group object quorum approval policy definition as a JSON string",
 				Type:     schema.TypeString,
 				Optional: true,
 			},
 			"hmg": {
+			    Description: "The Fortanix DSM group object HMS/KMS definition as a JSON string",
 				Type:     schema.TypeString,
 				Optional: true,
 			},
 			"hmg_id": {
+			    Description: "HSM/KMS ID from Fortanix/DSM  ",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"key_undo_policy_window_time": {
+			    Description: "The Fortanix DSM group object key undo policy window time as an Integer(Number of seconds).",
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
