@@ -25,16 +25,20 @@ func resourceAzureSobject() *schema.Resource {
 		ReadContext:   resourceReadAzureSobject,
 		UpdateContext: resourceUpdateAzureSobject,
 		DeleteContext: resourceDeleteAzureSobject,
+		Description: "Returns the DSM security object from the cluster as a Resource for Azure KV Group. This is a Bring-Your-Own-Key (BYOK) method and copies an existing DSM local security object to Azure KV as a Customer Managed Key (CMK).",
 		Schema: map[string]*schema.Schema{
 			"name": {
+			    Description: "The security object name",
 				Type:     schema.TypeString,
 				Required: true,
 			},
 			"group_id": {
+			    Description: "The Azure group ID in Fortanix DSM into which the key will be generated",
 				Type:     schema.TypeString,
 				Required: true,
 			},
 			"key": {
+			    Description: "A Local security object imported to Fortanix DSM(BYOK) and copied to Azure KV",
 				Type:     schema.TypeMap,
 				Required: true,
 				Elem: &schema.Schema{
@@ -42,6 +46,7 @@ func resourceAzureSobject() *schema.Resource {
 				},
 			},
 			"links": {
+			    Description: "Link between local security object and Azure KV security object",
 				Type:     schema.TypeMap,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -49,14 +54,19 @@ func resourceAzureSobject() *schema.Resource {
 				},
 			},
 			"kid": {
+			    Description: "The security object ID from Fortanix DSM",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"acct_id": {
+			    Description: "The account ID from Fortanix DSM",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"creator": {
+				Description: "The creator of the security object from Fortanix DSM.\n" +
+				"   * `user`: If the security object was created by a user, the computed value will be the matching user id.\n" +
+				"   * `app`: If the security object was created by a app, the computed value will be the matching app id.",
 				Type:     schema.TypeMap,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -64,6 +74,12 @@ func resourceAzureSobject() *schema.Resource {
 				},
 			},
 			"rotation_policy": {
+				Description: "Policy to rotate a Security Object, configure the below parameters.\n" +
+				"   * `interval_days`: Rotate the key for every given number of days\n" +
+				"   * `interval_months`: Rotate the key for every given number of months\n" +
+				"   * `effective_at`: Start of the rotation policy time\n" +
+				"   * `deactivate_rotated_key`: Deactivate original key after rotation (true/false)\n" +
+				"   * **Note:** Either interval_days or interval_months should be given, but not both.",
 				Type:     schema.TypeMap,
 				Optional: true,
 				Elem: &schema.Schema{
@@ -71,28 +87,27 @@ func resourceAzureSobject() *schema.Resource {
 				},
 			},
 			"custom_metadata": {
+			    Description: "Azure CMK level metadata information.\n" +
+			    "   *`azure-key-state`:  Key state within Azure KV" +
+			    "   *`azure-key-name`: Key name within Azure KV",
 				Type:     schema.TypeMap,
 				Optional: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
-			"external": {
-				Type:     schema.TypeMap,
-				Computed: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
 			},
 			"obj_type": {
+			    Description: "The type of security object",
 				Type:     schema.TypeString,
 				Optional: true,
 			},
 			"key_size": {
+			    Description: "The size of the security object",
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
 			"key_ops": {
+			    Description: "The security object operations permitted",
 				Type:     schema.TypeList,
 				Optional: true,
 				Elem: &schema.Schema{
@@ -100,19 +115,23 @@ func resourceAzureSobject() *schema.Resource {
 				},
 			},
 			"description": {
+			    Description: "The security object description",
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "",
 			},
 			"enabled": {
+			    Description: "Whether the security object will be Enabled or Disabled. The values are True/False",
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
 			"state": {
+			    Description: "The key states of the Azure KV key. The values are Created, Deleted, Purged",
 				Type:     schema.TypeString,
 				Optional: true,
 			},
 			"expiry_date": {
+			    Description: "The security object expiry date in RFC format",
 				Type:     schema.TypeString,
 				Optional: true,
 			},
