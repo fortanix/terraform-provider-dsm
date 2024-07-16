@@ -30,7 +30,7 @@ data "dsm_aws_group" "sample_aws_group" {
 
 - `access_key` (String) The Access Key ID used to communicate with AWS KMS.
 - `description` (String) The AWS KMS group object description.
-- `scan` (Boolean) Syncs keys from AWS KMS to the AWS KMS group in DSM. Value is either True/False.
+- `scan` (Boolean) Syncs keys from AWS KMS to the AWS KMS group in DSM. Value is either true/false.
 - `secret_key` (String, Sensitive) AWS KMS Secret key.
 
 ### Read-Only

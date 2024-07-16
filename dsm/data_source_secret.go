@@ -57,7 +57,7 @@ func dataSourceSecret() *schema.Resource {
 				Computed: true,
 			},
 			"export": {
-				Description: "Exports the secret based on the value shown. The value is either True/False.",
+				Description: "Exports the secret based on the value shown. The value is either true/false.",
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,

@@ -73,7 +73,7 @@ func dataSourceAWSGroup() *schema.Resource {
 				Sensitive: true,
 			},
 			"scan": {
-				Description: "Syncs keys from AWS KMS to the AWS KMS group in DSM. Value is either True/False.",
+				Description: "Syncs keys from AWS KMS to the AWS KMS group in DSM. Value is either true/false.",
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,

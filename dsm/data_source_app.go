@@ -34,7 +34,7 @@ func dataSourceApp() *schema.Resource {
 				Sensitive: true,
 			},
 			"new_credential": {
-				Description: "Set this if you want to rotate/regenerate the API key. The values can be set as True/False.",
+				Description: "Set this if you want to rotate/regenerate the API key. The values can be set as true/false.",
 				Type:     schema.TypeBool,
 				Optional: true,
 			},

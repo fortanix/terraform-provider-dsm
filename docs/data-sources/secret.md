@@ -28,7 +28,7 @@ data "dsm_secret" "sample_secret" {
 
 ### Optional
 
-- `export` (Boolean) Exports the secret based on the value shown. The value is either True/False.
+- `export` (Boolean) Exports the secret based on the value shown. The value is either true/false.
 
 ### Read-Only
 

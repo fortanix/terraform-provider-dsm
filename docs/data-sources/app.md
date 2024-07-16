@@ -28,7 +28,7 @@ data "dsm_app" "sample_app" {
 
 ### Optional
 
-- `new_credential` (Boolean) Set this if you want to rotate/regenerate the API key. The values can be set as True/False.
+- `new_credential` (Boolean) Set this if you want to rotate/regenerate the API key. The values can be set as true/false.
 
 ### Read-Only
 
