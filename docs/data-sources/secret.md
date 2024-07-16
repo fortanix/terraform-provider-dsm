@@ -24,20 +24,20 @@ data "dsm_secret" "sample_secret" {
 
 ### Required
 
-- `name` (String) The secret security object name in Fortanix DSM
+- `name` (String) The secret security object name in Fortanix DSM.
 
 ### Optional
 
-- `export` (Boolean) Exports the secret based on the value shown. The value is either True/False
+- `export` (Boolean) Exports the secret based on the value shown. The value is either True/False.
 
 ### Read-Only
 
-- `acct_id` (String) The account ID from Fortanix DSM
+- `acct_id` (String) The account ID from Fortanix DSM.
 - `creator` (Map of String) The creator of the security object from Fortanix DSM.
    * `user`: If the security object was created by a user, the computed value will be the matching user id.
    * `app`: If the security object was created by a app, the computed value will be the matching app id.
-- `description` (String) The Fortanix DSM security object description
+- `description` (String) The Fortanix DSM security object description.
 - `id` (String) The ID of this resource.
-- `kid` (String) The unique ID of the secret from Fortanix DSM
-- `pub_key` (String) Public key from DSM (If applicable)
-- `value` (String, Sensitive) The (sensitive) value of the secret shown if exported in base64 format
+- `kid` (String) The unique ID of the secret from Fortanix DSM.
+- `pub_key` (String) Public key from DSM (If applicable).
+- `value` (String, Sensitive) The (sensitive) value of the secret shown if exported in base64 format.

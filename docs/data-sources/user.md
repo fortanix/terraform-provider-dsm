@@ -3,12 +3,12 @@
 page_title: "dsm_user Data Source - terraform-provider-dsm"
 subcategory: ""
 description: |-
-  Returns the DSM user ID from the cluster as a Data Source
+  Returns the DSM user ID from the cluster as a Data Source.
 ---
 
 # dsm_user (Data Source)
 
-Returns the DSM user ID from the cluster as a Data Source
+Returns the DSM user ID from the cluster as a Data Source.
 
 ## Example Usage
 
@@ -23,9 +23,9 @@ data "dsm_user" "sample_users" {
 
 ### Required
 
-- `user_email` (String) Email ID of the user
+- `user_email` (String) Email ID of the user.
 
 ### Read-Only
 
 - `id` (String) The ID of this resource.
-- `user_id` (String) Unique ID to identify the user
+- `user_id` (String) Unique ID to identify the user.

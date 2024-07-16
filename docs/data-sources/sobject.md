@@ -24,25 +24,25 @@ data "dsm_sobject" "sample_sobject"{
 
 ### Required
 
-- `name` (String) Security object name
+- `name` (String) Security object name.
 
 ### Optional
 
-- `enabled` (Boolean) Whether the security object will be Enabled or Disabled. The values are True/False
-- `export` (Boolean) If set to true, value of the security object in base64 format will be stored in the data source
+- `enabled` (Boolean) Whether the security object will be Enabled or Disabled. The values are True/False.
+- `export` (Boolean) If set to true, value of the security object in base64 format will be stored in the data source.
 - `key_ops` (List of String) The security object key permission from Fortanix DSM.
-   * Default is to allow all permissions except EXPORT
-- `key_size` (Number) The size of the security object
-- `obj_type` (String) Security object key type from DSM
+   * Default is to allow all permissions except EXPORT.
+- `key_size` (Number) The size of the security object.
+- `obj_type` (String) Security object key type from DSM.
 
 ### Read-Only
 
-- `acct_id` (String) Account ID from DSM
+- `acct_id` (String) Account ID from DSM.
 - `creator` (Map of String) The creator of the security object from Fortanix DSM.
    * `user`: If the security object was created by a user, the computed value will be the matching user id.
    * `app`: If the security object was created by a app, the computed value will be the matching app id.
-- `description` (String) Security object description
+- `description` (String) Security object description.
 - `id` (String) The ID of this resource.
-- `kid` (String) Security object ID from DSM
-- `pub_key` (String) Public key from DSM (If applicable)
-- `value` (String, Sensitive) Value of key material (only if export is allowed)
+- `kid` (String) Security object ID from DSM.
+- `pub_key` (String) Public key from DSM (If applicable).
+- `value` (String, Sensitive) Value of key material (only if export is allowed).
