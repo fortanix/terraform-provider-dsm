@@ -85,6 +85,7 @@ AES, DES, DES3, RSA, DSA, KCDSA, EC, ECKCDSA, ARIA, SEED and Tokenization(fpe).
 - `custom_metadata` (Map of String) The user defined security object attributes added to the key’s metadata from Fortanix DSM.
 - `description` (String) The security object description.
 - `elliptic_curve` (String) Standardized elliptic curve. It should be given only when the obj_type is EC or ECKCDSA.
+
 | obj_type | Curve | key_ops |
 | -------- | -------- |-------- |
 | `EC` | SecP192K1, SecP224K1, SecP256K1  NistP192, NistP224, NistP256, NistP384, NistP521, X25519, Ed25519 | APPMANAGEABLE, SIGN, VERIFY, ENCRYPT, DECRYPT, WRAPKEY, UNWRAPKEY, EXPORT |
@@ -124,6 +125,7 @@ Refer to the fpeOptions schema in https://www.fortanix.com/fortanix-restful-api-
 ```
 - `fpe_radix` (Number) integer, The base for input data. The radix should be a number from 2 to 36, inclusive. Each radix corresponds to a subset of ASCII alphanumeric characters (with all letters being uppercase). For instance, a radix of 10 corresponds to a character set consisting of the digits from 0 to 9, while a character set of 16 corresponds to a character set consisting of all hexadecimal digits (with letters A-F being uppercase).
 - `hash_alg` (String) Hashing Algorithm for KCDSA and ECKCDSA.
+
 | obj_type | hash_alg |
 | -------- | -------- |
 | `ECKCDSA` | SHA1,SHA224, SHA256, SHA384, SHA521|
@@ -131,6 +133,7 @@ Refer to the fpeOptions schema in https://www.fortanix.com/fortanix-restful-api-
 - `key_ops` (List of String) The security object key permission from Fortanix DSM.
    * Default is to allow all permissions except EXPORT
 - `key_size` (Number) The security object size. It should not be given only when the obj_type is EC and ECKCDSA.
+
 | obj_type | key_size | key_ops |
 | -------- | -------- |-------- |
 | `RSA` | 1024, 2048, 4096, 8192 | APPMANAGEABLE, SIGN, VERIFY, ENCRYPT, DECRYPT, WRAPKEY, UNWRAPKEY, EXPORT |
@@ -156,6 +159,7 @@ Refer to the fpeOptions schema in https://www.fortanix.com/fortanix-restful-api-
 - `state` (String) The state of the secret security object.
    * Allowed states are: None, PreActive, Active, Deactivated, Compromised, Destroyed, Deleted.
 - `subgroup_size` (Number) Subgroup Size for DSA and ECKCDSA. The allowed Subgroup Sizes are 224 and 256.
+
 | obj_type | subgroup_size | usage
 | -------- | -------- | -------- |
 | `DSA` | 224, 256| 224: When DSA key_size is 2048. 256: When DSA key_size is 2048 and 3072.

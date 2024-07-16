@@ -44,7 +44,7 @@ func resourceSobject() *schema.Resource {
 				Required: true,
 			},
 			"key_size": {
-			    Description: "The security object size. It should not be given only when the obj_type is EC and ECKCDSA.\n" +
+			    Description: "The security object size. It should not be given only when the obj_type is EC and ECKCDSA.\n\n" +
 				"| obj_type | key_size | key_ops |\n" +
 				"| -------- | -------- |-------- |\n" +
 				"| `RSA` | 1024, 2048, 4096, 8192 | APPMANAGEABLE, SIGN, VERIFY, ENCRYPT, DECRYPT, WRAPKEY, UNWRAPKEY, EXPORT |\n" +
@@ -261,7 +261,7 @@ func resourceSobject() *schema.Resource {
 				Optional: true,
 			},
 			"elliptic_curve": {
-				Description: "Standardized elliptic curve. It should be given only when the obj_type is EC or ECKCDSA.\n" +
+				Description: "Standardized elliptic curve. It should be given only when the obj_type is EC or ECKCDSA.\n\n" +
 				"| obj_type | Curve | key_ops |\n" +
 				"| -------- | -------- |-------- |\n" +
 				"| `EC` | SecP192K1, SecP224K1, SecP256K1  NistP192, NistP224, NistP256, NistP384, NistP521, X25519, Ed25519 | APPMANAGEABLE, SIGN, VERIFY, ENCRYPT, DECRYPT, WRAPKEY, UNWRAPKEY, EXPORT |\n" +
@@ -275,7 +275,7 @@ func resourceSobject() *schema.Resource {
 				Optional: true,
 			},
 			"subgroup_size": {
-				Description: "Subgroup Size for DSA and ECKCDSA. The allowed Subgroup Sizes are 224 and 256.\n" +
+				Description: "Subgroup Size for DSA and ECKCDSA. The allowed Subgroup Sizes are 224 and 256.\n\n" +
 				"| obj_type | subgroup_size | usage\n" +
 				"| -------- | -------- | -------- |\n"+
 				"| `DSA` | 224, 256| 224: When DSA key_size is 2048. 256: When DSA key_size is 2048 and 3072.\n" +
@@ -284,7 +284,7 @@ func resourceSobject() *schema.Resource {
 				Optional: true,
 			},
 			"hash_alg": {
-			    Description: "Hashing Algorithm for KCDSA and ECKCDSA.\n" +
+			    Description: "Hashing Algorithm for KCDSA and ECKCDSA.\n\n" +
 				"| obj_type | hash_alg |\n" +
 				"| -------- | -------- |\n"+
 				"| `ECKCDSA` | SHA1,SHA224, SHA256, SHA384, SHA521|\n" +
