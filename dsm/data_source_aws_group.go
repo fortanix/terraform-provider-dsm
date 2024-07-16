@@ -24,17 +24,17 @@ func dataSourceAWSGroup() *schema.Resource {
 		Description: "Returns the Fortanix DSM AWS KMS mapped group object from the cluster as a Data Source for AWS KMS.",
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Description: "The AWS KMS group object name in Fortanix DSM",
+				Description: "The AWS KMS group object name in Fortanix DSM.",
 				Type:     schema.TypeString,
 				Required: true,
 			},
 			"group_id": {
-				Description: "The AWS KMS group object ID from Fortanix DSM",
+				Description: "The AWS KMS group object ID from Fortanix DSM.",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"acct_id": {
-				Description: "The Account ID from Fortanix DSM",
+				Description: "The Account ID from Fortanix DSM.",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -49,31 +49,31 @@ func dataSourceAWSGroup() *schema.Resource {
 				},
 			},
 			"region": {
-				Description: "The AWS region mapped to the group from which keys are imported",
+				Description: "The AWS region mapped to the group from which keys are imported.",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"description": {
-				Description: "The AWS KMS group object description",
+				Description: "The AWS KMS group object description.",
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "",
 			},
 			"access_key": {
-				Description: "The Access Key ID used to communicate with AWS KMS",
+				Description: "The Access Key ID used to communicate with AWS KMS.",
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "na",
 			},
 			"secret_key": {
-				Description: "AWS KMS Secret key",
+				Description: "AWS KMS Secret key.",
 				Type:      schema.TypeString,
 				Optional:  true,
 				Default:   "na",
 				Sensitive: true,
 			},
 			"scan": {
-				Description: "Syncs keys from AWS KMS to the AWS KMS group in DSM. Value is either True/False",
+				Description: "Syncs keys from AWS KMS to the AWS KMS group in DSM. Value is either True/False.",
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,

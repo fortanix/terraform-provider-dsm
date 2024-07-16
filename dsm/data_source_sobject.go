@@ -22,22 +22,22 @@ func dataSourceSobject() *schema.Resource {
 		Description: "Returns the DSM security object from the cluster as a Data Source.",
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Description: "Security object name",
+				Description: "Security object name.",
 				Type:     schema.TypeString,
 				Required: true,
 			},
 			"kid": {
-				Description: "Security object ID from DSM",
+				Description: "Security object ID from DSM.",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"pub_key": {
-				Description: "Public key from DSM (If applicable)",
+				Description: "Public key from DSM (If applicable).",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"acct_id": {
-				Description: "Account ID from DSM",
+				Description: "Account ID from DSM.",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -52,25 +52,25 @@ func dataSourceSobject() *schema.Resource {
 				},
 			},
 			"description": {
-				Description: "Security object description",
+				Description: "Security object description.",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"export": {
-				Description: "If set to true, value of the security object in base64 format will be stored in the data source",
+				Description: "If set to true, value of the security object in base64 format will be stored in the data source.",
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
 			"value": {
-				Description: " Value of key material (only if export is allowed)",
+				Description: " Value of key material (only if export is allowed).",
 				Type:      schema.TypeString,
 				Computed:  true,
 				Sensitive: true,
 			},
 			"key_ops": {
 				Description: " The security object key permission from Fortanix DSM.\n" +
-				"   * Default is to allow all permissions except EXPORT",
+				"   * Default is to allow all permissions except EXPORT.",
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
@@ -79,19 +79,19 @@ func dataSourceSobject() *schema.Resource {
 				},
 			},
 			"key_size": {
-				Description: "The size of the security object",
+				Description: "The size of the security object.",
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
 			"obj_type": {
-				Description: "Security object key type from DSM",
+				Description: "Security object key type from DSM.",
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
 			"enabled": {
-				Description: "Whether the security object will be Enabled or Disabled. The values are True/False",
+				Description: "Whether the security object will be Enabled or Disabled. The values are True/False.",
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
