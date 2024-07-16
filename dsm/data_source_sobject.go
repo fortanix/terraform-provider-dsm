@@ -91,7 +91,7 @@ func dataSourceSobject() *schema.Resource {
 				Computed: true,
 			},
 			"enabled": {
-				Description: "Whether the security object will be Enabled or Disabled. The values are True/False.",
+				Description: "Whether the security object will be Enabled or Disabled. The values are true/false.",
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,

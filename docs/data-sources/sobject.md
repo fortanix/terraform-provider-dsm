@@ -28,7 +28,7 @@ data "dsm_sobject" "sample_sobject"{
 
 ### Optional
 
-- `enabled` (Boolean) Whether the security object will be Enabled or Disabled. The values are True/False.
+- `enabled` (Boolean) Whether the security object will be Enabled or Disabled. The values are true/false.
 - `export` (Boolean) If set to true, value of the security object in base64 format will be stored in the data source.
 - `key_ops` (List of String) The security object key permission from Fortanix DSM.
    * Default is to allow all permissions except EXPORT.
