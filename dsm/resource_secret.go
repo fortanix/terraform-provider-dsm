@@ -24,7 +24,7 @@ func resourceSecret() *schema.Resource {
 		ReadContext:   resourceReadSecret,
 		UpdateContext: resourceUpdateSecret,
 		DeleteContext: resourceDeleteSecret,
-		Description: "Creates a security object of type Secret. The returned resource object contains the UUID of the security object for further references.\n" +
+		Description: "Imports a security object of type Secret. The returned resource object contains the UUID of the security object for further references.\n" +
 		"A secret value format should be in a raw/base64/hex format. Secret can also be rotated",
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -86,7 +86,7 @@ func resourceSecret() *schema.Resource {
 				Default:  "",
 			},
 			"enabled": {
-			    Description: "Whether the security object is Enabled or Disabled. The values are `True/False`.",
+			    Description: "Whether the security object is Enabled or Disabled. The values are true/false.",
 				Type:     schema.TypeBool,
 				Optional: true,
 			},

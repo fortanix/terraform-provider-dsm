@@ -99,8 +99,8 @@ dsm_group.group2.id
 ### Optional
 
 - `description` (String) The description of the app.
-- `mod_group_permissions` (Map of String) To modify the permissions of any existing group that includes default group.
-- `new_credential` (Boolean) Set this if you want to rotate/regenerate the API key. The values can be set as True/False.
+- `mod_group_permissions` (Map of String) To modify the permissions of any existing group that includes default group. Please refer the example.
+- `new_credential` (Boolean) Set this if you want to rotate/regenerate the API key. The values can be set as true/false.
 - `other_group` (List of String) The Fortanix DSM group object id the app needs to be assigned to. If you want to delete the existing groups from an app, remove the ids during update.
 - `other_group_permissions` (Map of String) Incase if you want to change the default permissions of a new group that includes default group. Please refer the example.
 

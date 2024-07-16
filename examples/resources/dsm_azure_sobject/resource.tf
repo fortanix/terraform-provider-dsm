@@ -43,7 +43,7 @@ resource "dsm_sobject" "dsm_sobject" {
   obj_type = "RSA"
 }
 
-// Copy a key inside azure key vault using the above DSM security object
+// Copy a key to azure key vault using the above DSM security object
 resource "dsm_azure_sobject" "sobject" {
   name            = "azure_sobject"
   group_id        = dsm_group.azure_byok.id

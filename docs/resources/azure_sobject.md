@@ -58,7 +58,7 @@ resource "dsm_sobject" "dsm_sobject" {
   obj_type = "RSA"
 }
 
-// Copy a key inside azure key vault using the above DSM security object
+// Copy a key to azure key vault using the above DSM security object
 resource "dsm_azure_sobject" "sobject" {
   name            = "azure_sobject"
   group_id        = dsm_group.azure_byok.id
@@ -88,13 +88,13 @@ resource "dsm_azure_sobject" "sobject" {
 - `custom_metadata` (Map of String) Azure CMK level metadata information.
    * `azure-key-name`: Key name within Azure KV.
 - `group_id` (String) The Azure group ID in Fortanix DSM into which the key will be generated.
-- `key` (Map of String) A Local security object imported to Fortanix DSM(BYOK) and copied to Azure KV.
+- `key` (Map of String) A local security object imported to Fortanix DSM(BYOK) and copied to Azure KV.
 - `name` (String) The security object name.
 
 ### Optional
 
 - `description` (String) The security object description.
-- `enabled` (Boolean) Whether the security object will be Enabled or Disabled. The values are True/False.
+- `enabled` (Boolean) Whether the security object will be Enabled or Disabled. The values are true/false.
 - `expiry_date` (String) The security object expiry date in RFC format.
 - `key_ops` (List of String) The security object operations permitted.
 - `key_size` (Number) The size of the security object.
@@ -103,7 +103,7 @@ resource "dsm_azure_sobject" "sobject" {
    * `interval_days`: Rotate the key for every given number of days.
    * `interval_months`: Rotate the key for every given number of months.
    * `effective_at`: Start of the rotation policy time.
-   * `deactivate_rotated_key`: Deactivate original key after rotation (True/False).
+   * `deactivate_rotated_key`: Deactivate original key after rotation true/false.
    * **Note:** Either interval_days or interval_months should be given, but not both.
 - `state` (String) The key states of the Azure KV key. The values are Created, Deleted, Purged.
 

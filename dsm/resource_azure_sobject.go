@@ -38,7 +38,7 @@ func resourceAzureSobject() *schema.Resource {
 				Required: true,
 			},
 			"key": {
-			    Description: "A Local security object imported to Fortanix DSM(BYOK) and copied to Azure KV.",
+			    Description: "A local security object imported to Fortanix DSM(BYOK) and copied to Azure KV.",
 				Type:     schema.TypeMap,
 				Required: true,
 				Elem: &schema.Schema{
@@ -78,7 +78,7 @@ func resourceAzureSobject() *schema.Resource {
 				"   * `interval_days`: Rotate the key for every given number of days.\n" +
 				"   * `interval_months`: Rotate the key for every given number of months.\n" +
 				"   * `effective_at`: Start of the rotation policy time.\n" +
-				"   * `deactivate_rotated_key`: Deactivate original key after rotation (True/False).\n" +
+				"   * `deactivate_rotated_key`: Deactivate original key after rotation true/false.\n" +
 				"   * **Note:** Either interval_days or interval_months should be given, but not both.",
 				Type:     schema.TypeMap,
 				Optional: true,
@@ -120,7 +120,7 @@ func resourceAzureSobject() *schema.Resource {
 				Default:  "",
 			},
 			"enabled": {
-			    Description: "Whether the security object will be Enabled or Disabled. The values are True/False.",
+			    Description: "Whether the security object will be Enabled or Disabled. The values are true/false.",
 				Type:     schema.TypeBool,
 				Optional: true,
 			},

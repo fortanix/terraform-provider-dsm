@@ -25,6 +25,6 @@ resource "dsm_secret" "secret_rotate" {
   value       = "cm90YXRlZm9ydGFuaXg="
   expiry_date = "2025-02-02T17:04:05Z"
   rotate      = true
-  // Provide the secret name that needs to be rotated
+  // Provide the secret security object name that needs to be rotated
   rotate_from = dsm_secret.secret.name
 }

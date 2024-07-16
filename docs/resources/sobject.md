@@ -90,7 +90,7 @@ AES, DES, DES3, RSA, DSA, KCDSA, EC, ECKCDSA, ARIA, SEED and Tokenization(fpe).
 | `EC` | SecP192K1, SecP224K1, SecP256K1  NistP192, NistP224, NistP256, NistP384, NistP521, X25519, Ed25519 | APPMANAGEABLE, SIGN, VERIFY, ENCRYPT, DECRYPT, WRAPKEY, UNWRAPKEY, EXPORT |
 | `ECKCDSA` | SecP192K1, SecP224K1, SecP256K1  NistP192, NistP224, NistP256, NistP384, NistP521 | APPMANAGEABLE, SIGN, VERIFY, EXPORT |
 - `enabled` (Boolean) Whether the security object is enabled or disabled.
-   * The values are True/False.
+   * The values are true/false.
 - `expiry_date` (String) The security object expiry date in RFC format.
 - `fpe` (String) FPE specific options. obj_type should be AES. It should be given in string format like below:
 ```This is a sample variable that specifies fpeOptions to create a Tokenization object that can tokenize credit card format data:
@@ -130,7 +130,7 @@ Refer to the fpeOptions schema in https://www.fortanix.com/fortanix-restful-api-
 | `KCDSA` | SHA224, SHA256 |
 - `key_ops` (List of String) The security object key permission from Fortanix DSM.
    * Default is to allow all permissions except EXPORT
-- `key_size` (Number) The security object size. It should not be given only when the obj_type is EC.
+- `key_size` (Number) The security object size. It should not be given only when the obj_type is EC and ECKCDSA.
 | obj_type | key_size | key_ops |
 | -------- | -------- |-------- |
 | `RSA` | 1024, 2048, 4096, 8192 | APPMANAGEABLE, SIGN, VERIFY, ENCRYPT, DECRYPT, WRAPKEY, UNWRAPKEY, EXPORT |
@@ -148,6 +148,7 @@ Refer to the fpeOptions schema in https://www.fortanix.com/fortanix-restful-api-
    * `interval_months`: Rotate the key for every given number of months.
    * `effective_at`: Start of the rotation policy time.
    * `rotate_copied_keys`: Enable key rotation for copied keys.
+   * `deactivate_rotated_key`: Deactivate original key after rotation true/false).
    * **Note:** Either interval_days or interval_months should be given, but not both.
 - `rsa` (String) rsaOptions passed as a string (if ”RSA” obj_type is specified). The string should match the 'rsa' value in Post body while working with Fortanix Rest API. For Example:
 

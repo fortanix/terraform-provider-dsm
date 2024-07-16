@@ -78,7 +78,7 @@ func resourceApp() *schema.Resource {
 				Sensitive: true,
 			},
 			"new_credential": {
-			    Description: "Set this if you want to rotate/regenerate the API key. The values can be set as True/False.",
+			    Description: "Set this if you want to rotate/regenerate the API key. The values can be set as true/false.",
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
@@ -92,7 +92,7 @@ func resourceApp() *schema.Resource {
 				},
 			},
 			"mod_group_permissions": {
-			    Description: "To modify the permissions of any existing group that includes default group.",
+			    Description: "To modify the permissions of any existing group that includes default group. Please refer the example.",
 				Type:     schema.TypeMap,
 				Optional: true,
 				Elem: &schema.Schema{

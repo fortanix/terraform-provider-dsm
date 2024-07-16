@@ -3,13 +3,13 @@
 page_title: "dsm_secret Resource - terraform-provider-dsm"
 subcategory: ""
 description: |-
-  Creates a security object of type Secret. The returned resource object contains the UUID of the security object for further references.
+  Imports a security object of type Secret. The returned resource object contains the UUID of the security object for further references.
   A secret value format should be in a raw/base64/hex format. Secret can also be rotated
 ---
 
 # dsm_secret (Resource)
 
-Creates a security object of type Secret. The returned resource object contains the UUID of the security object for further references.
+Imports a security object of type Secret. The returned resource object contains the UUID of the security object for further references.
 A secret value format should be in a raw/base64/hex format. Secret can also be rotated
 
 ## Example Usage
@@ -42,7 +42,7 @@ resource "dsm_secret" "secret_rotate" {
   value       = "cm90YXRlZm9ydGFuaXg="
   expiry_date = "2025-02-02T17:04:05Z"
   rotate      = true
-  // Provide the secret name that needs to be rotated
+  // Provide the secret security object name that needs to be rotated
   rotate_from = dsm_secret.secret.name
 }
 ```
@@ -60,7 +60,7 @@ resource "dsm_secret" "secret_rotate" {
 
 - `custom_metadata` (Map of String) The user defined security object attributes added to the key’s metadata.
 - `description` (String) The Fortanix DSM security object description.
-- `enabled` (Boolean) Whether the security object is Enabled or Disabled. The values are `True/False`.
+- `enabled` (Boolean) Whether the security object is Enabled or Disabled. The values are true/false.
 - `expiry_date` (String) The security object expiry date in RFC format.
 - `rotate` (Boolean) boolean value true/false to enable/disable rotation.
 - `rotate_from` (String) Name of the security object to be rotated from.

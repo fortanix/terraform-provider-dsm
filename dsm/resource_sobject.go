@@ -44,7 +44,7 @@ func resourceSobject() *schema.Resource {
 				Required: true,
 			},
 			"key_size": {
-			    Description: "The security object size. It should not be given only when the obj_type is EC.\n" +
+			    Description: "The security object size. It should not be given only when the obj_type is EC and ECKCDSA.\n" +
 				"| obj_type | key_size | key_ops |\n" +
 				"| -------- | -------- |-------- |\n" +
 				"| `RSA` | 1024, 2048, 4096, 8192 | APPMANAGEABLE, SIGN, VERIFY, ENCRYPT, DECRYPT, WRAPKEY, UNWRAPKEY, EXPORT |\n" +
@@ -100,6 +100,7 @@ func resourceSobject() *schema.Resource {
 				"   * `interval_months`: Rotate the key for every given number of months.\n" +
 				"   * `effective_at`: Start of the rotation policy time.\n" +
 				"   * `rotate_copied_keys`: Enable key rotation for copied keys.\n" +
+				"   * `deactivate_rotated_key`: Deactivate original key after rotation true/false).\n" +
 				"   * **Note:** Either interval_days or interval_months should be given, but not both.",
 				Type:     schema.TypeMap,
 				Optional: true,
@@ -242,7 +243,7 @@ func resourceSobject() *schema.Resource {
 			},
 			"enabled": {
 			    Description: "Whether the security object is enabled or disabled.\n" +
-			    "   * The values are True/False.",
+			    "   * The values are true/false.",
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
