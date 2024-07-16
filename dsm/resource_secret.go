@@ -24,7 +24,8 @@ func resourceSecret() *schema.Resource {
 		ReadContext:   resourceReadSecret,
 		UpdateContext: resourceUpdateSecret,
 		DeleteContext: resourceDeleteSecret,
-		Description: "Returns the Fortanix DSM secret security object from the cluster as a Resource.",
+		Description: "Creates a security object of type Secret. The returned resource object contains the UUID of the security object for further references.\n" +
+		"A secret value format should be in a raw/base64/hex format. Secret can also be rotated",
 		Schema: map[string]*schema.Schema{
 			"name": {
 			    Description: "The Fortanix DSM secret security object name",
@@ -32,7 +33,7 @@ func resourceSecret() *schema.Resource {
 				Required: true,
 			},
 			"group_id": {
-			    Description: "The Fortanix DSM security object group assignment",
+			    Description: "The Fortanix DSM security object group assignment.",
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -42,12 +43,12 @@ func resourceSecret() *schema.Resource {
 				Computed: true,
 			},
 			"kid": {
-				Description: "Security object ID from Fortanix DSM",
+				Description: "Security object ID from Fortanix DSM.",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"acct_id": {
-			    Description: "Account ID from Fortanix DSM",
+			    Description: "Account ID from Fortanix DSM.",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -62,7 +63,7 @@ func resourceSecret() *schema.Resource {
 				},
 			},
 			"custom_metadata": {
-			    Description: "The user defined security object attributes added to the key’s metadata",
+			    Description: "The user defined security object attributes added to the key’s metadata.",
 				Type:     schema.TypeMap,
 				Optional: true,
 				Elem: &schema.Schema{
@@ -70,8 +71,8 @@ func resourceSecret() *schema.Resource {
 				},
 			},
 			"key_ops": {
-				Description: "The security object key permission from Fortanix DSM\n" +
-				"   * Default is to allow all permissions",
+				Description: "The security object key permission from Fortanix DSM.\n" +
+				"   * Default is to allow all permissions.",
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -79,40 +80,42 @@ func resourceSecret() *schema.Resource {
 				},
 			},
 			"description": {
-			    Description: "The Fortanix DSM security object description",
+			    Description: "The Fortanix DSM security object description.",
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "",
 			},
 			"enabled": {
-			    Description: "Whether the security object is Enabled or Disabled. The values are `True/False`",
+			    Description: "Whether the security object is Enabled or Disabled. The values are `True/False`.",
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
 			"value": {
-			    Description: "The secret value in base64 format",
+			    Description: "The secret value",
 				Type:      schema.TypeString,
-				Optional:  true,
+				Required:  true,
 				Sensitive: true,
 			},
 			"state": {
 				Description: "The state of the secret security object.\n" +
-				"   * Allowed states are: None, PreActive, Active, Deactivated, Compromised, Destroyed, Deleted",
+				"   * Allowed states are: None, PreActive, Active, Deactivated, Compromised, Destroyed, Deleted.",
 				Type:     schema.TypeString,
 				Optional: true,
+				Sensitive: false,
+				Computed: false,
 			},
 			"expiry_date": {
-			    Description: " The security object expiry date in RFC format",
+			    Description: " The security object expiry date in RFC format.",
 				Type:     schema.TypeString,
 				Optional: true,
 			},
 			"rotate": {
-			    Description: "boolean value true/false to enable/disable rotation",
+			    Description: "boolean value true/false to enable/disable rotation.",
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
 			"rotate_from": {
-			    Description: "Name of the security object to be rotated from",
+			    Description: "Name of the security object to be rotated from.",
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -130,12 +133,12 @@ func resourceSecret() *schema.Resource {
 				Computed: true,
 			},
 			"replacement": {
-			    Description: "Replacement of a security object",
+			    Description: "Replacement of a security object.",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"replaced": {
-			    Description: "Replaced by a security object",
+			    Description: "Replaced by a security object.",
 				Type:     schema.TypeString,
 				Computed: true,
 			},

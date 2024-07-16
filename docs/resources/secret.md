@@ -3,29 +3,47 @@
 page_title: "dsm_secret Resource - terraform-provider-dsm"
 subcategory: ""
 description: |-
-  Returns the Fortanix DSM secret security object from the cluster as a Resource.
+  Creates a security object of type Secret. The returned resource object contains the UUID of the security object for further references.
+  A secret value format should be in a raw/base64/hex format. Secret can also be rotated
 ---
 
 # dsm_secret (Resource)
 
-Returns the Fortanix DSM secret security object from the cluster as a Resource.
+Creates a security object of type Secret. The returned resource object contains the UUID of the security object for further references.
+A secret value format should be in a raw/base64/hex format. Secret can also be rotated
 
 ## Example Usage
 
 ```terraform
+// Create a group
 resource "dsm_group" "group" {
-  name = "group example"
+  name = "group"
   description = "group description"
 }
 
+// Import a secret
 resource "dsm_secret" "secret" {
-  name        = "Secret"
+  name        = "secret"
   group_id    = dsm_group.group.id
   description = "test secret"
   enabled     = true
   state       = "Active"
   value       = "Rm9ydGFuaXg="
-  expiry_date = "20231130T183000Z"
+  expiry_date = "2025-02-02T17:04:05Z"
+}
+
+// Rotate a secret
+resource "dsm_secret" "secret_rotate" {
+  name        = "secret_rotate"
+  group_id    = dsm_group.group.id
+  description = "rotate secret"
+  enabled     = true
+  state       = "Active"
+  value       = "cm90YXRlZm9ydGFuaXg="
+  expiry_date = "2025-02-02T17:04:05Z"
+  rotate      = true
+  // Provide the secret name that needs to be rotated
+  rotate_from = dsm_secret.secret.name
 }
 ```
 
@@ -34,33 +52,33 @@ resource "dsm_secret" "secret" {
 
 ### Required
 
-- `group_id` (String) The Fortanix DSM security object group assignment
+- `group_id` (String) The Fortanix DSM security object group assignment.
 - `name` (String) The Fortanix DSM secret security object name
+- `value` (String, Sensitive) The secret value
 
 ### Optional
 
-- `custom_metadata` (Map of String) The user defined security object attributes added to the key’s metadata
-- `description` (String) The Fortanix DSM security object description
-- `enabled` (Boolean) Whether the security object is Enabled or Disabled. The values are `True/False`
-- `expiry_date` (String) The security object expiry date in RFC format
-- `rotate` (Boolean) boolean value true/false to enable/disable rotation
-- `rotate_from` (String) Name of the security object to be rotated from
+- `custom_metadata` (Map of String) The user defined security object attributes added to the key’s metadata.
+- `description` (String) The Fortanix DSM security object description.
+- `enabled` (Boolean) Whether the security object is Enabled or Disabled. The values are `True/False`.
+- `expiry_date` (String) The security object expiry date in RFC format.
+- `rotate` (Boolean) boolean value true/false to enable/disable rotation.
+- `rotate_from` (String) Name of the security object to be rotated from.
 - `state` (String) The state of the secret security object.
-   * Allowed states are: None, PreActive, Active, Deactivated, Compromised, Destroyed, Deleted
-- `value` (String, Sensitive) The secret value in base64 format
+   * Allowed states are: None, PreActive, Active, Deactivated, Compromised, Destroyed, Deleted.
 
 ### Read-Only
 
-- `acct_id` (String) Account ID from Fortanix DSM
+- `acct_id` (String) Account ID from Fortanix DSM.
 - `copied_from` (String) Security object that is copied to the current security object.
 - `copied_to` (List of String) List of security objects copied by the current security object.
 - `creator` (Map of String) The creator of the security object from Fortanix DSM.
    * `user`: If the security object was created by a user, the computed value will be the matching user id.
    * `app`: If the security object was created by a app, the computed value will be the matching app id.
 - `id` (String) The ID of this resource.
-- `key_ops` (List of String) The security object key permission from Fortanix DSM
-   * Default is to allow all permissions
-- `kid` (String) Security object ID from Fortanix DSM
+- `key_ops` (List of String) The security object key permission from Fortanix DSM.
+   * Default is to allow all permissions.
+- `kid` (String) Security object ID from Fortanix DSM.
 - `obj_type` (String) The security object key type from Fortanix DSM.
-- `replaced` (String) Replaced by a security object
-- `replacement` (String) Replacement of a security object
+- `replaced` (String) Replaced by a security object.
+- `replacement` (String) Replacement of a security object.

@@ -1,5 +1,17 @@
+// Create a normal group
 resource "dsm_group" "group" {
-  name = "group example"
+  name = "group"
+}
+
+/*
+Create a group with multiple parameters.
+The following resource group is an example of an external KMS group of Azure key vault
+and an approval policy.
+
+For more examples of external KMS groups please refer Guides/create_BYOK_groups
+*/
+resource "dsm_group" "group" {
+  name = "group"
   description = "group description"
   approval_policy = var.approval_policy
   hmg = var.azure_data
@@ -36,9 +48,7 @@ variable "approval_policy" {
           ],
           "require_password": false,
           "require_2fa": false
-        },
-        "user": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-        "app": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+        }
       }
       EOF
 }
