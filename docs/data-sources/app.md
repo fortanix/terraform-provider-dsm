@@ -24,13 +24,13 @@ data "dsm_app" "sample_app" {
 
 ### Required
 
-- `app_id` (String) App id value
+- `app_id` (String) App id value.
 
 ### Optional
 
-- `new_credential` (Boolean) Set this if you want to rotate/regenerate the API key. The values can be set as True/False
+- `new_credential` (Boolean) Set this if you want to rotate/regenerate the API key. The values can be set as true/false.
 
 ### Read-Only
 
-- `credential` (String, Sensitive) The Fortanix DSM App API key
+- `credential` (String, Sensitive) The Fortanix DSM App API key.
 - `id` (String) The ID of this resource.
