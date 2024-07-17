@@ -17,32 +17,40 @@ func resourceGroupUserRole() *schema.Resource {
 		ReadContext:   resourceReadGroupUserRole,
 		UpdateContext: resourceUpdateGroupUserRole,
 		DeleteContext: resourceDeleteGroupUserRole,
+		Description: "Associates a user with a group and a role.",
 		Schema: map[string]*schema.Schema{
 			"name": {
+			    Description: "Group object name from Fortanix DSM (matches the group_name provided during creation).",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"group_id": {
+			    Description: "Group object ID from Fortanix DSM.",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"role_id": {
+			    Description: "Role object ID from Fortanix DSM.",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"user_id": {
+			    Description: "User object ID from Fortanix DSM.",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"group_name": {
+			    Description: "The Fortanix DSM group object name.",
 				Type:     schema.TypeString,
 				Required: true,
 			},
 			"user_email": {
+			    Description: "The Fortanix DSM user object email.",
 				Type:     schema.TypeString,
 				Required: true,
 			},
 			"role_name": {
+			    Description: "The Fortanix DSM role object name.",
 				Type:     schema.TypeString,
 				Required: true,
 			},
