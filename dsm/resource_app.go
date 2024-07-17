@@ -24,20 +24,21 @@ func resourceApp() *schema.Resource {
 		ReadContext:   resourceReadApp,
 		UpdateContext: resourceUpdateApp,
 		DeleteContext: resourceDeleteApp,
-		Description: "Returns the Fortanix DSM App from the cluster as a resource",
+		Description: "Creates a new DSM App of type API key.The returned resource object contains the UUID of the app for further references.\n" +
+		"This resource can also rotate/regenerate an API key. Default permissions of any group can be modified.",
 		Schema: map[string]*schema.Schema{
 			"name": {
-			    Description: "The Fortanix DSM App name",
+			    Description: "The Fortanix DSM App name.",
 				Type:     schema.TypeString,
 				Required: true,
 			},
 			"app_id": {
-			    Description: "The unique ID of the app from Terraform",
+			    Description: "The unique ID of the app from Terraform.",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"default_group": {
-			    Description: "The Fortanix DSM group object id to be mapped to the app by default",
+			    Description: "The Fortanix DSM group object id to be mapped to the app by default.",
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -50,7 +51,7 @@ func resourceApp() *schema.Resource {
 				},
 			},
 			"acct_id": {
-			    Description: "The account ID from Fortanix DSM",
+			    Description: "The account ID from Fortanix DSM.",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -65,24 +66,24 @@ func resourceApp() *schema.Resource {
 				},
 			},
 			"description": {
-			    Description: "The description of the app",
+			    Description: "The description of the app.",
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "",
 			},
 			"credential": {
-			    Description: "The Fortanix DSM App API key",
+			    Description: "The Fortanix DSM App API key.",
 				Type:      schema.TypeString,
 				Computed:  true,
 				Sensitive: true,
 			},
 			"new_credential": {
-			    Description: "Set this if you want to rotate/regenerate the API key. The values can be set as True/False",
+			    Description: "Set this if you want to rotate/regenerate the API key. The values can be set as true/false.",
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
 			"other_group_permissions": {
-			    Description: "Incase if you want to change the default permissions of a new group.",
+			    Description: "Incase if you want to change the default permissions of a new group that includes default group. Please refer the example.",
 				Type:     schema.TypeMap,
 				Optional: true,
 				Elem: &schema.Schema{
@@ -91,7 +92,7 @@ func resourceApp() *schema.Resource {
 				},
 			},
 			"mod_group_permissions": {
-			    Description: "To modify the permissions of any existing group",
+			    Description: "To modify the permissions of any existing group that includes default group. Please refer the example.",
 				Type:     schema.TypeMap,
 				Optional: true,
 				Elem: &schema.Schema{

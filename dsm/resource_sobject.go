@@ -19,7 +19,8 @@ func resourceSobject() *schema.Resource {
 		ReadContext:   resourceReadSobject,
 		UpdateContext: resourceUpdateSobject,
 		DeleteContext: resourceDeleteSobject,
-		Description: "Returns the Fortanix DSM security object from the cluster as a Resource.",
+		Description: "Creates a new security object. The returned resource object contains the UUID of the security object for further references.\n" +
+		"A key value can be imported as a security object. This resource also can rotate or copy a security object.",
 		Schema: map[string]*schema.Schema{
 			"name": {
 			    Description: "The security object name.",
@@ -27,7 +28,7 @@ func resourceSobject() *schema.Resource {
 				Required: true,
 			},
 			"dsm_name": {
-			    Description: "The security object name",
+			    Description: "The security object name.",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -37,12 +38,23 @@ func resourceSobject() *schema.Resource {
 				Required: true,
 			},
 			"obj_type": {
-			    Description: "The security object type.",
+			    Description: "The security object type. Supported security objects:\n" +
+			    "AES, DES, DES3, RSA, DSA, KCDSA, EC, ECKCDSA, ARIA, SEED and Tokenization(fpe).",
 				Type:     schema.TypeString,
 				Required: true,
 			},
 			"key_size": {
-			    Description: "The security object size. It should not be given only when the obj_type is EC.",
+			    Description: "The security object size. It should not be given only when the obj_type is EC and ECKCDSA.\n\n" +
+				"| obj_type | key_size | key_ops |\n" +
+				"| -------- | -------- |-------- |\n" +
+				"| `RSA` | 1024, 2048, 4096, 8192 | APPMANAGEABLE, SIGN, VERIFY, ENCRYPT, DECRYPT, WRAPKEY, UNWRAPKEY, EXPORT |\n" +
+				"| `DSA` | 2048, 3072 | APPMANAGEABLE, SIGN, VERIFY, EXPORT |\n" +
+				"| `KCDSA` | 2048 | APPMANAGEABLE, SIGN, VERIFY, EXPORT |\n" +
+				"| `AES` | 128, 192, 256 | ENCRYPT, DECRYPT, WRAPKEY, UNWRAPKEY, DERIVEKEY, MACGENERATE, MACVERIFY, APPMANAGEABLE, EXPORT |\n" +
+				"| `DES` | 56 | ENCRYPT, DECRYPT, WRAPKEY, UNWRAPKEY, DERIVEKEY, APPMANAGEABLE, EXPORT |\n" +
+				"| `DES3` | 112, 168 | ENCRYPT, DECRYPT, WRAPKEY, UNWRAPKEY, DERIVEKEY, MACGENERATE, MACVERIFY, APPMANAGEABLE, EXPORT |\n" +
+				"| `ARIA` | 128, 192, 256 | ENCRYPT, DECRYPT, WRAPKEY, UNWRAPKEY, DERIVEKEY, MACGENERATE, MACVERIFY, APPMANAGEABLE, EXPORT |\n" +
+				"| `SEED` | 128 | ENCRYPT, DECRYPT, WRAPKEY, UNWRAPKEY, DERIVEKEY, EXPORT |\n",
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
@@ -68,7 +80,7 @@ func resourceSobject() *schema.Resource {
 				ValidateFunc: validation.StringInSlice([]string{"DSM", "ALL"}, true),
 			},
 			"rotate_from": {
-			    Description: "Name of the security object to be rotated from",
+			    Description: "Name of the security object to be rotated from.",
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -84,10 +96,11 @@ func resourceSobject() *schema.Resource {
 			},
 			"rotation_policy": {
 				Description: "Policy to rotate a Security Object, configure the below parameters.\n" +
-				"   * `interval_days`: Rotate the key for every given number of days\n" +
-				"   * `interval_months`: Rotate the key for every given number of months\n" +
-				"   * `effective_at`: Start of the rotation policy time\n" +
-				"   * `rotate_copied_keys`: Enable key rotation for copied keys\n" +
+				"   * `interval_days`: Rotate the key for every given number of days.\n" +
+				"   * `interval_months`: Rotate the key for every given number of months.\n" +
+				"   * `effective_at`: Start of the rotation policy time.\n" +
+				"   * `rotate_copied_keys`: Enable key rotation for copied keys.\n" +
+				"   * `deactivate_rotated_key`: Deactivate original key after rotation true/false).\n" +
 				"   * **Note:** Either interval_days or interval_months should be given, but not both.",
 				Type:     schema.TypeMap,
 				Optional: true,
@@ -117,17 +130,17 @@ func resourceSobject() *schema.Resource {
 				Computed: true,
 			},
 			"replacement": {
-			    Description: "Replacement of a security object",
+			    Description: "Replacement of a security object.",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"replaced": {
-			    Description: "Replaced by a security object",
+			    Description: "Replaced by a security object.",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"pub_key": {
-			    Description: "Public key (if ”RSA” obj_type is specified)",
+			    Description: "Public key (if ”RSA” obj_type is specified).",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -151,7 +164,34 @@ func resourceSobject() *schema.Resource {
 				Optional: true,
 			},
 			"fpe": {
-			    Description: "FPE specific options.",
+				Description: "FPE specific options. obj_type should be AES. It should be given in string format like below:\n" +
+				"```This is a sample variable that specifies fpeOptions to create a Tokenization object that can tokenize credit card format data:\n" +
+				"    variable " + "\"fpeOptionsExample\"" + " { \n" +
+				"      type = any\n" +
+				"      description = " + "\"The policy document. This is a JSON formatted string.\"" + "\n" +
+				"      default = <<-EOF \n" +
+				"              {\n" +
+				"               " + "\"description\"" + ":" + "\"Credit card\"" + "\n" +
+				"               " + "\"format\"" + ": {\n" +
+				"               " + "\"char_set\"" + ": [\n" +
+				"                    [\n" +
+				"                     "+ "\"0\"" + ",\n" +
+				"                     "+ "\"9\"" + "\n" +
+				"                    ]\n" +
+				"                  ],\n" +
+				"                  " + "\"min_length\"" + ": 13,\n" +
+				"                  " + "\"max_length\"" + ": 19,\n" +
+				"                  " + "\"constraints\"" + ": {\n" +
+				"                   " + "\"luhn_check\"" + ": true\n" +
+				"                  }\n" +
+				"              }\n" +
+				"            }\n" +
+				"            EOF\n" +
+				"    }\n" +
+				"\nThis is how we can reference this fpeOptions:\n" +
+				"      fpe = var.fpeOptionsExample\n" +
+				"\nRefer to the fpeOptions schema in https://www.fortanix.com/fortanix-restful-api-references/dsm for a better understanding of the fpe body.\n" +
+				"```",
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -166,7 +206,8 @@ func resourceSobject() *schema.Resource {
 				},
 			},
 			"rsa": {
-			    Description: "rsaOptions passed as a string (if ”RSA” obj_type is specified). The string should match the 'rsa' value in Post body while working with Fortanix Rest API.",
+			    Description: "rsaOptions passed as a string (if ”RSA” obj_type is specified). The string should match the 'rsa' value in Post body while working with Fortanix Rest API. For Example:\n" +
+			    "\n`rsa = " + "\"{\\" + "\"encryption_policy\\\"" + ":[{\\" + "\"padding\\\"" + ":{\\" + "\"RAW_DECRYPT\\\"" + ":{}}},{\\" + "\"padding\\\"" + ":{\\" + "\"OAEP\\\"" + ":{\\" + "\"mgf\\\"" + ":{\\" + "\"mgf1\\\"" + ":{\\" + "\"hash\\\"" + ":\\"+ "\"SHA1\\\""+ "}}}}}],\\"+ "\"signature_policy\\\"" + ":[{\\" + "\"padding\\\"" + ":{\\" + "\"PKCS1_V15\\\"" + ":{}}},{\\" + "\"padding\\\"" + ":{\\" + "\"PSS\\\"" + ":{\\" + "\"mgf\\\"" + ":{\\" + "\"mgf1\\\"" + ":{\\" + "\"hash\\\"" + ":\\" + "\"SHA384\\\"" + "}}}}}]}" + "\"" + "`",
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -202,14 +243,14 @@ func resourceSobject() *schema.Resource {
 			},
 			"enabled": {
 			    Description: "Whether the security object is enabled or disabled.\n" +
-			    "   * The values are True/False",
+			    "   * The values are true/false.",
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
 			"state": {
 			    Description: "The state of the secret security object.\n" +
-			    "   * Allowed states are: None, PreActive, Active, Deactivated, Compromised, Destroyed, Deleted",
+			    "   * Allowed states are: None, PreActive, Active, Deactivated, Compromised, Destroyed, Deleted.",
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -220,7 +261,11 @@ func resourceSobject() *schema.Resource {
 				Optional: true,
 			},
 			"elliptic_curve": {
-			    Description: "Standardized elliptic curve. It should be given only when the obj_type is EC.",
+				Description: "Standardized elliptic curve. It should be given only when the obj_type is EC or ECKCDSA.\n\n" +
+				"| obj_type | Curve | key_ops |\n" +
+				"| -------- | -------- |-------- |\n" +
+				"| `EC` | SecP192K1, SecP224K1, SecP256K1  NistP192, NistP224, NistP256, NistP384, NistP521, X25519, Ed25519 | APPMANAGEABLE, SIGN, VERIFY, ENCRYPT, DECRYPT, WRAPKEY, UNWRAPKEY, EXPORT |\n" +
+				"| `ECKCDSA` | SecP192K1, SecP224K1, SecP256K1  NistP192, NistP224, NistP256, NistP384, NistP521 | APPMANAGEABLE, SIGN, VERIFY, EXPORT |\n",
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -230,13 +275,20 @@ func resourceSobject() *schema.Resource {
 				Optional: true,
 			},
 			"subgroup_size": {
-			    Description: " Subgroup Size for DSA and ECKCDSA. The allowed Subgroup Sizes are 224 and 256",
+				Description: "Subgroup Size for DSA and ECKCDSA. The allowed Subgroup Sizes are 224 and 256.\n\n" +
+				"| obj_type | subgroup_size | usage\n" +
+				"| -------- | -------- | -------- |\n"+
+				"| `DSA` | 224, 256| 224: When DSA key_size is 2048. 256: When DSA key_size is 2048 and 3072.\n" +
+				"| `KCDSA` | 224, 256| 224, 256: When KCDSA key_size is 2048.\n",
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
 			"hash_alg": {
-			    Description: "Hashing Algorithm for KCDSA and ECKCDSA.\n" +
-			    "   * The allowed Hashing Algorithms are SHA1,SHA224, SHA256, SHA384, SHA521",
+			    Description: "Hashing Algorithm for KCDSA and ECKCDSA.\n\n" +
+				"| obj_type | hash_alg |\n" +
+				"| -------- | -------- |\n"+
+				"| `ECKCDSA` | SHA1,SHA224, SHA256, SHA384, SHA521|\n" +
+				"| `KCDSA` | SHA224, SHA256 |\n",
 				Type:     schema.TypeString,
 				Optional: true,
 			},

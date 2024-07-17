@@ -3,12 +3,12 @@
 page_title: "dsm_azure_sobject Resource - terraform-provider-dsm"
 subcategory: ""
 description: |-
-  Returns the DSM security object from the cluster as a Resource for Azure KV Group. This is a Bring-Your-Own-Key (BYOK) method and copies an existing DSM local security object to Azure KV as a Customer Managed Key (CMK).
+  Creates a new security object in Azure key vault. This is a Bring-Your-Own-Key (BYOK) method and copies an existing DSM local security object to Azure KV as a Customer Managed Key (CMK).
 ---
 
 # dsm_azure_sobject (Resource)
 
-Returns the DSM security object from the cluster as a Resource for Azure KV Group. This is a Bring-Your-Own-Key (BYOK) method and copies an existing DSM local security object to Azure KV as a Customer Managed Key (CMK).
+Creates a new security object in Azure key vault. This is a Bring-Your-Own-Key (BYOK) method and copies an existing DSM local security object to Azure KV as a Customer Managed Key (CMK).
 
 ## Example Usage
 
@@ -44,18 +44,32 @@ variable "azure_data" {
    EOF
 }
 
+// Create a normal group
+resource "dsm_group" "normal_group" {
+  name = "normal_group"
+}
+
+// Create a RSA key in normal group
+resource "dsm_sobject" "dsm_sobject" {
+  name     = "dsm_sobject"
+  group_id = dsm_group.normal_group.id
+  key_size = 2048
+  key_ops = ["ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "SIGN", "VERIFY", "EXPORT"]
+  obj_type = "RSA"
+}
+
+// Copy a key to azure key vault using the above DSM security object
 resource "dsm_azure_sobject" "sobject" {
   name            = "azure_sobject"
   group_id        = dsm_group.azure_byok.id
   description     = "key creation in akv"
   key_ops         = ["SIGN", "VERIFY", "ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "EXPORT", "APPMANAGEABLE", "HIGHVOLUME"]
   enabled         = true
-  expiry_date     = "20231130T183000Z"
+  expiry_date     = "2025-02-02T17:04:05Z"
   key             = {
-    kid = "<dsm sobject key id>"
+    kid = dsm_sobject.dsm_sobject.id
   }
   custom_metadata = {
-    azure_key_state = "Enabled"
     azure-key-name = "key_inside_akv"
   }
   rotation_policy = {
@@ -71,34 +85,34 @@ resource "dsm_azure_sobject" "sobject" {
 
 ### Required
 
-- `group_id` (String) The Azure group ID in Fortanix DSM into which the key will be generated
-- `key` (Map of String) A Local security object imported to Fortanix DSM(BYOK) and copied to Azure KV
-- `name` (String) The security object name
+- `custom_metadata` (Map of String) Azure CMK level metadata information.
+   * `azure-key-name`: Key name within Azure KV.
+- `group_id` (String) The Azure group ID in Fortanix DSM into which the key will be generated.
+- `key` (Map of String) A local security object imported to Fortanix DSM(BYOK) and copied to Azure KV.
+- `name` (String) The security object name.
 
 ### Optional
 
-- `custom_metadata` (Map of String) Azure CMK level metadata information.
-   *`azure-key-state`:  Key state within Azure KV   *`azure-key-name`: Key name within Azure KV
-- `description` (String) The security object description
-- `enabled` (Boolean) Whether the security object will be Enabled or Disabled. The values are True/False
-- `expiry_date` (String) The security object expiry date in RFC format
-- `key_ops` (List of String) The security object operations permitted
-- `key_size` (Number) The size of the security object
-- `obj_type` (String) The type of security object
+- `description` (String) The security object description.
+- `enabled` (Boolean) Whether the security object will be Enabled or Disabled. The values are true/false.
+- `expiry_date` (String) The security object expiry date in RFC format.
+- `key_ops` (List of String) The security object operations permitted.
+- `key_size` (Number) The size of the security object.
+- `obj_type` (String) The type of security object.
 - `rotation_policy` (Map of String) Policy to rotate a Security Object, configure the below parameters.
-   * `interval_days`: Rotate the key for every given number of days
-   * `interval_months`: Rotate the key for every given number of months
-   * `effective_at`: Start of the rotation policy time
-   * `deactivate_rotated_key`: Deactivate original key after rotation (true/false)
+   * `interval_days`: Rotate the key for every given number of days.
+   * `interval_months`: Rotate the key for every given number of months.
+   * `effective_at`: Start of the rotation policy time.
+   * `deactivate_rotated_key`: Deactivate original key after rotation true/false.
    * **Note:** Either interval_days or interval_months should be given, but not both.
-- `state` (String) The key states of the Azure KV key. The values are Created, Deleted, Purged
+- `state` (String) The key states of the Azure KV key. The values are Created, Deleted, Purged.
 
 ### Read-Only
 
-- `acct_id` (String) The account ID from Fortanix DSM
+- `acct_id` (String) The account ID from Fortanix DSM.
 - `creator` (Map of String) The creator of the security object from Fortanix DSM.
    * `user`: If the security object was created by a user, the computed value will be the matching user id.
    * `app`: If the security object was created by a app, the computed value will be the matching app id.
 - `id` (String) The ID of this resource.
-- `kid` (String) The security object ID from Fortanix DSM
-- `links` (Map of String) Link between local security object and Azure KV security object
+- `kid` (String) The security object ID from Fortanix DSM.
+- `links` (Map of String) Link between local security object and Azure KV security object.

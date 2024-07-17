@@ -17,7 +17,8 @@ func resourceGroup() *schema.Resource {
 		ReadContext:   resourceReadGroup,
 		UpdateContext: resourceUpdateGroup,
 		DeleteContext: resourceDeleteGroup,
-		Description: "Returns the Fortanix DSM group object from the cluster as a Resource.",
+		Description: "Creates a new DSM group. Such groups are act as containers for security objects, like keys or secrets. The returned resource object contains the UUID of the group for further references.\n" +
+		"Besides creating regular DSM groups, this resource may also be used to create DSM groups that are mapped to external resources, e.g. like an Azure Key Vault, an AWS KMS, a GCP Key Ring or a legacy HSM.",
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
@@ -25,17 +26,17 @@ func resourceGroup() *schema.Resource {
 				Required: true,
 			},
 			"group_id": {
-			    Description: "Group object ID from Fortanix DSM",
+			    Description: "Group object ID from Fortanix DSM.",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"acct_id": {
-			    Description: "Account ID from Fortanix DSM",
+			    Description: "Account ID from Fortanix DSM.",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"creator": {
-			    Description: "Creator of the group object from Fortanix DSM",
+			    Description: "Creator of the group object from Fortanix DSM.",
 				Type:     schema.TypeMap,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -43,22 +44,22 @@ func resourceGroup() *schema.Resource {
 				},
 			},
 			"description": {
-			    Description: "The Fortanix DSM group object description",
+			    Description: "The Fortanix DSM group object description.",
 				Type:     schema.TypeString,
 				Optional: true,
 			},
 			"approval_policy": {
-			    Description: "The Fortanix DSM group object quorum approval policy definition as a JSON string",
+			    Description: "The Fortanix DSM group object quorum approval policy definition as a JSON string.",
 				Type:     schema.TypeString,
 				Optional: true,
 			},
 			"hmg": {
-			    Description: "The Fortanix DSM group object HMS/KMS definition as a JSON string",
+			    Description: "The Fortanix DSM group object HMS/KMS definition as a JSON string.",
 				Type:     schema.TypeString,
 				Optional: true,
 			},
 			"hmg_id": {
-			    Description: "HSM/KMS ID from Fortanix/DSM  ",
+			    Description: "HSM/KMS ID from Fortanix/DSM.",
 				Type:     schema.TypeString,
 				Computed: true,
 			},

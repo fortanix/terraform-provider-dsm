@@ -3,18 +3,32 @@
 page_title: "dsm_group Resource - terraform-provider-dsm"
 subcategory: ""
 description: |-
-  Returns the Fortanix DSM group object from the cluster as a Resource.
+  Creates a new DSM group. Such groups are act as containers for security objects, like keys or secrets. The returned resource object contains the UUID of the group for further references.
+  Besides creating regular DSM groups, this resource may also be used to create DSM groups that are mapped to external resources, e.g. like an Azure Key Vault, an AWS KMS, a GCP Key Ring or a legacy HSM.
 ---
 
 # dsm_group (Resource)
 
-Returns the Fortanix DSM group object from the cluster as a Resource.
+Creates a new DSM group. Such groups are act as containers for security objects, like keys or secrets. The returned resource object contains the UUID of the group for further references.
+Besides creating regular DSM groups, this resource may also be used to create DSM groups that are mapped to external resources, e.g. like an Azure Key Vault, an AWS KMS, a GCP Key Ring or a legacy HSM.
 
 ## Example Usage
 
 ```terraform
+// Create a normal group
 resource "dsm_group" "group" {
-  name = "group example"
+  name = "group"
+}
+
+/*
+Create a group with multiple parameters.
+The following resource group is an example of an external KMS group of Azure key vault
+and an approval policy.
+
+For more examples of external KMS groups please refer Guides/create_BYOK_groups
+*/
+resource "dsm_group" "group" {
+  name = "group"
   description = "group description"
   approval_policy = var.approval_policy
   hmg = var.azure_data
@@ -51,9 +65,7 @@ variable "approval_policy" {
           ],
           "require_password": false,
           "require_2fa": false
-        },
-        "user": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-        "app": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+        }
       }
       EOF
 }
@@ -92,15 +104,15 @@ variable "azure_data" {
 
 ### Optional
 
-- `approval_policy` (String) The Fortanix DSM group object quorum approval policy definition as a JSON string
-- `description` (String) The Fortanix DSM group object description
-- `hmg` (String) The Fortanix DSM group object HMS/KMS definition as a JSON string
+- `approval_policy` (String) The Fortanix DSM group object quorum approval policy definition as a JSON string.
+- `description` (String) The Fortanix DSM group object description.
+- `hmg` (String) The Fortanix DSM group object HMS/KMS definition as a JSON string.
 - `key_undo_policy_window_time` (Number) The Fortanix DSM group object key undo policy window time as an Integer(Number of seconds).
 
 ### Read-Only
 
-- `acct_id` (String) Account ID from Fortanix DSM
-- `creator` (Map of String) Creator of the group object from Fortanix DSM
-- `group_id` (String) Group object ID from Fortanix DSM
-- `hmg_id` (String) HSM/KMS ID from Fortanix/DSM
+- `acct_id` (String) Account ID from Fortanix DSM.
+- `creator` (Map of String) Creator of the group object from Fortanix DSM.
+- `group_id` (String) Group object ID from Fortanix DSM.
+- `hmg_id` (String) HSM/KMS ID from Fortanix/DSM.
 - `id` (String) The ID of this resource.

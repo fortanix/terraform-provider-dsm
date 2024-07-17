@@ -71,7 +71,7 @@ Initial setup of the Fortanix DSM Provider to interact using Terraform.
 terraform {
   required_providers {
     dsm = {
-      version = "0.5.9"
+      version = "0.5.31"
       source = "fortanix/dsm"
     }
   }
