@@ -25,20 +25,27 @@ func resourceAWSGroup() *schema.Resource {
 		ReadContext:   resourceReadAWSGroup,
 		UpdateContext: resourceUpdateAWSGroup,
 		DeleteContext: resourceDeleteAWSGroup,
+		Description: "Creates a Fortanix DSM group mapped to AWS KMS in the cluster as a resource. This group acts as a container for security objects. The returned resource object contains the UUID of the group for further references.",
 		Schema: map[string]*schema.Schema{
 			"name": {
+			    Description: "The name follows the nomenclature of `<Custom Group Name>-aws-<Region>`.",
 				Type:     schema.TypeString,
 				Required: true,
 			},
 			"group_id": {
+			    Description: "The unique ID for AWS KMS Mapped group from Fortanix DSM.",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"acct_id": {
+			    Description: "The Account ID from Fortanix DSM.",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"creator": {
+				Description: "The creator of the group from Fortanix DSM.\n" +
+				"   * `user`: If the group was created by a user, the computed value will be the matching user id.\n" +
+				"   * `app`: If the group was created by a app, the computed value will be the matching app id.",
 				Type:     schema.TypeMap,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -46,21 +53,25 @@ func resourceAWSGroup() *schema.Resource {
 				},
 			},
 			"region": {
+			    Description: "The AWS region mapped to the group from which keys are imported.",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"description": {
+			    Description: "The description of the AWS KMS group.",
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "",
 			},
 			"access_key": {
+			    Description: "The Access Key ID to set for AWS KMS group for programmatic (API) access to AWS Services.",
 				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
 			},
 			"secret_key": {
+			    Description: "The Secret Access Key to set for AWS KMS group for programmatic (API) access to AWS Services.",
 				Type:      schema.TypeString,
-				Optional:  true,
+				Required:  true,
 				Sensitive: true,
 			},
 		},

@@ -25,7 +25,7 @@ func resourceSecret() *schema.Resource {
 		UpdateContext: resourceUpdateSecret,
 		DeleteContext: resourceDeleteSecret,
 		Description: "Imports a security object of type Secret. The returned resource object contains the UUID of the security object for further references.\n" +
-		"A secret value format should be in a raw/base64/hex format. Secret can also be rotated",
+		"A secret value format should be in a base64 format. Secret can also be rotated.",
 		Schema: map[string]*schema.Schema{
 			"name": {
 			    Description: "The Fortanix DSM secret security object name",

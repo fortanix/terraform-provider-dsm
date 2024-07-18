@@ -36,20 +36,30 @@ func resourceAppNonAPIKey() *schema.Resource {
 		ReadContext:   resourceReadAppNonAPIKey,
 		UpdateContext: resourceUpdateAppNonAPIKey,
 		DeleteContext: resourceDeleteAppNonAPIKey,
+		Description: "Creates a non API key app. The returned resource object contains the UUID of the app for further references. Default permissions of any group can be modified. Using dsm_app_non_api_key following " +
+		"apps can be created:\n" +
+		"   * `awsxks`\n" +
+		"   * `awsiam`\n" +
+		"   * `certificate`\n" +
+		"   * `trustedca`\n",
 		Schema: map[string]*schema.Schema{
 			"name": {
+			    Description: "The Fortanix DSM App name.",
 				Type:     schema.TypeString,
 				Required: true,
 			},
 			"app_id": {
+			    Description: "The unique ID of the app.",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"default_group": {
+			    Description: "The Fortanix DSM group object id to be mapped to the app by default.",
 				Type:     schema.TypeString,
 				Required: true,
 			},
 			"other_group": {
+			    Description: "The Fortanix DSM group object id the app needs to be assigned to. If you want to delete the existing groups from an app, remove the ids during update.",
 				Type:     schema.TypeList,
 				Optional: true,
 				Elem: &schema.Schema{
@@ -57,10 +67,14 @@ func resourceAppNonAPIKey() *schema.Resource {
 				},
 			},
 			"acct_id": {
+			    Description: "The account ID from Fortanix DSM.",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"creator": {
+				Description: "The creator of the app from Fortanix DSM.\n" +
+				"   * `user`: If the app was created by a user, the computed value will be the matching user id.\n" +
+				"   * `app`: If the app was created by a app, the computed value will be the matching app id.",
 				Type:     schema.TypeMap,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -68,11 +82,21 @@ func resourceAppNonAPIKey() *schema.Resource {
 				},
 			},
 			"description": {
+			    Description: "The description of the app.",
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "",
 			},
 			"authentication_method": {
+			    Description: "The Authentication type of an app.\n" +
+				"   * `type`:  Following authentication types are supported.\n" +
+				"       * awsxks, awsiam, certificate and trustedca.\n" +
+				"   * `certificate`: Certificate value, this should be configured when the type is certificate.\n" +
+				"   * `ca_certificate`: CA certificate value, this should be configured when the type is trustedca.\n" +
+				"   One of the following parameters should be given when the type is trustedca.\n" +
+				"   * `ip_address`:  IP address value for trusted ca.\n" +
+				"   * `dns_name`:  DNS name for trusted ca.\n" +
+				"   **Note**: For more details refer the above examples.",
 				Type:      schema.TypeMap,
 				Required:  true,
 				Elem: &schema.Schema{
@@ -81,6 +105,8 @@ func resourceAppNonAPIKey() *schema.Resource {
 				},
 			},
 			"credential": {
+			    Description: "The Fortanix DSM App credentials. When the authentication method is awsxks, " +
+			    "AWSXKS access and secret keys will be mapped here.",
 				Type:      schema.TypeMap,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -88,6 +114,7 @@ func resourceAppNonAPIKey() *schema.Resource {
 				},
 			},
 			"other_group_permissions": {
+			    Description: "Incase if you want to change the default permissions of a new group that includes default group. Please refer the example.",
 				Type:     schema.TypeMap,
 				Optional: true,
 				Elem: &schema.Schema{
@@ -96,6 +123,7 @@ func resourceAppNonAPIKey() *schema.Resource {
 				},
 			},
 			"mod_group_permissions": {
+			    Description: "To modify the permissions of any existing group that includes default group. Please refer the example.",
 				Type:     schema.TypeMap,
 				Optional: true,
 				Elem: &schema.Schema{

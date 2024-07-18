@@ -106,7 +106,11 @@ func resourceAzureSobject() *schema.Resource {
 				Optional: true,
 			},
 			"key_ops": {
-			    Description: "The security object operations permitted.",
+			    Description: "The security object operations permitted.\n\n" +
+				"| obj_type | key_size/curve | key_ops |\n" +
+				"| -------- | -------- |-------- |\n" +
+				"| `RSA` | 2048, 3072, 4096 | APPMANAGEABLE, SIGN, VERIFY, ENCRYPT, DECRYPT, WRAPKEY, UNWRAPKEY, EXPORT |\n" +
+				"| `EC` | NistP256, NistP384, NistP521,SecP256K1 | APPMANAGEABLE, SIGN, VERIFY, AGREEKEY, EXPORT",
 				Type:     schema.TypeList,
 				Optional: true,
 				Elem: &schema.Schema{

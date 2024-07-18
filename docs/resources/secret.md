@@ -4,13 +4,13 @@ page_title: "dsm_secret Resource - terraform-provider-dsm"
 subcategory: ""
 description: |-
   Imports a security object of type Secret. The returned resource object contains the UUID of the security object for further references.
-  A secret value format should be in a raw/base64/hex format. Secret can also be rotated
+  A secret value format should be in a base64 format. Secret can also be rotated.
 ---
 
 # dsm_secret (Resource)
 
 Imports a security object of type Secret. The returned resource object contains the UUID of the security object for further references.
-A secret value format should be in a raw/base64/hex format. Secret can also be rotated
+A secret value format should be in a base64 format. Secret can also be rotated.
 
 ## Example Usage
 

@@ -48,7 +48,7 @@ resource "dsm_azure_sobject" "sobject" {
   name            = "azure_sobject"
   group_id        = dsm_group.azure_byok.id
   description     = "key creation in akv"
-  key_ops         = ["SIGN", "VERIFY", "ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "EXPORT", "APPMANAGEABLE", "HIGHVOLUME"]
+  key_ops         = ["SIGN", "VERIFY", "ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "APPMANAGEABLE", "HIGHVOLUME"]
   enabled         = true
   expiry_date     = "2025-02-02T17:04:05Z"
   key             = {

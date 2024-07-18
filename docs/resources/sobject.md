@@ -64,8 +64,8 @@ resource "dsm_sobject" "sobject" {
 
 - `group_id` (String) The security object group assignment.
 - `name` (String) The security object name.
-- `obj_type` (String) The security object type. Supported security objects:
-AES, DES, DES3, RSA, DSA, KCDSA, EC, ECKCDSA, ARIA, SEED and Tokenization(fpe).
+- `obj_type` (String) The security object type.
+   * `Supported security objects`: AES, DES, DES3, RSA, DSA, KCDSA, EC, ECKCDSA, ARIA, SEED and Tokenization(fpe).
 
 ### Optional
 
@@ -88,7 +88,7 @@ AES, DES, DES3, RSA, DSA, KCDSA, EC, ECKCDSA, ARIA, SEED and Tokenization(fpe).
 
 | obj_type | Curve | key_ops |
 | -------- | -------- |-------- |
-| `EC` | SecP192K1, SecP224K1, SecP256K1  NistP192, NistP224, NistP256, NistP384, NistP521, X25519, Ed25519 | APPMANAGEABLE, SIGN, VERIFY, ENCRYPT, DECRYPT, WRAPKEY, UNWRAPKEY, EXPORT |
+| `EC` | SecP192K1, SecP224K1, SecP256K1  NistP192, NistP224, NistP256, NistP384, NistP521, X25519, Ed25519 | APPMANAGEABLE, SIGN, VERIFY, AGREEKEY, EXPORT |
 | `ECKCDSA` | SecP192K1, SecP224K1, SecP256K1  NistP192, NistP224, NistP256, NistP384, NistP521 | APPMANAGEABLE, SIGN, VERIFY, EXPORT |
 - `enabled` (Boolean) Whether the security object is enabled or disabled.
    * The values are true/false.
@@ -151,7 +151,7 @@ Refer to the fpeOptions schema in https://www.fortanix.com/fortanix-restful-api-
    * `interval_months`: Rotate the key for every given number of months.
    * `effective_at`: Start of the rotation policy time.
    * `rotate_copied_keys`: Enable key rotation for copied keys.
-   * `deactivate_rotated_key`: Deactivate original key after rotation true/false).
+   * `deactivate_rotated_key`: Deactivate original key after rotation true/false.
    * **Note:** Either interval_days or interval_months should be given, but not both.
 - `rsa` (String) rsaOptions passed as a string (if ”RSA” obj_type is specified). The string should match the 'rsa' value in Post body while working with Fortanix Rest API. For Example:
 

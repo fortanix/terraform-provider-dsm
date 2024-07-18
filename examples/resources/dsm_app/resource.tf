@@ -53,6 +53,7 @@ resource "dsm_app" "app" {
   default_group = dsm_group.group1.id
   other_group = [dsm_group.group2.id, dsm_group.group3.id]
   other_group_permissions = local.other_groups
+  // mod_group_permissions should be given while updating an app
   mod_group_permissions = local.mod_groups
 }
 
