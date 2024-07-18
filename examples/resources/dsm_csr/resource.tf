@@ -1,7 +1,7 @@
 resource "dsm_sobject" "sobject" {
   name     = "sobject-rsa"
   obj_type = "RSA"
-  group_id = "<group ID>" // make sure that the group can be accessed by your plugin "Terraform Plugin - CSR"
+  group_id = "<group ID>" // make sure that the group can be accessed by your plugin "Terraform Plugin - CSR".
   key_size = 2048
 }
 
