@@ -27,6 +27,8 @@ resource "dsm_group_user_role" "sample_group_user_role" {
 
 - `group_name` (String) The Fortanix DSM group object name.
 - `role_name` (String) The Fortanix DSM role object name.
+   * The legacy group user role values can be GROUPAUDITOR or GROUPADMINISTRATOR.
+   * For custom group roles, the value should be the role ID.
 - `user_email` (String) The Fortanix DSM user object email.
 
 ### Read-Only

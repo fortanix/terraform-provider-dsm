@@ -3,18 +3,18 @@
 page_title: "dsm_group_crypto_policy Resource - terraform-provider-dsm"
 subcategory: ""
 description: |-
-  Returns the Fortanix DSM group cryptographic policy object from the cluster as a Resource.
+  Adds cryptographic policy to a existing Fortnanix DSM group.
 ---
 
 # dsm_group_crypto_policy (Resource)
 
-Returns the Fortanix DSM group cryptographic policy object from the cluster as a Resource.
+Adds cryptographic policy to a existing Fortnanix DSM group.
 
 ## Example Usage
 
 ```terraform
 resource "dsm_group_crypto_policy" "sample_group_crypto_policy" {
-  group_id = d7bb3e7e-153a-4a18-ac8f-9b924113eef3
+  name = "my_group"
   cryptographic_policy = jsonencode({
     legacy_policy = "allowed"
     key_ops = [
@@ -92,7 +92,9 @@ resource "dsm_group_crypto_policy" "sample_group_crypto_policy" {
 
 - `acct_id` (String) Account ID from Fortanix DSM.
 - `approval_policy` (String) The Fortanix DSM group object quorum approval policy definition as a JSON string.
-- `creator` (Map of String) Creator of the group object from Fortanix DSM.
+- `creator` (Map of String) The creator of the group from Fortanix DSM.
+   * `user`: If the group was created by a user, the computed value will be the matching user id.
+   * `app`: If the group was created by a app, the computed value will be the matching app id.
 - `description` (String) The Fortanix DSM group object description.
 - `group_id` (String) Group object ID from Fortanix DSM.
 - `id` (String) The ID of this resource.

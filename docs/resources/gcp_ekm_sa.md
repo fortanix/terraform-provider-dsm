@@ -3,28 +3,44 @@
 page_title: "dsm_gcp_ekm_sa Resource - terraform-provider-dsm"
 subcategory: ""
 description: |-
-  Returns the Fortanix DSM Google EKM app from the cluster as a resource.
+  Creates a Fortanix DSM Google EKM app. The returned resource object contains the UUID of the app for further references.
 ---
 
 # dsm_gcp_ekm_sa (Resource)
 
-Returns the Fortanix DSM Google EKM app from the cluster as a resource.
+Creates a Fortanix DSM Google EKM app. The returned resource object contains the UUID of the app for further references.
 
 ## Example Usage
 
 ```terraform
+// Create three normal groups
+resource "dsm_group" "group1" {
+  name = "group1"
+  description = "group1"
+}
+
+resource "dsm_group" "group2" {
+  name = "group2"
+  description = "group2"
+}
+
+resource "dsm_group" "group3" {
+  name = "group3"
+  description = "group3"
+}
+
 resource "dsm_gcp_ekm_sa" "sample_ekm_sa" {
   name = "service-[PROJECT-NUMBER]@gcp-sa-ekms.iam.gserviceaccount.com"
-  default_group = "035f84b5-75b6-4f37-8968-19d588695bcc"
+  default_group = dsm_group.group1.id
   other_group =     [
-      "d23ea001-80ef-41ad-a3b2-25489b555a58",
-      "499760d3-04bd-4c7e-98b1-51a9e8871ee1"
+      dsm_group.group2.id,
+      dsm_group.group3.id
     ]
 
   other_group_permissions = zipmap(
     [
-      "d23ea001-80ef-41ad-a3b2-25489b555a58",
-      "499760d3-04bd-4c7e-98b1-51a9e8871ee1"
+      dsm_group.group2.id,
+      dsm_group.group3.id
     ],
     [
       "SIGN,VERIFY,ENCRYPT,DECRYPT,WRAPKEY,UNWRAPKEY,DERIVEKEY,MACGENERATE,MACVERIFY,EXPORT,MANAGE,AGREEKEY,AUDIT",
