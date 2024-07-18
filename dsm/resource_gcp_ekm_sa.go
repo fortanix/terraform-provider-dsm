@@ -27,7 +27,7 @@ func resourceGcpEkmSa() *schema.Resource {
 		ReadContext:   resourceReadGcpEkmSa,
 		UpdateContext: resourceUpdateGcpEkmSa,
 		DeleteContext: resourceDeleteGcpEkmSa,
-		Description: "Returns the Fortanix DSM Google EKM app from the cluster as a resource.",
+		Description: "Creates a Fortanix DSM Google EKM app. The returned resource object contains the UUID of the app for further references.",
 		Schema: map[string]*schema.Schema{
 			// service account name = app name
 			"name": {

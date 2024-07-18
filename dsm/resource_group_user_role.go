@@ -50,7 +50,9 @@ func resourceGroupUserRole() *schema.Resource {
 				Required: true,
 			},
 			"role_name": {
-			    Description: "The Fortanix DSM role object name.",
+				Description: "The Fortanix DSM role object name.\n" +
+				"   * The legacy group user role values can be GROUPAUDITOR or GROUPADMINISTRATOR.\n" +
+				"   * For custom group roles, the value should be the role ID.",
 				Type:     schema.TypeString,
 				Required: true,
 			},

@@ -1,6 +1,5 @@
-
 resource "dsm_group_crypto_policy" "sample_group_crypto_policy" {
-  group_id = d7bb3e7e-153a-4a18-ac8f-9b924113eef3
+  name = "my_group"
   cryptographic_policy = jsonencode({
     legacy_policy = "allowed"
     key_ops = [

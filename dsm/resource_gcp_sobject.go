@@ -25,7 +25,7 @@ func resourceGCPSobject() *schema.Resource {
 		ReadContext:   resourceReadGCPSobject,
 		UpdateContext: resourceUpdateGCPSobject,
 		DeleteContext: resourceDeleteGCPSobject,
-		Description: "Returns the DSM security object from the cluster as a resource for the GCP CDC Group. This is a Bring-Your-Own-Key (BYOK) method and copies an existing DSM local security object to GCP KMS as a Customer Managed Key (CMK).",
+		Description: "Creates a new security object in GCP CDC Group. This is a Bring-Your-Own-Key (BYOK) method and copies an existing DSM local security object to GCP KMS as a Customer Managed Key (CMK).",
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Description: "The security object name.",
@@ -114,7 +114,10 @@ func resourceGCPSobject() *schema.Resource {
 				Optional: true,
 			},
 			"key_ops": {
-				Description: "The permitted operations for the security object.",
+			    Description: "The security object operations permitted.\n\n" +
+				"| obj_type | key_size/curve | key_ops |\n" +
+				"| -------- | -------- |-------- |\n" +
+				"| `AES` | 256 | ENCRYPT, DECRYPT, WRAPKEY, UNWRAPKEY, DERIVEKEY, MACGENERATE, MACVERIFY, APPMANAGEABLE, EXPORT",
 				Type:     schema.TypeList,
 				Optional: true,
 				Elem: &schema.Schema{

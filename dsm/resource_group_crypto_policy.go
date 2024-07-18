@@ -17,7 +17,7 @@ func resourceGroupCryptoPolicy() *schema.Resource {
 		ReadContext:   resourceReadGroupCryptoPolicy,
 		UpdateContext: resourceUpdateGroupCryptoPolicy,
 		DeleteContext: resourceDeleteGroupCryptoPolicy,
-		Description: "Returns the Fortanix DSM group cryptographic policy object from the cluster as a Resource.",
+		Description: "Adds cryptographic policy to a existing Fortnanix DSM group.",
 		Schema: map[string]*schema.Schema{
 			"name": {
 			    Description: "The Fortanix DSM group object name.",
@@ -35,7 +35,9 @@ func resourceGroupCryptoPolicy() *schema.Resource {
 				Computed: true,
 			},
 			"creator": {
-			    Description: "Creator of the group object from Fortanix DSM.",
+				Description: "The creator of the group from Fortanix DSM.\n" +
+				"   * `user`: If the group was created by a user, the computed value will be the matching user id.\n" +
+				"   * `app`: If the group was created by a app, the computed value will be the matching app id.",
 				Type:     schema.TypeMap,
 				Computed: true,
 				Elem: &schema.Schema{
