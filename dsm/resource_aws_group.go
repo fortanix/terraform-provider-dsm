@@ -66,12 +66,13 @@ func resourceAWSGroup() *schema.Resource {
 			"access_key": {
 			    Description: "The Access Key ID to set for AWS KMS group for programmatic (API) access to AWS Services.",
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
+				Sensitive: true,
 			},
 			"secret_key": {
 			    Description: "The Secret Access Key to set for AWS KMS group for programmatic (API) access to AWS Services.",
 				Type:      schema.TypeString,
-				Required:  true,
+				Optional: true,
 				Sensitive: true,
 			},
 		},

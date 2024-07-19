@@ -35,13 +35,13 @@ resource "dsm_aws_group" "dsm_aws_group_terraform" {
 
 ### Required
 
-- `access_key` (String) The Access Key ID to set for AWS KMS group for programmatic (API) access to AWS Services.
 - `name` (String) The name follows the nomenclature of `<Custom Group Name>-aws-<Region>`.
-- `secret_key` (String, Sensitive) The Secret Access Key to set for AWS KMS group for programmatic (API) access to AWS Services.
 
 ### Optional
 
+- `access_key` (String, Sensitive) The Access Key ID to set for AWS KMS group for programmatic (API) access to AWS Services.
 - `description` (String) The description of the AWS KMS group.
+- `secret_key` (String, Sensitive) The Secret Access Key to set for AWS KMS group for programmatic (API) access to AWS Services.
 
 ### Read-Only
 
