@@ -3,12 +3,12 @@
 page_title: "dsm_aws_sobject Resource - terraform-provider-dsm"
 subcategory: ""
 description: |-
-  Creates a new security object in AWS KMS. This is a Bring-Your-Own-Key (BYOK) method and copies an existing DSM local security object to AWS KMS as a Customer Managed Key (CMK).The returned resource object contains the UUID of the group for further references.
+  Creates a new security object in AWS KMS. This is a Bring-Your-Own-Key (BYOK) method and copies an existing DSM local security object to AWS KMS as a Customer Managed Key (CMK).The returned resource object contains the UUID of the security object for further references.
 ---
 
 # dsm_aws_sobject (Resource)
 
-Creates a new security object in AWS KMS. This is a Bring-Your-Own-Key (BYOK) method and copies an existing DSM local security object to AWS KMS as a Customer Managed Key (CMK).The returned resource object contains the UUID of the group for further references.
+Creates a new security object in AWS KMS. This is a Bring-Your-Own-Key (BYOK) method and copies an existing DSM local security object to AWS KMS as a Customer Managed Key (CMK).The returned resource object contains the UUID of the security object for further references.
 
 ## Example Usage
 

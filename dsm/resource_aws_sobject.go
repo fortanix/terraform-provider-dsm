@@ -36,7 +36,7 @@ func resourceAWSSobject() *schema.Resource {
 		ReadContext:   resourceReadAWSSobject,
 		UpdateContext: resourceUpdateAWSSobject,
 		DeleteContext: resourceDeleteAWSSobject,
-		Description: "Creates a new security object in AWS KMS. This is a Bring-Your-Own-Key (BYOK) method and copies an existing DSM local security object to AWS KMS as a Customer Managed Key (CMK).The returned resource object contains the UUID of the group for further references.",
+		Description: "Creates a new security object in AWS KMS. This is a Bring-Your-Own-Key (BYOK) method and copies an existing DSM local security object to AWS KMS as a Customer Managed Key (CMK).The returned resource object contains the UUID of the security object for further references.",
 		Schema: map[string]*schema.Schema{
 			"name": {
 			    Description: "The security object name.",
