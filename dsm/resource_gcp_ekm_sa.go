@@ -13,7 +13,8 @@ package dsm
 import (
 	"context"
 	"fmt"
-//	"strings"
+
+	//	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -26,25 +27,33 @@ func resourceGcpEkmSa() *schema.Resource {
 		ReadContext:   resourceReadGcpEkmSa,
 		UpdateContext: resourceUpdateGcpEkmSa,
 		DeleteContext: resourceDeleteGcpEkmSa,
+		Description: "Creates a Fortanix DSM Google EKM app. The returned resource object contains the UUID of the app for further references.",
 		Schema: map[string]*schema.Schema{
 			// service account name = app name
 			"name": {
+				Description: "The Google service account name.",
 				Type:     schema.TypeString,
 				Required: true,
 			},
 			"app_id": {
+				Description: "The unique ID of the app from Terraform.",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"default_group": {
+				Description: "The Fortanix DSM group ID to be mapped to the app by default.",
 				Type:     schema.TypeString,
 				Required: true,
 			},
 			"acct_id": {
+				Description: "The account ID from Fortanix DSM.",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"creator": {
+				Description: "The creator of the security object from Fortanix DSM.\n" +
+				"   * `user`: If the security object was created by a user, the computed value will be the matching user ID.\n" +
+				"   * `app`: If the security object was created by an app, the computed value will be the matching app ID.",
 				Type:     schema.TypeMap,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -52,11 +61,13 @@ func resourceGcpEkmSa() *schema.Resource {
 				},
 			},
 			"description": {
+				Description: "The description of the app.",
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "",
 			},
 			"other_group": {
+				Description: "The Fortanix DSM group object ID the app needs to be assigned to. If you want to delete the existing groups from an app, remove the IDs during update.",
 				Type:     schema.TypeList,
 				Optional: true,
 				Elem: &schema.Schema{
@@ -64,6 +75,7 @@ func resourceGcpEkmSa() *schema.Resource {
 				},
 			},
 			"other_group_permissions": {
+				Description: "If you want to change the default permissions of a new group.",
 				Type:     schema.TypeMap,
 				Optional: true,
 				Elem: &schema.Schema{
@@ -72,6 +84,7 @@ func resourceGcpEkmSa() *schema.Resource {
 				},
 			},
 			"mod_group_permissions": {
+				Description: "To modify the permissions of any existing group.",
 				Type:     schema.TypeMap,
 				Optional: true,
 				Elem: &schema.Schema{

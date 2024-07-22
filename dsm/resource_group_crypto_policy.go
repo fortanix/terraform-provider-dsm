@@ -17,20 +17,27 @@ func resourceGroupCryptoPolicy() *schema.Resource {
 		ReadContext:   resourceReadGroupCryptoPolicy,
 		UpdateContext: resourceUpdateGroupCryptoPolicy,
 		DeleteContext: resourceDeleteGroupCryptoPolicy,
+		Description: "Adds cryptographic policy to a existing Fortnanix DSM group.",
 		Schema: map[string]*schema.Schema{
 			"name": {
+			    Description: "The Fortanix DSM group object name.",
 				Type:     schema.TypeString,
 				Required: true,
 			},
 			"group_id": {
+			    Description: "Group object ID from Fortanix DSM.",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"acct_id": {
+			    Description: "Account ID from Fortanix DSM.",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"creator": {
+				Description: "The creator of the group from Fortanix DSM.\n" +
+				"   * `user`: If the group was created by a user, the computed value will be the matching user id.\n" +
+				"   * `app`: If the group was created by a app, the computed value will be the matching app id.",
 				Type:     schema.TypeMap,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -38,14 +45,17 @@ func resourceGroupCryptoPolicy() *schema.Resource {
 				},
 			},
 			"description": {
+			    Description: "The Fortanix DSM group object description.",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"approval_policy": {
+			    Description: "The Fortanix DSM group object quorum approval policy definition as a JSON string.",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"cryptographic_policy": {
+			    Description: "The Fortanix DSM group object cryptographic policy definition as a JSON string",
 				Type:     schema.TypeString,
 				Required: true,
 			},
