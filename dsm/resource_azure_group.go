@@ -25,20 +25,28 @@ func resourceAzureGroup() *schema.Resource {
 		ReadContext:   resourceReadAzureGroup,
 		UpdateContext: resourceUpdateAzureGroup,
 		DeleteContext: resourceDeleteAzureGroup,
+		Description: "Creates a Fortanix DSM group mapped to Azure Key Vault in the cluster as a resource. This group acts as a container for security objects. The returned resource object contains the UUID of the group for further references.\n\n" +
+		"   **Note**: It supports only Standard Azure key vault.",
 		Schema: map[string]*schema.Schema{
 			"name": {
+                Description: "The Azure KV group object name in Fortanix DSM.",
 				Type:     schema.TypeString,
 				Required: true,
 			},
 			"group_id": {
+			    Description: "The Azure KV group object ID from Fortanix DSM.",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"acct_id": {
+			    Description: "The Account ID from Fortanix DSM.",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"creator": {
+			    Description: "The creator of the group from Fortanix DSM.\n" +
+			    "   * `user`: If the group was created by a user, the computed value will be the matching user id.\n" +
+			    "   * `app`: If the group was created by a app, the computed value will be the matching app id.",
 				Type:     schema.TypeMap,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -46,31 +54,39 @@ func resourceAzureGroup() *schema.Resource {
 				},
 			},
 			"description": {
+			    Description: "Description of the Azure KV Fortanix DSM group.",
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "",
 			},
 			"url": {
+			    Description: "The URL of the object in an Azure KV that uniquely identifies the object.",
 				Type:     schema.TypeString,
 				Required: true,
 			},
 			"client_id": {
+			    Description: "The Azure registered application id (username).",
 				Type:     schema.TypeString,
 				Required: true,
 			},
 			"subscription_id": {
+			    Description: "The ID of the Azure AD subscription.",
 				Type:     schema.TypeString,
 				Required: true,
 			},
 			"tenant_id": {
+			    Description: "The tenant/directory id of the Azure subscription.",
 				Type:     schema.TypeString,
 				Required: true,
 			},
 			"key_vault_type": {
+			    Description: "The type of key vaults. The default value is `Standard`.",
 				Type:     schema.TypeString,
 				Optional: true,
+				Default :"Standard",
 			},
 			"secret_key": {
+			    Description: "A secret string that a registered application in Azure uses to prove its identity (application password).",
 				Type:      schema.TypeString,
 				Required:  true,
 				Sensitive: true,
@@ -102,7 +118,7 @@ func resourceCreateAzureGroup(ctx context.Context, d *schema.ResourceData, m int
 			"subscription_id": d.Get("subscription_id").(string),
 			"secret_key":      d.Get("secret_key").(string),
 			// 0.5.0: FIXME: key_vault_type currently set to Standard only
-			"key_vault_type": "Standard",
+			"key_vault_type": d.Get("key_vault_type").(string),
 			"hsm_order":      0,
 			"tls": map[string]interface{}{
 				"mode":              "required",

@@ -39,7 +39,7 @@ resource "dsm_sobject" "dsm_sobject" {
   name     = "dsm_sobject"
   group_id = dsm_group.normal_group.id
   key_size = 2048
-  key_ops = ["ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "SIGN", "VERIFY", "EXPORT"]
+  key_ops = ["ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "SIGN", "VERIFY", "EXPORT", "APPMANAGEABLE"]
   obj_type = "RSA"
 }
 
@@ -48,7 +48,7 @@ resource "dsm_azure_sobject" "sobject" {
   name            = "azure_sobject"
   group_id        = dsm_group.azure_byok.id
   description     = "key creation in akv"
-  key_ops         = ["SIGN", "VERIFY", "ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "EXPORT", "APPMANAGEABLE", "HIGHVOLUME"]
+  key_ops         = ["ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "SIGN", "VERIFY", "EXPORT", "APPMANAGEABLE"]
   enabled         = true
   expiry_date     = "2025-02-02T17:04:05Z"
   key             = {

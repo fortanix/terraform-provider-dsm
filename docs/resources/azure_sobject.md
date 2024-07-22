@@ -54,7 +54,7 @@ resource "dsm_sobject" "dsm_sobject" {
   name     = "dsm_sobject"
   group_id = dsm_group.normal_group.id
   key_size = 2048
-  key_ops = ["ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "SIGN", "VERIFY", "EXPORT"]
+  key_ops = ["ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "SIGN", "VERIFY", "EXPORT", "APPMANAGEABLE"]
   obj_type = "RSA"
 }
 
@@ -63,7 +63,7 @@ resource "dsm_azure_sobject" "sobject" {
   name            = "azure_sobject"
   group_id        = dsm_group.azure_byok.id
   description     = "key creation in akv"
-  key_ops         = ["SIGN", "VERIFY", "ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "EXPORT", "APPMANAGEABLE", "HIGHVOLUME"]
+  key_ops         = ["ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "SIGN", "VERIFY", "EXPORT", "APPMANAGEABLE"]
   enabled         = true
   expiry_date     = "2025-02-02T17:04:05Z"
   key             = {
@@ -97,6 +97,11 @@ resource "dsm_azure_sobject" "sobject" {
 - `enabled` (Boolean) Whether the security object will be Enabled or Disabled. The values are true/false.
 - `expiry_date` (String) The security object expiry date in RFC format.
 - `key_ops` (List of String) The security object operations permitted.
+
+| obj_type | key_size/curve | key_ops |
+| -------- | -------- |-------- |
+| `RSA` | 2048, 3072, 4096 | APPMANAGEABLE, SIGN, VERIFY, ENCRYPT, DECRYPT, WRAPKEY, UNWRAPKEY, EXPORT |
+| `EC` | NistP256, NistP384, NistP521,SecP256K1 | APPMANAGEABLE, SIGN, VERIFY, AGREEKEY, EXPORT
 - `key_size` (Number) The size of the security object.
 - `obj_type` (String) The type of security object.
 - `rotation_policy` (Map of String) Policy to rotate a Security Object, configure the below parameters.
