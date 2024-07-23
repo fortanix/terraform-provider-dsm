@@ -57,6 +57,9 @@ resource "dsm_aws_sobject" "aws_sobject" {
     aws-aliases = "dsm_aws_sobject"
     aws-policy = "{\"Version\":\"2012-10-17\",\"Id\":\"key-default-1\",\"Statement\":[{\"Sid\":\"EnableIAMUserPermissions\",\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"arn:aws:iam::XXXXXXXXXXXX:root\"},\"Action\":\"kms:*\",\"Resource\":\"*\"}]}"
   }
+  aws_tags = {
+    test-key = "test-value"
+  }
 }
 
 /*
@@ -73,7 +76,7 @@ aws_secret_access_key = XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 aws_session_token = XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 */
 
-// Step2: add aws_profile and aws_region to the dsm provider. By default aws_region is "us-east-1"
+// Step2: add aws_profile name and aws_region to the dsm provider. By default aws_region is "us-east-1"
 provider "dsm" {
   aws_profile = "default"
 }

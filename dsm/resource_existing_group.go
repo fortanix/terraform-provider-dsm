@@ -17,20 +17,28 @@ func resourceExistingGroup() *schema.Resource {
 		ReadContext:   resourceReadExistingGroup,
 		UpdateContext: resourceUpdateExistingGroup,
 		DeleteContext: resourceDeleteExistingGroup,
+		Description: "Returns the existing Fortanix DSM group object from the cluster as a Resource. The returned resource object contains the UUID of the group for further references.\n" +
+		"Later this resource group can be modified.",
 		Schema: map[string]*schema.Schema{
 			"name": {
+			    Description: "The Fortanix DSM group object name.",
 				Type:     schema.TypeString,
 				Required: true,
 			},
 			"group_id": {
+			    Description: " Group object ID from Fortanix DSM.",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"acct_id": {
+			    Description: "Account ID from Fortanix DSM.",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"creator": {
+				Description: "The creator of the app from Fortanix DSM.\n" +
+				"   * `user`: If the group was created by a user, the computed value will be the matching user id.\n" +
+				"   * `app`: If the group was created by a app, the computed value will be the matching app id.",
 				Type:     schema.TypeMap,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -38,14 +46,17 @@ func resourceExistingGroup() *schema.Resource {
 				},
 			},
 			"description": {
+			    Description: "The Fortanix DSM group object description.",
 				Type:     schema.TypeString,
 				Optional: true,
 			},
 			"approval_policy": {
+			    Description: "The Fortanix DSM group object quorum approval policy definition as a JSON string.",
 				Type:     schema.TypeString,
 				Optional: true,
 			},
 			"hmg": {
+			    Description: "The Fortanix DSM group object HMS/KMS definition as a JSON string.",
 				Type:     schema.TypeString,
 				Optional: true,
 			},
