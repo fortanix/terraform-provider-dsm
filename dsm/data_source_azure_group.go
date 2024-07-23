@@ -20,21 +20,28 @@ import (
 
 func dataSourceAzureGroup() *schema.Resource {
 	return &schema.Resource{
+		Description: "Returns the Fortanix DSM Azure KV mapped group object from the cluster as a Data Source.",
 		ReadContext: dataSourceAzureGroupRead,
 		Schema: map[string]*schema.Schema{
 			"name": {
+				Description: "The Azure KV group object name in Fortanix DSM.",
 				Type:     schema.TypeString,
 				Required: true,
 			},
 			"group_id": {
+				Description: "The Azure KV group object ID from Fortanix DSM.",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"acct_id": {
+				Description: "The Account ID from Fortanix DSM.",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"creator": {
+				Description: "The creator of the group from Fortanix DSM.\n" +
+			    "   * `user`: If the group was created by a user, the computed value will be the matching user id.\n" +
+			    "   * `app`: If the group was created by a app, the computed value will be the matching app id.",
 				Type:     schema.TypeMap,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -42,35 +49,43 @@ func dataSourceAzureGroup() *schema.Resource {
 				},
 			},
 			"description": {
+				Description: "Description of the Azure KV Fortanix DSM group.",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"url": {
+				Description: "The URL of the object in an Azure KV that uniquely identifies the object.",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"client_id": {
+				Description: "The Azure registered application id (username).",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"subscription_id": {
+				Description: "The ID of the Azure AD subscription.",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"tenant_id": {
+				Description: "The tenant/directory id of the Azure subscription.",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"secret_key": {
+				Description: "A secret string that a registered application in Azure uses to prove its identity (application password).",
 				Type:      schema.TypeString,
 				Computed:  true,
 				Sensitive: true,
 			},
 			"key_vault_type": {
+				Description: "The type of key vaults. The default value is `Standard`.",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"scan": {
+				Description: "Syncs keys from Azure KV to the Azure group in DSM. Value is either true/false.",
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
