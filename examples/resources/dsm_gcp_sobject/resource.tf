@@ -1,11 +1,11 @@
 // Create GCP group
 resource "dsm_group" "gcp_cdc" {
   name = "group_gcp"
-  hmg  = var.hmg
+  gcp_data  = var.gcp_data
 }
 
 // GCP data to create a group inside DSM
-variable "hmg" {
+variable "gcp_data" {
   default = <<EOF
   {
     "kind": "GcpKeyRing",
@@ -27,6 +27,7 @@ resource "dsm_group" "normal_group" {
 resource "dsm_sobject" "sobject" {
   name     = "aes256"
   key_size = 256
+  group_id = dsm_group.normal_group.id
 }
 
 // Copy a key to GCP key ring using the above DSM security object
