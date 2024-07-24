@@ -13,6 +13,7 @@ Adds cryptographic policy to a existing Fortnanix DSM group.
 ## Example Usage
 
 ```terraform
+// Adding cryptographic policy to the group
 resource "dsm_group_crypto_policy" "sample_group_crypto_policy" {
   name = "my_group"
   cryptographic_policy = jsonencode({

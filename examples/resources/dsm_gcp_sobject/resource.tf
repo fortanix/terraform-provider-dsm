@@ -6,6 +6,8 @@ resource "dsm_group" "gcp_cdc" {
 
 // GCP data to create a group inside DSM
 variable "gcp_data" {
+  type        = any
+  description = "The policy document. This is a JSON formatted string."
   default = <<EOF
   {
     "kind": "GcpKeyRing",
