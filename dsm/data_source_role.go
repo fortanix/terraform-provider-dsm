@@ -11,14 +11,17 @@ import (
 func dataSourceRole() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceRoleRead,
+		Description: "Returns the Fortanix DSM role object from the cluster as a Data Source.",
 		Schema: map[string]*schema.Schema{
 			"role_id": {
+				Description: "Role object ID from Fortanix DSM.",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"name": {
+				Description: "Role name in Fortanix DSM.",
 				Type:     schema.TypeString,
-				Computed: true,
+				Required: true,
 			},
 		},
 	}

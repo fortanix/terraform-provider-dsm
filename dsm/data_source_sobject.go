@@ -19,24 +19,32 @@ import (
 func dataSourceSobject() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceSobjectRead,
+		Description: "Returns the DSM security object from the cluster as a Data Source.",
 		Schema: map[string]*schema.Schema{
 			"name": {
+				Description: "Security object name.",
 				Type:     schema.TypeString,
 				Required: true,
 			},
 			"kid": {
+				Description: "Security object ID from DSM.",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"pub_key": {
+				Description: "Public key from DSM (If applicable).",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"acct_id": {
+				Description: "Account ID from DSM.",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"creator": {
+				Description: "The creator of the security object from Fortanix DSM.\n" +
+				"   * `user`: If the security object was created by a user, the computed value will be the matching user id.\n" +
+				"   * `app`: If the security object was created by a app, the computed value will be the matching app id.",
 				Type:     schema.TypeMap,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -44,40 +52,44 @@ func dataSourceSobject() *schema.Resource {
 				},
 			},
 			"description": {
+				Description: "Security object description.",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"export": {
+				Description: "If set to true, value of the security object in base64 format will be stored in the data source.",
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
 			"value": {
+				Description: "Value of key material (only if export is allowed).",
 				Type:      schema.TypeString,
 				Computed:  true,
 				Sensitive: true,
 			},
 			"key_ops": {
+				Description: "The security object key permission from Fortanix DSM.\n" +
+				"   * Default is to allow all permissions except EXPORT.",
 				Type:     schema.TypeList,
-				Optional: true,
 				Computed: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
 			},
 			"key_size": {
+				Description: "The size of the security object.",
 				Type:     schema.TypeInt,
-				Optional: true,
 				Computed: true,
 			},
 			"obj_type": {
+				Description: "Security object key type from DSM.",
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 			"enabled": {
+				Description: "Whether the security object will be Enabled or Disabled. The values are true/false.",
 				Type:     schema.TypeBool,
-				Optional: true,
 				Computed: true,
 			},
 		},

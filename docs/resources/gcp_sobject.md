@@ -13,7 +13,16 @@ Creates a new security object in GCP CDC Group. This is a Bring-Your-Own-Key (BY
 ## Example Usage
 
 ```terraform
-variable "hmg" {
+// Create GCP group
+resource "dsm_group" "gcp_cdc" {
+  name = "group_gcp"
+  gcp_data  = var.gcp_data
+}
+
+// GCP data to create a group inside DSM
+variable "gcp_data" {
+  type        = any
+  description = "The policy document. This is a JSON formatted string."
   default = <<EOF
   {
     "kind": "GcpKeyRing",
@@ -26,20 +35,19 @@ variable "hmg" {
   EOF
 }
 
-resource "dsm_group" "gcp_cdc" {
-  name = "group_gcp"
-  hmg = var.hmg
-}
-
-resource "dsm_group" "group" {
+// Create a normal group
+resource "dsm_group" "normal_group" {
   name = "group_test"
 }
 
+// Create an AES key in normal group
 resource "dsm_sobject" "sobject" {
-  name = "aes256"
+  name     = "aes256"
   key_size = 256
+  group_id = dsm_group.normal_group.id
 }
 
+// Copy a key to GCP key ring using the above DSM security object
 resource "dsm_gcp_sobject" "sample_gcp_sobject" {
   name     = "test-gcp-sobject"
   group_id = dsm_group.gcp_cdc.id
@@ -55,19 +63,9 @@ resource "dsm_gcp_sobject" "sample_gcp_sobject" {
     deactivate_rotated_key = true
     rotate_copied_keys     = "all_external"
   }
-  obj_type = "AES"
-  key_size = 256
-  key_ops = [
-    "ENCRYPT",
-    "DECRYPT",
-    "WRAPKEY",
-    "UNWRAPKEY",
-    "DERIVEKEY",
-    "MACGENERATE",
-    "MACVERIFY",
-    "APPMANAGEABLE",
-    "EXPORT"
-  ]
+  obj_type    = "AES"
+  key_size    = 256
+  key_ops     = ["ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "DERIVEKEY", "MACGENERATE", "MACVERIFY", "APPMANAGEABLE", "EXPORT"]
   enabled     = true
   expiry_date = "2025-02-02T17:04:05Z"
 }
@@ -78,14 +76,14 @@ resource "dsm_gcp_sobject" "sample_gcp_sobject" {
 
 ### Required
 
+- `custom_metadata` (Map of String) GCP KMS key metadata information:
+   * `gcp-key-id`: Key name within GCP KMS.
 - `group_id` (String) The GCP group ID in Fortanix DSM where the key will be generated.
 - `key` (Map of String) A local security object imported to Fortanix DSM (BYOK) and copied to GCP KMS.
 - `name` (String) The security object name.
 
 ### Optional
 
-- `custom_metadata` (Map of String) GCP KMS key metadata information:
-   * `gcp-key-id`: Key name within GCP KMS.
 - `description` (String) The description of the security object.
 - `enabled` (Boolean) Indicates whether the security object is enabled or disabled. Values are true/false.
 - `expiry_date` (String) The expiry date of the security object in RFC format.

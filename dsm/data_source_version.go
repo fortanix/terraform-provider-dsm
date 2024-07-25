@@ -20,16 +20,21 @@ import (
 func dataSourceVersion() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceVersionRead,
+		Description: "Returns the Fortanix DSM version of the cluster as a Data Source.",
 		Schema: map[string]*schema.Schema{
 			"version": {
+				Description: "The Fortanix DSM version.",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"api_version": {
+				Description: "The Fortanix DSM API version.",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"server_mode": {
+				Description: "The Fortanix DSM execution environment.\n" +
+			    "   * `SGX`: The Fortanix DSM running in Intel® SGX environment.",
 				Type:     schema.TypeString,
 				Computed: true,
 			},

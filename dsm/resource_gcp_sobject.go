@@ -90,7 +90,7 @@ func resourceGCPSobject() *schema.Resource {
 				Description: "GCP KMS key metadata information:\n" +
 				"   * `gcp-key-id`: Key name within GCP KMS.",
 				Type:     schema.TypeMap,
-				Optional: true,
+				Required: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},

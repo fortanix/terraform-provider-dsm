@@ -1,3 +1,10 @@
+// To use this resource, it is required to create a custom plugin in DSM first.
+// Copy the plugin from https://github.com/fortanix/terraform-provider-dsm/blob/main/plugins/Terraform-Plugin-CSR.lua
+// Create the custom plugin in DSM 
+// Plugin title: "Terraform Plugin - CSR"
+
+
+// Create an RSA key pair that will be used to generate the CSR
 resource "dsm_sobject" "sobject" {
   name     = "sobject-rsa"
   obj_type = "RSA"
@@ -5,6 +12,7 @@ resource "dsm_sobject" "sobject" {
   key_size = 2048
 }
 
+// Generating the CSR
 resource "dsm_csr" "example_csr" {
   kid      = dsm_sobject.sobject.id
   cn       = "example-common-name"
