@@ -57,6 +57,7 @@ func resourceGroup() *schema.Resource {
 			    Description: "The Fortanix DSM group object HMS/KMS definition as a JSON string.",
 				Type:     schema.TypeString,
 				Optional: true,
+				Sensitive: true,
 			},
 			"hmg_id": {
 			    Description: "HSM/KMS ID from Fortanix/DSM.",

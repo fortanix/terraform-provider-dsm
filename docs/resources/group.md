@@ -106,7 +106,7 @@ variable "azure_data" {
 
 - `approval_policy` (String) The Fortanix DSM group object quorum approval policy definition as a JSON string.
 - `description` (String) The Fortanix DSM group object description.
-- `hmg` (String) The Fortanix DSM group object HMS/KMS definition as a JSON string.
+- `hmg` (String, Sensitive) The Fortanix DSM group object HMS/KMS definition as a JSON string.
 - `key_undo_policy_window_time` (Number) The Fortanix DSM group object key undo policy window time as an Integer(Number of seconds).
 
 ### Read-Only
