@@ -39,4 +39,3 @@ data "dsm_plugin" "sample_plugin" {
 - `id` (String) The ID of this resource.
 - `language` (String) Programming language for plugin code (Default value is `LUA`).
 - `plugin_id` (String) Plugin object ID from Fortanix DSM.
-- `plugin_type` (String) Type of the plugin.

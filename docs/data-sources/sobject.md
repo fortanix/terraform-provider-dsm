@@ -4,11 +4,13 @@ page_title: "dsm_sobject Data Source - terraform-provider-dsm"
 subcategory: ""
 description: |-
   Returns the DSM security object from the cluster as a Data Source.
+  Note: This data source supports only security objects with EXPORT permission set in DSM.
 ---
 
 # dsm_sobject (Data Source)
 
 Returns the DSM security object from the cluster as a Data Source.
+	`Note`: This data source supports only security objects with EXPORT permission set in DSM.
 
 ## Example Usage
 
