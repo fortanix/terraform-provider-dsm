@@ -20,7 +20,7 @@ func dataSourceSobject() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceSobjectRead,
 		Description: "Returns the DSM security object from the cluster as a Data Source.\n" + 
-		"	`Note`: This data source supports only security objects with EXPORT permission set in DSM.",
+		"`Note`: This data source supports only security objects with EXPORT permission set in DSM.",
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Description: "Security object name.",

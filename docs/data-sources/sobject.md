@@ -10,7 +10,7 @@ description: |-
 # dsm_sobject (Data Source)
 
 Returns the DSM security object from the cluster as a Data Source.
-	`Note`: This data source supports only security objects with EXPORT permission set in DSM.
+`Note`: This data source supports only security objects with EXPORT permission set in DSM.
 
 ## Example Usage
 
