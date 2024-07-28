@@ -1,6 +1,11 @@
+// Create a group
+resource "dsm_group" "group" {
+  name = "group"
+}
+
 // Adding cryptographic policy to the group
 resource "dsm_group_crypto_policy" "sample_group_crypto_policy" {
-  name = "my_group"
+  name = dsm_group.group.name
   cryptographic_policy = jsonencode({
     legacy_policy = "allowed"
     key_ops = [
