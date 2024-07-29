@@ -28,7 +28,7 @@ resource "dsm_sobject" "sobject" {
 }
 
 // Generating the CSR
-resource "dsm_csr" "example_csr" {
+resource "dsm_csr" "csr" {
   kid      = dsm_sobject.sobject.id
   cn       = "example-common-name"
   ou       = "example-organizational-unit"

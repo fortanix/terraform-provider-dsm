@@ -37,11 +37,6 @@ func dataSourcePlugin() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"plugin_type": {
-				Description: "Type of the plugin.",
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"default_group": {
 				Description: "The Fortanix DSM group object ID that is mapped to the plugin by default.",
 				Type:     schema.TypeString,
