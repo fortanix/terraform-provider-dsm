@@ -90,32 +90,25 @@ provider "dsm" {
 // Step3: Create a group
 resource "dsm_group" "aws_group_no_credentials" {
   name = "aws_group_no_credentials"
-  description = "AWS group change"
-  hmg = var.aws_data_no_credentials
-}
-
-// Step4: aws credential data to create a group inside
-variable "aws_data_no_credentials" {
-  type        = any
-  description = "The policy document. This is a JSON formatted string."
-  default     = <<-EOF
+  description = "AWS group"
+  hmg = jsonencode(
     {
-    "url": "kms.us-east-1.amazonaws.com",
-    "tls": {
-      "mode": "required",
-      "validate_hostname": false,
-      "ca": {
-        "ca_set": "global_roots"
+      url = "kms.us-east-1.amazonaws.com"
+      tls = {
+        mode = "required"
+        validate_hostname: false,
+        ca = {
+          ca_set = "global_roots"
+        }
       }
-    },
-    "kind": "AWSKMS",
-    "region": "us-east-1",
-    "service": "kms"
-    }
-  EOF
+      kind = "AWSKMS"
+      region = "us-east-1"
+      service = "kms"
+    })
 }
 
-// Step3: AWS sobject creation(Copies the key from DSM)
+
+// Step4: AWS sobject creation(Copies the key from DSM)
 resource "dsm_aws_sobject" "aws_sobject_temp_creds" {
   name = "aws_sobject_temp_creds"
   group_id = dsm_group.aws_group_no_credentials.id
