@@ -4,14 +4,11 @@ page_title: "dsm_azure_group Resource - terraform-provider-dsm"
 subcategory: ""
 description: |-
   Creates a Fortanix DSM group mapped to Azure Key Vault in the cluster as a resource. This group acts as a container for security objects. The returned resource object contains the UUID of the group for further references.
-  Note: It supports only Standard Azure key vault.
 ---
 
 # dsm_azure_group (Resource)
 
 Creates a Fortanix DSM group mapped to Azure Key Vault in the cluster as a resource. This group acts as a container for security objects. The returned resource object contains the UUID of the group for further references.
-
-   **Note**: It supports only Standard Azure key vault.
 
 ## Example Usage
 
