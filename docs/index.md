@@ -168,3 +168,8 @@ To COPY local DSM keys to AWS KMS for Bring-Your-Own-Key (BYOK), appropriate per
 - `aws_region` (String) The AWS region from which keys should be imported, by default it’s us-east-1 if not specified.
 - `azure_region` (String) The regions where Fortanix DSM is supported. The default is us-east if not specified.
 
+**Note**: Though the above parameters are optional, one of the following Authentication methods needs to be available during the DSM Terraform Provider initial setup. Please refer the examples for more.
+
+1. username, password and acct_id
+2. username, password, acct_id and ldap_name
+3. api_key

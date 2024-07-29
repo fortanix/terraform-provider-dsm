@@ -14,9 +14,9 @@ Creates a new security object in Azure key vault. This is a Bring-Your-Own-Key (
 
 ```terraform
 // Create Azure group
-resource "dsm_group" "azure_byok" {
-  name = "azure_byok"
-  description = "azure_byok"
+resource "dsm_group" "azure_group" {
+  name = "azure_group"
+  description = "azure_group"
   hmg = jsonencode({
     url = "https://sampleakv.vault.azure.net/"
     tls = {
@@ -52,9 +52,9 @@ resource "dsm_sobject" "dsm_sobject" {
 /* Copy a key to azure key vault using the above DSM security object.
 By default it creates a key as a software protected key.
 */
-resource "dsm_azure_sobject" "sobject" {
+resource "dsm_azure_sobject" "azure_sobject" {
   name            = "azure_sobject"
-  group_id        = dsm_group.azure_byok.id
+  group_id        = dsm_group.azure_group.id
   description     = "key creation in akv"
   key_ops         = ["ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "SIGN", "VERIFY", "EXPORT", "APPMANAGEABLE"]
   enabled         = true
@@ -77,7 +77,7 @@ It is an example of hardware protected key in PREMIUM key vault.
 */
 resource "dsm_azure_sobject" "sobject" {
   name            = "azure_sobject"
-  group_id        = dsm_group.azure_byok.id
+  group_id        = dsm_group.azure_group.id
   description     = "key creation in akv"
   key_ops         = ["ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "SIGN", "VERIFY", "EXPORT", "APPMANAGEABLE"]
   enabled         = true
@@ -105,7 +105,7 @@ resource "dsm_azure_sobject" "sobject" {
 - `custom_metadata` (Map of String) Azure CMK level metadata information.
    * `azure-key-name`: Key name within Azure KV.
    * **Note:** By default dsm_azure_sobject creates the key as a software protected key. For a hardware protected key use the below parameter.
-   * `azure-key-type`: Type of a key. It can be used in `PREMIUM` key vault. Values are software/hardware.
+   * `azure-key-type`: Type of a key. It can be used in `PREMIUM` key vault. Value is hardware.
 - `group_id` (String) The Azure group ID in Fortanix DSM into which the key will be generated.
 - `key` (Map of String) A local security object imported to Fortanix DSM(BYOK) and copied to Azure KV.
 - `name` (String) The security object name.

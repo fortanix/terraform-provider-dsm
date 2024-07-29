@@ -4,8 +4,8 @@ resource "dsm_group" "normal_group" {
 }
 
 // Create GCP group
-resource "dsm_group" "gcp_cdc" {
-  name = "group_gcp"
+resource "dsm_group" "gcp_group" {
+  name = "gcp_group"
   hmg = jsonencode({
     kind         = "GCPKEYRING"
     key_ring       = "key_ring_name"
@@ -27,7 +27,7 @@ resource "dsm_sobject" "sobject" {
 // Copy a key to GCP key ring using the above DSM security object
 resource "dsm_gcp_sobject" "gcp_sobject" {
   name     = "gcp_sobject"
-  group_id = dsm_group.gcp_cdc.id
+  group_id = dsm_group.gcp_group.id
   key = {
     kid = dsm_sobject.sobject.id
   }

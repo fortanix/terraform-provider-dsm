@@ -1,7 +1,7 @@
 // Create Azure group
-resource "dsm_group" "azure_byok" {
-  name = "azure_byok"
-  description = "azure_byok"
+resource "dsm_group" "azure_group" {
+  name = "azure_group"
+  description = "azure_group"
   hmg = jsonencode({
     url = "https://sampleakv.vault.azure.net/"
     tls = {
@@ -37,9 +37,9 @@ resource "dsm_sobject" "dsm_sobject" {
 /* Copy a key to azure key vault using the above DSM security object.
 By default it creates a key as a software protected key.
 */
-resource "dsm_azure_sobject" "sobject" {
+resource "dsm_azure_sobject" "azure_sobject" {
   name            = "azure_sobject"
-  group_id        = dsm_group.azure_byok.id
+  group_id        = dsm_group.azure_group.id
   description     = "key creation in akv"
   key_ops         = ["ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "SIGN", "VERIFY", "EXPORT", "APPMANAGEABLE"]
   enabled         = true
@@ -62,7 +62,7 @@ It is an example of hardware protected key in PREMIUM key vault.
 */
 resource "dsm_azure_sobject" "sobject" {
   name            = "azure_sobject"
-  group_id        = dsm_group.azure_byok.id
+  group_id        = dsm_group.azure_group.id
   description     = "key creation in akv"
   key_ops         = ["ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "SIGN", "VERIFY", "EXPORT", "APPMANAGEABLE"]
   enabled         = true

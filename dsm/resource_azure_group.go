@@ -79,7 +79,7 @@ func resourceAzureGroup() *schema.Resource {
 				Required: true,
 			},
 			"key_vault_type": {
-			    Description: "The type of key vaults. The default value is `Standard`.",
+			    Description: "The type of key vault. The default value is `Standard`. Values are Standard/Premium.",
 				Type:     schema.TypeString,
 				Optional: true,
 				Default :"Standard",

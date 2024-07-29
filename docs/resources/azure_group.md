@@ -41,7 +41,7 @@ resource "dsm_azure_group" "dsm_azure_group" {
 ### Optional
 
 - `description` (String) Description of the Azure KV Fortanix DSM group.
-- `key_vault_type` (String) The type of key vaults. The default value is `Standard`.
+- `key_vault_type` (String) The type of key vault. The default value is `Standard`. Values are Standard/Premium.
 
 ### Read-Only
 
