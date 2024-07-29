@@ -88,7 +88,9 @@ func resourceAzureSobject() *schema.Resource {
 			},
 			"custom_metadata": {
 			    Description: "Azure CMK level metadata information.\n" +
-			    "   * `azure-key-name`: Key name within Azure KV.",
+			    "   * `azure-key-name`: Key name within Azure KV.\n" +
+			    "   * **Note:** By default dsm_azure_sobject creates the key as a software protected key. For a hardware protected key use the below parameter.\n" +
+			    "   * `azure-key-type`: Type of a key. It can be used in `PREMIUM` key vault. Value is hardware.",
 				Type:     schema.TypeMap,
 				Required: true,
 				Elem: &schema.Schema{

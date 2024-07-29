@@ -25,8 +25,7 @@ func resourceAzureGroup() *schema.Resource {
 		ReadContext:   resourceReadAzureGroup,
 		UpdateContext: resourceUpdateAzureGroup,
 		DeleteContext: resourceDeleteAzureGroup,
-		Description: "Creates a Fortanix DSM group mapped to Azure Key Vault in the cluster as a resource. This group acts as a container for security objects. The returned resource object contains the UUID of the group for further references.\n\n" +
-		"   **Note**: It supports only Standard Azure key vault.",
+		Description: "Creates a Fortanix DSM group mapped to Azure Key Vault in the cluster as a resource. This group acts as a container for security objects. The returned resource object contains the UUID of the group for further references.\n",
 		Schema: map[string]*schema.Schema{
 			"name": {
                 Description: "The Azure KV group object name in Fortanix DSM.",
@@ -80,7 +79,7 @@ func resourceAzureGroup() *schema.Resource {
 				Required: true,
 			},
 			"key_vault_type": {
-			    Description: "The type of key vaults. The default value is `Standard`.",
+			    Description: "The type of key vault. The default value is `Standard`. Values are Standard/Premium.",
 				Type:     schema.TypeString,
 				Optional: true,
 				Default :"Standard",
