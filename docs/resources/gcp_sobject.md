@@ -44,7 +44,6 @@ resource "dsm_group" "normal_group" {
 resource "dsm_sobject" "sobject" {
   name     = "aes256"
   key_size = 256
-  obj_type = "AES"
   group_id = dsm_group.normal_group.id
 }
 
