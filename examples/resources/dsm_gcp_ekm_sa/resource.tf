@@ -15,7 +15,7 @@ resource "dsm_group" "group3" {
 }
 
 // Create a Google EKM app in DSM
-resource "dsm_gcp_ekm_sa" "sample_ekm_sa" {
+resource "dsm_gcp_ekm_sa" "ekm_sa" {
   name                    = "service-[PROJECT-NUMBER]@gcp-sa-ekms.iam.gserviceaccount.com"
   default_group           = dsm_group.group1.id
   other_group             = [dsm_group.group2.id, dsm_group.group3.id]
@@ -47,7 +47,7 @@ locals {
 }
 
 // An example on how to modify the existing permissions of a group in EKM
-resource "dsm_gcp_ekm_sa" "sample_ekm_sa" {
+resource "dsm_gcp_ekm_sa" "ekm_sa" {
   name                    = "service-[PROJECT-NUMBER]@gcp-sa-ekms.iam.gserviceaccount.com"
   default_group           = dsm_group.group1.id
   other_group             = [dsm_group.group2.id, dsm_group.group3.id]
