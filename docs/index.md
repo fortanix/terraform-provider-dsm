@@ -19,7 +19,7 @@ The usage of DSM Terraform Provider assumes the following is pre-configured in o
   * Trial / Test environment maybe provisioned via [amer.smartkey.io](https://amer.smartkey.io)
 * Production / Test account or tenant has already been provisioned within Fortanix DSM.
 
-### Authentication and Configuraion.
+### Authentication and Configuration
 
 * **Note**: One of the following Authentication methods needs to be available during the DSM Terraform Provider initial setup.
 
@@ -112,44 +112,6 @@ provider "dsm" {
 }
 ```
 
-### _(Optional) AWS Setup / Permissions_
-
-To COPY local DSM keys to AWS KMS for Bring-Your-Own-Key (BYOK), appropriate permissions must be set. At a minimum, the following permissions must be set at a User or the Role to assume into:
-
-```
-"Action": [
-    "kms:CancelKeyDeletion",
-    "kms:CreateAlias",
-    "kms:CreateGrant",
-    "kms:CreateKey",
-    "kms:DeleteAlias",
-    "kms:DeleteImportedKeyMaterial",
-    "kms:Describe*",
-    "kms:DisableKey",
-    "kms:DisableKeyRotation",
-    "kms:EnableKey",
-    "kms:EnableKeyRotation",
-    "kms:GenerateDataKey",
-    "kms:GenerateDataKeyPair",
-    "kms:GenerateDataKeyPairWithoutPlaintext",
-    "kms:GenerateDataKeyWithoutPlaintext",
-    "kms:GenerateRandom",
-    "kms:Get*",
-    "kms:ImportKeyMaterial"
-    "kms:List*",
-    "kms:PutKeyPolicy",
-    "kms:RetireGrant",
-    "kms:RevokeGrant",
-    "kms:ScheduleKeyDeletion",
-    "kms:Sign",
-    "kms:TagResource",
-    "kms:UntagResource",
-    "kms:UpdateAlias",
-    "kms:Verify"
-]
-```
-
-
 ## Schema
 
 ### Required
@@ -173,3 +135,17 @@ To COPY local DSM keys to AWS KMS for Bring-Your-Own-Key (BYOK), appropriate per
 1. username, password and acct_id
 2. username, password, acct_id and ldap_name
 3. api_key
+
+### BYOK setup / permissions
+
+Please refer the below links for BYOK setup/permissions.
+
+- [AWS](https://support.fortanix.com/hc/en-us/articles/360055605471-Fortanix-DSM-AWS-Key-Management-Service-CDC-Group-Setup)
+- [Azure](https://support.fortanix.com/hc/en-us/articles/4404920424468-Fortanix-DSM-Azure-Key-Vault-CDC-Group-Setup)
+- [GCP](https://support.fortanix.com/hc/en-us/articles/4423384427796-User-s-Guide-Google-Cloud-KMS)
+
+### Attributes usage definitions
+
+- **Required**: This attribute must be provided by the user in the Terraform configuration. If it is not specified, Terraform will return an error during the plan or apply phases.
+- **Optional**: This attribute is not mandatory. If it is not provided by the user, Terraform will use a default value (if any). Users can specify it to override the default behavior.
+- **Read-Only**: This attribute is output-only and cannot be set by the user. It provides information that is determined by the provider or the state of the resource after it has been created or updated. Also known as a "computed" attribute.
