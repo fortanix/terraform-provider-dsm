@@ -17,16 +17,20 @@ func resourceAccountCryptoPolicy() *schema.Resource {
 		ReadContext:   resourceReadAccountCryptoPolicy,
 		UpdateContext: resourceUpdateAccountCryptoPolicy,
 		DeleteContext: resourceDeleteAccountCryptoPolicy,
+		Description: "Adds cryptographic policy to a Fortanix DSM account. Cryptographic policy restricts adding certain types of security objects to the account, set minimum key sizes and manage permitted key operations for all objects. The policy can be restricted further for each group.",
 		Schema: map[string]*schema.Schema{
 			"acct_id": {
+			    Description: "The Fortanix DSM account object id.",
 				Type:     schema.TypeString,
 				Required: true,
 			},
 			"approval_policy": {
+			    Description: "The Fortanix DSM account object quorum approval policy definition as a JSON string.",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"cryptographic_policy": {
+			    Description: "The Fortanix DSM account object cryptographic policy definition as a JSON string.",
 				Type:     schema.TypeString,
 				Required: true,
 			},

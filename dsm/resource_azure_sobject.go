@@ -88,7 +88,9 @@ func resourceAzureSobject() *schema.Resource {
 			},
 			"custom_metadata": {
 			    Description: "Azure CMK level metadata information.\n" +
-			    "   * `azure-key-name`: Key name within Azure KV.",
+			    "   * `azure-key-name`: Key name within Azure KV.\n" +
+			    "   * **Note:** By default dsm_azure_sobject creates the key as a software protected key. For a hardware protected key use the below parameter.\n" +
+			    "   * `azure-key-type`: Type of a key. It can be used in `PREMIUM` key vault. Value is hardware.",
 				Type:     schema.TypeMap,
 				Required: true,
 				Elem: &schema.Schema{
@@ -106,7 +108,11 @@ func resourceAzureSobject() *schema.Resource {
 				Optional: true,
 			},
 			"key_ops": {
-			    Description: "The security object operations permitted.",
+			    Description: "The security object operations permitted.\n\n" +
+				"| obj_type | key_size/curve | key_ops |\n" +
+				"| -------- | -------- |-------- |\n" +
+				"| `RSA` | 2048, 3072, 4096 | APPMANAGEABLE, SIGN, VERIFY, ENCRYPT, DECRYPT, WRAPKEY, UNWRAPKEY, EXPORT |\n" +
+				"| `EC` | NistP256, NistP384, NistP521,SecP256K1 | APPMANAGEABLE, SIGN, VERIFY, AGREEKEY, EXPORT",
 				Type:     schema.TypeList,
 				Optional: true,
 				Elem: &schema.Schema{

@@ -19,20 +19,25 @@ import (
 func dataSourceGroup() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceGroupRead,
+		Description: "Returns the Fortanix DSM group object from the cluster as a Data Source.",
 		Schema: map[string]*schema.Schema{
 			"name": {
+				Description: "The Fortanix DSM group object name.",
 				Type:     schema.TypeString,
 				Required: true,
 			},
 			"group_id": {
+				Description: "Group object ID from Fortanix DSM.",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"acct_id": {
+				Description: "Account ID from Fortanix DSM.",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"creator": {
+				Description: "Creator of the group object from Fortanix DSM.",
 				Type:     schema.TypeMap,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -40,18 +45,22 @@ func dataSourceGroup() *schema.Resource {
 				},
 			},
 			"description": {
+				Description: "The Fortanix DSM group object description.",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"approval_policy": {
+				Description: "The Fortanix DSM group object quorum approval policy definition as a JSON string.",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"cryptographic_policy": {
+				Description: "The Fortanix DSM group object cryptographic policy.",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"hmg": {
+				Description: "The Fortanix DSM group object HMS/KMS definition.",
 				Type:     schema.TypeString,
 				Computed: true,
 			},

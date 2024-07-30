@@ -38,8 +38,8 @@ func resourceSobject() *schema.Resource {
 				Required: true,
 			},
 			"obj_type": {
-			    Description: "The security object type. Supported security objects:\n" +
-			    "AES, DES, DES3, RSA, DSA, KCDSA, EC, ECKCDSA, ARIA, SEED and Tokenization(fpe).",
+			    Description: "The security object type.\n" +
+			    "   * `Supported security objects`: AES, DES, DES3, RSA, DSA, KCDSA, EC, ECKCDSA, ARIA, SEED and Tokenization(fpe).",
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -100,7 +100,7 @@ func resourceSobject() *schema.Resource {
 				"   * `interval_months`: Rotate the key for every given number of months.\n" +
 				"   * `effective_at`: Start of the rotation policy time.\n" +
 				"   * `rotate_copied_keys`: Enable key rotation for copied keys.\n" +
-				"   * `deactivate_rotated_key`: Deactivate original key after rotation true/false).\n" +
+				"   * `deactivate_rotated_key`: Deactivate original key after rotation true/false.\n" +
 				"   * **Note:** Either interval_days or interval_months should be given, but not both.",
 				Type:     schema.TypeMap,
 				Optional: true,
@@ -264,7 +264,7 @@ func resourceSobject() *schema.Resource {
 				Description: "Standardized elliptic curve. It should be given only when the obj_type is EC or ECKCDSA.\n\n" +
 				"| obj_type | Curve | key_ops |\n" +
 				"| -------- | -------- |-------- |\n" +
-				"| `EC` | SecP192K1, SecP224K1, SecP256K1  NistP192, NistP224, NistP256, NistP384, NistP521, X25519, Ed25519 | APPMANAGEABLE, SIGN, VERIFY, ENCRYPT, DECRYPT, WRAPKEY, UNWRAPKEY, EXPORT |\n" +
+				"| `EC` | SecP192K1, SecP224K1, SecP256K1  NistP192, NistP224, NistP256, NistP384, NistP521, X25519, Ed25519 | APPMANAGEABLE, SIGN, VERIFY, AGREEKEY, EXPORT |\n" +
 				"| `ECKCDSA` | SecP192K1, SecP224K1, SecP256K1  NistP192, NistP224, NistP256, NistP384, NistP521 | APPMANAGEABLE, SIGN, VERIFY, EXPORT |\n",
 				Type:     schema.TypeString,
 				Optional: true,

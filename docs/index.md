@@ -11,101 +11,141 @@ The DSM Terraform Provider transforms the Fortanix Data Security Manager RESTful
 
 ## Prerequisites
 
-
 ### Fortanix DSM Setup
 
 The usage of DSM Terraform Provider assumes the following is pre-configured in one's environment:
 
 * Up-to-date DSM deployment:
-  * Trial / Test environment maybe provisioned via [sdkms.fortanix.com](https://sdkms.fortanix.com)
-* Production / Test account or tenant has already been provisioned within Fortanix DSM
-  * Username, Password and the Account ID needs to be available during the DSM Terraform Provider initial setup
-  * Account ID maybe found from the UI by going to Settings:
+  * Trial / Test environment maybe provisioned via [amer.smartkey.io](https://amer.smartkey.io)
+* Production / Test account or tenant has already been provisioned within Fortanix DSM.
 
+### Authentication and Configuration
 
-### _(Optional) AWS Setup / Permissions_
+* **Note**: One of the following Authentication methods needs to be available during the DSM Terraform Provider initial setup.
 
-To COPY local DSM keys to AWS KMS for Bring-Your-Own-Key (BYOK), appropriate permissions must be set. At a minimum, the following permissions must be set at a User or the Role to assume into:
-
-```
-"Action": [
-    "kms:CancelKeyDeletion",
-    "kms:CreateAlias",
-    "kms:CreateGrant",
-    "kms:CreateKey",
-    "kms:DeleteAlias",
-    "kms:DeleteImportedKeyMaterial",
-    "kms:Describe*",
-    "kms:DisableKey",
-    "kms:DisableKeyRotation",
-    "kms:EnableKey",
-    "kms:EnableKeyRotation",
-    "kms:GenerateDataKey",
-    "kms:GenerateDataKeyPair",
-    "kms:GenerateDataKeyPairWithoutPlaintext",
-    "kms:GenerateDataKeyWithoutPlaintext",
-    "kms:GenerateRandom",
-    "kms:Get*",
-    "kms:ImportKeyMaterial"
-    "kms:List*",
-    "kms:PutKeyPolicy",
-    "kms:RetireGrant",
-    "kms:RevokeGrant",
-    "kms:ScheduleKeyDeletion",
-    "kms:Sign",
-    "kms:TagResource",
-    "kms:UntagResource",
-    "kms:UpdateAlias",
-    "kms:Verify"
-]
-```
+| Authentication methods | Required Attributes                                               | Description |
+|------------------------|-------------------------------------------------------------------|------------|
+| `Username & Password`  | 1. username <br> 2. password <br> 3. account id                   | Username, Password and an Account ID should be configured. Account ID can be found in DSM UI by going to settings. |
+| `Admin API key`        | API key                                                           | An Admin API key can be configured in DSM UI by going to settings(Administrative Apps).           |
+| `LDAP Authentication`  | 1. username <br> 2. password <br> 3. account id <br> 4. LDAP name | An LDAP integration can be done in DSM UI by going to settings(Authentication, SINGLE SIGN-ON and ADD LDAP INTEGRATION). |
 
 
 ## DSM
 
 Initial setup of the Fortanix DSM Provider to interact using Terraform.
 
-## Usage Reference
+## Example Reference
 
-```
+```terraform
 terraform {
   required_providers {
     dsm = {
-      version = "0.5.31"
+      version = "0.5.32"
       source = "fortanix/dsm"
     }
   }
 }
 
+// Configure with username and password
 provider "dsm" {
-    endpoint = <sdkms_api_endpoint>
-    port     = <sdkms_api_port>
-    username = <sdkms_username>
-    password = <sdkms_password>
-    acct_id  = <sdkms_account_id>
-    insecure = <true/false>
-    api_key = <DSM App API key>
-    aws_profile = <AWS access key and secret>
-    aws_region <AWS region>
-    azure_region <Azure region>
-    ldap_name = <ldap_name>
-
+    endpoint = "https://amer.smartkey.io"
+    username = "test@user.com"
+    password = "12345678"
+    acct_id  = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
 }
 ```
 
-## Argument Reference
+```terraform
+// Configure with API key
+provider "dsm" {
+    endpoint = "https://amer.smartkey.io"
+    api_key = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+}
+```
 
-The following arguments are supported in the `dsm` provider block:
+```terraform
+// Configure with LDAP configuration
+provider "dsm" {
+    endpoint = "https://amer.smartkey.io"
+    username = "test@user.com"
+    password = "12345678"
+    acct_id  = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
+    ldap_name = "TEST_LDAP"
+}
+```
 
-* **endpoint**: Cluster IP address
-* _**port (optional)**_: Cluster access port
-* **username**: Login username
-* **password**: Login password
-* **acct\_id**: Account / Tenant ID
-* _**insecure (optional)**_: Disables the SSL of Fortanix DSM
-*	_**api\_key (optional)**_: The API of the app to authenticate to Fortanix DSM 
-*	**aws\_profile**: The AWS Access Key and Secret Access Key for programmatic (API) access to AWS Services
-*	_**aws\_region (optional)**_: The AWS region from which keys should be imported, by default it’s us-east-1 if not specified
-*	_**azure\_region (optional)**_: The regions where Fortanix DSM is supported. The default is us-east if not specified
-*   _**ldap\_name (optional)**_: LDAP Name if LDAP authentication is required.
+* **Note**: All the below examples are configured by username and password, these examples can also be configured with api_key or ldap_name
 
+```terraform
+// Disable the SSL
+provider "dsm" {
+    endpoint = "https://amer.smartkey.io"
+    username = "test@user.com"
+    password = "12345678"
+    acct_id  = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
+    insecure = false
+}
+```
+
+```terraform
+// Configure aws profile
+provider "dsm" {
+    endpoint = "https://amer.smartkey.io"
+    username = "test@user.com"
+    password = "12345678"
+    acct_id  = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
+    /* default: $HOME/.aws/
+    Or a file should be specified that contains aws_access_key_id, aws_secret_access_key, aws_session_token(Optional) and region
+    */
+    aws_profile = "default"
+    aws_region = "us-east-2"
+}
+```
+```terraform
+// Configure azure_ region
+provider "dsm" {
+    endpoint = "https://amer.smartkey.io"
+    username = "test@user.com"
+    password = "12345678"
+    acct_id  = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
+    azure_region = "us-east"
+}
+```
+
+## Schema
+
+### Required
+
+- `endpoint` (String) Cluster endpoint or url.
+
+### Optional
+
+- `username` (String) Username to login.
+- `password` (String) Associated username's password to login.
+- `acct_id` (String) Account ID or a Tenant ID. Account ID can be found in DSM UI by going to settings.
+- `api_key` (String) A DSM API key. Preferably an Admin API key. An Admin API key can be configured in DSM UI by going to settings(Administrative Apps).
+- `ldap_name` (String) A Ldap name. An LDAP integration can be done in DSM UI by going to settings(Authentication, SINGLE SIGN-ON and ADD LDAP INTEGRATION).
+- `insecure` (Boolean) Enables or Disables the SSL of Fortanix DSM. The values are true/false.
+- `aws_profile` (String) The AWS Access Key and Secret Access Key for programmatic (API) access to AWS Services. AWS profile name should be given.
+- `aws_region` (String) The AWS region from which keys should be imported, by default it’s us-east-1 if not specified.
+- `azure_region` (String) The regions where Fortanix DSM is supported. The default is us-east if not specified.
+
+**Note**: Though the above parameters are optional, one of the following Authentication methods needs to be available during the DSM Terraform Provider initial setup. Please refer the examples for more.
+
+1. username, password and acct_id
+2. username, password, acct_id and ldap_name
+3. api_key
+
+### BYOK setup / permissions
+
+Please refer the below links for BYOK setup/permissions.
+
+- [AWS](https://support.fortanix.com/hc/en-us/articles/360055605471-Fortanix-DSM-AWS-Key-Management-Service-CDC-Group-Setup)
+- [Azure](https://support.fortanix.com/hc/en-us/articles/4404920424468-Fortanix-DSM-Azure-Key-Vault-CDC-Group-Setup)
+- [GCP](https://support.fortanix.com/hc/en-us/articles/4423384427796-User-s-Guide-Google-Cloud-KMS)
+
+### Attributes usage definitions
+
+- **Required**: This attribute must be provided by the user in the Terraform configuration. If it is not specified, Terraform will return an error during the plan or apply phases.
+- **Optional**: This attribute is not mandatory. If it is not provided by the user, Terraform will use a default value (if any). Users can specify it to override the default behavior.
+- **Read-Only**: This attribute is output-only and cannot be set by the user. It provides information that is determined by the provider or the state of the resource after it has been created or updated. Also known as a "computed" attribute.

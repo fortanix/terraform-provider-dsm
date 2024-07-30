@@ -20,28 +20,30 @@ import (
 func dataSourcePlugin() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceReadPlugin,
+		Description: "Returns the Fortanix DSM plugin object from the cluster as a Resource.",
 		Schema: map[string]*schema.Schema{
 			"name": {
+				Description: "The Fortanix DSM plugin object name.",
 				Type:     schema.TypeString,
 				Required: true,
 			},
 			"plugin_id": {
+				Description: "Plugin object ID from Fortanix DSM.",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"description": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"plugin_type": {
+				Description: "The Fortanix DSM plugin object description.",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"default_group": {
+				Description: "The Fortanix DSM group object ID that is mapped to the plugin by default.",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"groups": {
+				Description: "List of other Fortanix DSM group object IDs that are mapped to the plugin.",
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -49,22 +51,29 @@ func dataSourcePlugin() *schema.Resource {
 				},
 			},
 			"language": {
+				Description: "Programming language for plugin code (Default value is `LUA`).",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"code": {
+				Description: "Plugin code that will be executed in DSM. Code should be in specified programming language.",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"enabled": {
+				Description: "Whether the security object is enabled or disabled. The values are true/false.",
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
 			"acct_id": {
+				Description: "Account ID from Fortanix DSM.",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"creator": {
+				Description: "The creator of the security object from Fortanix DSM.\n" +
+				"   * `user`: If the plugin object was created by a user, the computed value will be the matching user id.\n" +
+				"   * `app`: If the plugin object was created by a app, the computed value will be the matching app id.",
 				Type:     schema.TypeMap,
 				Computed: true,
 				Elem: &schema.Schema{

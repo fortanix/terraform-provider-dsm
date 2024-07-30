@@ -53,55 +53,69 @@ func resourcePlugin() *schema.Resource {
 		ReadContext:   resourceReadPlugin,
 		UpdateContext: resourceUpdatePlugin,
 		DeleteContext: resourceDeletePlugin,
+		Description: "Creates a Fortanix DSM plugin. The returned resource object contains the UUID of the plugin for further references.",
 		Schema: map[string]*schema.Schema{
 			"name": {
+			    Description: "The Fortanix DSM plugin object name.",
 				Type:     schema.TypeString,
 				Required: true,
 			},
 			"plugin_id": {
+			    Description: "Plugin object ID from Fortanix DSM.",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"description": {
+			    Description: "The Fortanix DSM plugin object description.",
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "",
 			},
 			"plugin_type": {
+			    Description: "Type of the plugin.",
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "standard",
 			},
 			"default_group": {
+			    Description: "The Fortanix DSM group object id to be mapped to the plugin by default.",
 				Type:     schema.TypeString,
 				Required: true,
 			},
 			"groups": {
+			    Description: "List of other Fortanix DSM group object ids to be mapped to the plugin.",
 				Type:     schema.TypeList,
-				Required: true,
+				Optional: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
 			},
 			"language": {
+			    Description: "Programming language for plugin code (Default value is `LUA`).",
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "LUA",
 			},
 			"code": {
+			    Description: "Plugin code that will be executed in DSM. Code should be in specified programming language.",
 				Type:     schema.TypeString,
 				Required: true,
 			},
 			"enabled": {
+			    Description: "Whether the security object is enabled or disabled. The values are true/false.",
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
 			},
 			"acct_id": {
+			    Description: "Account ID from Fortanix DSM.",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"creator": {
+			    Description: "The creator of the security object from Fortanix DSM.\n" +
+				"   * `user`: If the plugin object was created by a user, the computed value will be the matching user id.\n" +
+				"   * `app`: If the plugin object was created by a app, the computed value will be the matching app id.",
 				Type:     schema.TypeMap,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -109,6 +123,7 @@ func resourcePlugin() *schema.Resource {
 				},
 			},
 			"approval_request_id": {
+			    Description: "If a plugin creation requires approval, then request id will be stored here.",
 				Type:     schema.TypeString,
 				Computed: true,
 			},

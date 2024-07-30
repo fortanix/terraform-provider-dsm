@@ -36,20 +36,25 @@ func resourceAWSSobject() *schema.Resource {
 		ReadContext:   resourceReadAWSSobject,
 		UpdateContext: resourceUpdateAWSSobject,
 		DeleteContext: resourceDeleteAWSSobject,
+		Description: "Creates a new security object in AWS KMS. This is a Bring-Your-Own-Key (BYOK) method and copies an existing DSM local security object to AWS KMS as a Customer Managed Key (CMK).The returned resource object contains the UUID of the security object for further references.",
 		Schema: map[string]*schema.Schema{
 			"name": {
+			    Description: "The security object name.",
 				Type:     schema.TypeString,
 				Required: true,
 			},
 			"dsm_name": {
+			    Description: "The security object name from Fortanix DSM (matches the name provided during creation).",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"group_id": {
+			    Description: "The security object group assignment.",
 				Type:     schema.TypeString,
 				Required: true,
 			},
 			"key": {
+			    Description: "A local security object created/imported to Fortanix DSM(BYOK) and copied to AWS KMS.",
 				Type:     schema.TypeMap,
 				Required: true,
 				Elem: &schema.Schema{
@@ -57,6 +62,7 @@ func resourceAWSSobject() *schema.Resource {
 				},
 			},
 			"copied_to": {
+			    Description: "List of security objects copied by the current security object.",
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -64,26 +70,34 @@ func resourceAWSSobject() *schema.Resource {
 				},
 			},
 			"copied_from": {
+			    Description: "Security object that is copied from another security object.",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"replacement": {
+			    Description: "Replacement of a security object that was rotated.",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"replaced": {
+			    Description: "Replaced by a security object.",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"kid": {
+			    Description: "The security object ID from Fortanix DSM.",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"acct_id": {
+			    Description: "The account ID from Fortanix DSM.",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"creator": {
+				Description: "The creator of the group from Fortanix DSM.\n" +
+				"   * `user`: If the group was created by a user, the computed value will be the matching user id.\n" +
+				"   * `app`: If the group was created by a app, the computed value will be the matching app id.",
 				Type:     schema.TypeMap,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -91,6 +105,11 @@ func resourceAWSSobject() *schema.Resource {
 				},
 			},
 			"rotation_policy": {
+				Description: "Policy to rotate a Security Object, configure the below parameters.\n" +
+				"   * `interval_days`: Rotate the key for every given number of days.\n" +
+				"   * `interval_months`: Rotate the key for every given number of months.\n" +
+				"   * `effective_at`: Start of the rotation policy time.\n" +
+				"   * **Note:** Either interval_days or interval_months should be given, but not both.",
 				Type:     schema.TypeMap,
 				Optional: true,
 				Elem: &schema.Schema{
@@ -98,6 +117,9 @@ func resourceAWSSobject() *schema.Resource {
 				},
 			},
 			"custom_metadata": {
+			    Description: "AWS KMS key level metadata information.\n" +
+			    "   *`aws-aliases`: Key name within AWS KMS.\n" +
+			    "   *`aws-policy`: JSON format of AWS policy that should be enforced for the key.",
 				Type:     schema.TypeMap,
 				Optional: true,
 				Elem: &schema.Schema{
@@ -105,6 +127,9 @@ func resourceAWSSobject() *schema.Resource {
 				},
 			},
 			"aws_tags": {
+			    Description: "Any other user-defined AWS metadata information.\n" +
+			    "   * e.g. test-key = test-value \n" +
+			    "   * The above key value pair will be added as `aws-tag-test-key = test-value` \n",
 				Type:     schema.TypeMap,
 				Optional: true,
 				Elem: &schema.Schema{
@@ -112,6 +137,12 @@ func resourceAWSSobject() *schema.Resource {
 				},
 			},
 			"external": {
+			    Description: "AWS CMK level metadata:\n" +
+			    "   * `Key_arn`\n" +
+			    "   * `Key_id`\n" +
+			    "   * `Key_state`\n" +
+			    "   * `Key_aliases`\n" +
+			    "   * `Key_deletion_date`\n",
 				Type:     schema.TypeMap,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -119,14 +150,22 @@ func resourceAWSSobject() *schema.Resource {
 				},
 			},
 			"obj_type": {
+			    Description: "The type of security object.",
 				Type:     schema.TypeString,
 				Optional: true,
 			},
 			"key_size": {
+			    Description: "The size of the security object.",
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
 			"key_ops": {
+			    Description: "The security object operations permitted.\n\n" +
+				"| obj_type | key_size/curve | key_ops |\n" +
+				"| -------- | -------- |-------- |\n" +
+				"| `AES` | 256 | ENCRYPT, DECRYPT, WRAPKEY, UNWRAPKEY, DERIVEKEY, MACGENERATE, MACVERIFY, APPMANAGEABLE, EXPORT |\n" +
+				"| `RSA` | 2048, 3072, 4096 | APPMANAGEABLE, SIGN, VERIFY, ENCRYPT, DECRYPT, WRAPKEY, UNWRAPKEY, EXPORT  |\n" +
+				"| `EC` | NistP256, NistP384, NistP521,SecP256K1 | APPMANAGEABLE, SIGN, VERIFY, AGREEKEY, EXPORT",
 				Type:     schema.TypeList,
 				Optional: true,
 				Elem: &schema.Schema{
@@ -134,33 +173,44 @@ func resourceAWSSobject() *schema.Resource {
 				},
 			},
 			"description": {
+			    Description: "The security object description.",
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "",
 			},
 			"enabled": {
+			    Description: "Whether the security object will be enabled or disabled. The values are true/false.",
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
 			"state": {
+			    Description: "The key states of the AWS key. The values are PendingDeletion, Enabled, Disabled and PendingImport.",
 				Type:     schema.TypeString,
 				Optional: true,
 			},
 			"pending_window_in_days": {
+			    Description: "input the value for “days” after which the AWS key will be deleted.\n" +
+			    "   * The default value is 7 days.\n" +
+			    "   * The minimum value is 7 days.",
 				Type:     schema.TypeInt,
 				Optional: true,
 				Default:  7,
 			},
 			"expiry_date": {
+			    Description: "The security object expiry date in RFC format.",
 				Type:     schema.TypeString,
 				Optional: true,
 			},
 			"rotate": {
+			    Description: "The security object rotation. Specify the method to use for key rotation:\n" +
+			    "   * `DSM`: To rotate from a DSM local key. The key material of new key will be stored in DSM.\n" +
+			    "   * `AWS`: To rotate from a AWS key. The key material of new key will be stored in AWS.\n",
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice([]string{"DSM", "AWS"}, true),
 			},
 			"rotate_from": {
+			    Description: "Name of the security object to be rotated.",
 				Type:     schema.TypeString,
 				Optional: true,
 			},
