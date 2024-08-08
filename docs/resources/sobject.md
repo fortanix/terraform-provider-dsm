@@ -17,16 +17,16 @@ A key value can be imported as a security object. This resource also can rotate 
 ```terraform
 // Create a group
 resource "dsm_group" "group" {
-  name = "group"
+  name        = "group"
   description = "group description"
 }
 // Create a security object in the above group
 resource "dsm_sobject" "sobject" {
-  name            = "sobject"
-  obj_type        = "AES"
-  group_id        = dsm_group.group.id
-  key_size        = 256
-  key_ops         = [
+  name     = "sobject"
+  obj_type = "AES"
+  group_id = dsm_group.group.id
+  key_size = 256
+  key_ops = [
     "ENCRYPT",
     "DECRYPT",
     "WRAPKEY",
@@ -37,9 +37,9 @@ resource "dsm_sobject" "sobject" {
     "APPMANAGEABLE",
     "EXPORT"
   ]
-  enabled         = true
-  expiry_date     = "2025-02-02T17:04:05Z"
-  description     = "sobject description"
+  enabled     = true
+  expiry_date = "2025-02-02T17:04:05Z"
+  description = "sobject description"
   custom_metadata = {
     key1 = "value1"
   }
@@ -49,11 +49,19 @@ resource "dsm_sobject" "sobject" {
   ]
   allowed_missing_justifications = true
   rotation_policy = {
-    interval_days = 20
-    effective_at = "20231130T183000Z"
+    interval_days          = 20
+    effective_at           = "20231130T183000Z"
     deactivate_rotated_key = true
-    rotate_copied_keys = "all_external"
+    rotate_copied_keys     = "all_external"
+  }
 }
+
+// Import a security object to the group
+resource "dsm_sobject" "import_sobject" {
+  name     = "import_sobject"
+  obj_type = "AES"
+  group_id = dsm_group.group.id
+  value    = "+op+4RjqnBPFpy0PLEr8q/nXh859yMzMiYGX99ol+0Q="
 }
 ```
 
