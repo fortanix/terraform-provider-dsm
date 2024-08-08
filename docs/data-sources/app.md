@@ -15,7 +15,6 @@ Returns the Fortanix DSM app object from the cluster as a Data Source.
 ```terraform
 data "dsm_app" "sample_app" {
     app_id = "36cc21d0-a852-4c29-8e34-33388ab73529"
-    new_credential = false
 }
 ```
 
@@ -25,10 +24,6 @@ data "dsm_app" "sample_app" {
 ### Required
 
 - `app_id` (String) App id value.
-
-### Optional
-
-- `new_credential` (Boolean) Set this if you want to rotate/regenerate the API key. The values can be set as true/false.
 
 ### Read-Only
 
