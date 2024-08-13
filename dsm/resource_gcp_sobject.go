@@ -12,6 +12,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -120,6 +121,7 @@ func resourceGCPSobject() *schema.Resource {
 				"| `AES` | 256 | ENCRYPT, DECRYPT, WRAPKEY, UNWRAPKEY, DERIVEKEY, MACGENERATE, MACVERIFY, APPMANAGEABLE, EXPORT",
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
@@ -241,6 +243,26 @@ func resourceReadGCPSobject(ctx context.Context, d *schema.ResourceData, m inter
 		if err := d.Set("links", req["links"]); err != nil {
 			return diag.FromErr(err)
 		}
+		externalData := make(map[string]interface{})
+		externalData1 := req["external"].(map[string]interface{})
+		for key, value := range(externalData1) {
+			if key == "id" {
+				id := value.(map[string]interface{})
+				for id_key, id_value := range(id){
+					if id_key == "version" {
+						externalData[id_key] = strconv.FormatFloat(id_value.(float64), 'f', -1, 64)
+						
+					} else {
+						externalData[id_key] = id_value
+					}
+				}
+			} else if key == "hsm_group_id" {
+				externalData[key] = value
+			}
+		}
+		if err := d.Set("external", externalData); err != nil {
+			return diag.FromErr(err)
+		}		
 		if err := d.Set("kid", req["kid"].(string)); err != nil {
 			return diag.FromErr(err)
 		}
@@ -304,7 +326,9 @@ func resourceUpdateGCPSobject(ctx context.Context, d *schema.ResourceData, m int
 		update_gcp_key["enabled"] = d.Get("enabled").(bool)
 	}
 	if d.HasChange("key_ops") {
-		update_gcp_key["key_ops"] = d.Get("key_ops")
+		if err := d.Get("key_ops").([]interface{}); len(err) > 0 {
+			update_gcp_key["key_ops"] = d.Get("key_ops")
+		}			
 	}
 	if d.HasChange("rotation_policy") {
 		if err := d.Get("rotation_policy").(map[string]interface{}); len(err) > 0 {
