@@ -96,6 +96,9 @@ func dataSourceAzureGroup() *schema.Resource {
 
 func dataSourceAzureGroupRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	var group_data map[string]interface{}
+	original_name := d.Get("name").(string)
+	modified_name := fmt.Sprintf("%s-azure-%s", original_name, m.(*api_client).azure_region)
 
 	req, err := m.(*api_client).APICallList("GET", "sys/v1/groups")
 	if err != nil {
@@ -107,54 +110,73 @@ func dataSourceAzureGroupRead(ctx context.Context, d *schema.ResourceData, m int
 		return diags
 	}
 
+	// Shashi: First, check for the group name as provided.
+	// If not found, fallback to checking the group name in the "name-azure-region" format used prior to v0.5.33.
 	for _, data := range req {
-		prefix_name := fmt.Sprintf("%s-azure-%s", d.Get("name").(string), m.(*api_client).azure_region)
-		if data.(map[string]interface{})["name"].(string) == prefix_name {
-			jsonbody, err := json.Marshal(data)
-			if err != nil {
-				diags = append(diags, diag.Diagnostic{
-					Severity: diag.Error,
-					Summary:  "[DSM SDK] Unable to parse DSM provider API client output",
-					Detail:   fmt.Sprintf("[E]: API: GET crypto/v1/groups: %s", err),
-				})
-				return diags
-			}
-
-			azuregroup := AzureGroup{}
-			if err := json.Unmarshal(jsonbody, &azuregroup); err != nil {
-				diags = append(diags, diag.Diagnostic{
-					Severity: diag.Error,
-					Summary:  "[DSM SDK] Unable to parse DSM provider API client output",
-					Detail:   fmt.Sprintf("[E]: API: GET crypto/v1/groups: %s", err),
-				})
-				return diags
-			}
-
-			// FYOO: AzureGroup must conform to this JSON struct - if this crashes, then we have DSM issues
-			name := strings.Split(azuregroup.Name, fmt.Sprintf("-azure-%s", m.(*api_client).azure_region))
-			d.Set("name", name[0])
-			d.Set("group_id", azuregroup.Group_id)
-			d.Set("acct_id", azuregroup.Acct_id)
-			var creatorInt map[string]interface{}
-			creatorRec, _ := json.Marshal(azuregroup.Creator)
-			json.Unmarshal(creatorRec, &creatorInt)
-			d.Set("creator", creatorInt)
-			d.Set("region", m.(*api_client).azure_region)
-			// FYOO: there is only one HMG per AzureGroup
-			for _, value := range azuregroup.Hmg {
-				d.Set("subscription_id", value.Subscription_id)
-				d.Set("client_id", value.Client_id)
-				d.Set("tenant_id", value.Tenant_id)
-				d.Set("key_vault_type", value.Key_vault_type)
-				d.Set("url", value.Url)
-			}
-			// FYOO: remove sensitive information
-			d.Set("secret_key", "")
-			// FYOO: if description is blank, DSM does not return
-			if _, ok := data.(map[string]interface{})["description"]; ok {
-				d.Set("description", data.(map[string]interface{})["description"].(string))
-			}
+		group_name := data.(map[string]interface{})["name"].(string)
+		if group_name == original_name {
+			group_data = data.(map[string]interface{})
+			break
 		}
+		if group_name == modified_name && group_data == nil {
+			group_data = data.(map[string]interface{})
+		}
+	}
+
+	if group_data == nil {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "[DSM SDK] Group not found.",
+			Detail:   fmt.Sprintf("[E]: No group found with name: %s or %s", original_name, modified_name),
+		})
+		return diags
+	}
+
+	jsonbody, parsing_error := json.Marshal(group_data)
+	if parsing_error != nil {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "[DSM SDK] Unable to parse DSM provider API client output.",
+			Detail:   fmt.Sprintf("[E]: API: GET sys/v1/groups: %s", parsing_error),
+		})
+		return diags
+	}
+
+	azuregroup := AzureGroup{}
+	if err := json.Unmarshal(jsonbody, &azuregroup); err != nil {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "[DSM SDK] Unable to parse DSM provider API client output",
+			Detail:   fmt.Sprintf("[E]: API: GET sys/v1/groups: %s", err),
+		})
+		return diags
+	}
+
+	// FYOO: AzureGroup must conform to this JSON struct - if this crashes, then we have DSM issues
+	name := strings.Split(azuregroup.Name, fmt.Sprintf("-azure-%s", m.(*api_client).azure_region))
+	d.Set("name", name[0])
+	d.Set("group_id", azuregroup.Group_id)
+	d.Set("acct_id", azuregroup.Acct_id)
+
+	var creatorInt map[string]interface{}
+	creatorRec, _ := json.Marshal(azuregroup.Creator)
+	json.Unmarshal(creatorRec, &creatorInt)
+	d.Set("creator", creatorInt)
+	d.Set("region", m.(*api_client).azure_region)
+
+	// FYOO: there is only one HMG per AzureGroup
+	for _, value := range azuregroup.Hmg {
+		d.Set("subscription_id", value.Subscription_id)
+		d.Set("client_id", value.Client_id)
+		d.Set("tenant_id", value.Tenant_id)
+		d.Set("key_vault_type", value.Key_vault_type)
+		d.Set("url", value.Url)
+	}
+	// FYOO: remove sensitive information
+	d.Set("secret_key", "")
+	// FYOO: if description is blank, DSM does not return
+	if _, ok := group_data["description"]; ok {
+		d.Set("description", group_data["description"].(string))
 	}
 
 	d.SetId(d.Get("group_id").(string))

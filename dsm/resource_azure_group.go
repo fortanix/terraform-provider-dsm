@@ -103,7 +103,7 @@ func resourceCreateAzureGroup(ctx context.Context, d *schema.ResourceData, m int
 
 	group_object := map[string]interface{}{
 		// 0.5.0: Azure KMS Group Name to be predefined as <string>-azure-<region>
-		"name":           fmt.Sprintf("%s-azure-%s", d.Get("name").(string), m.(*api_client).azure_region),
+		"name":           d.Get("name").(string),
 		"description":    d.Get("description").(string),
 		"hmg_redundancy": "PriorityFailover",
 	}

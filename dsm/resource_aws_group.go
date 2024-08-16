@@ -88,7 +88,7 @@ func resourceCreateAWSGroup(ctx context.Context, d *schema.ResourceData, m inter
 
 	group_object := map[string]interface{}{
 		// 0.4.1: AWS KMS Group Name to be predefined as <string>-aws-<region>
-		"name":           fmt.Sprintf("%s-aws-%s", d.Get("name").(string), m.(*api_client).aws_region),
+		"name":           d.Get("name").(string),
 		"description":    d.Get("description").(string),
 		"hmg_redundancy": "PriorityFailover",
 	}
