@@ -186,7 +186,7 @@ resource "dsm_sobject" "certificate" {
       description = "The policy document. This is a JSON formatted string."
       default = <<-EOF 
               {
-               "description":"Credit card,"
+               "description":"Credit card",
                "format": {
                "char_set": [
                     [

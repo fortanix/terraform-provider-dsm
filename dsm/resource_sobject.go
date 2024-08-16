@@ -176,7 +176,7 @@ func resourceSobject() *schema.Resource {
 				"      description = " + "\"The policy document. This is a JSON formatted string.\"" + "\n" +
 				"      default = <<-EOF \n" +
 				"              {\n" +
-				"               " + "\"description\"" + ":" + "\"Credit card,\"" + "\n" +
+				"               " + "\"description\"" + ":" + "\"Credit card\"," + "\n" +
 				"               " + "\"format\"" + ": {\n" +
 				"               " + "\"char_set\"" + ": [\n" +
 				"                    [\n" +

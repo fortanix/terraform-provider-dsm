@@ -619,12 +619,12 @@ resource "dsm_sobject" "aes_sobject_example_rotate" {
 }
 ```
 
-## Destruct a security object
+## Destroy a security object
 
 ```terraform
 /*
 Destruction can be done while update only. 
-To destruct a security object, `destruct` parameter should be configured.
+To destroy a security object, `destruct` parameter should be configured.
 And make enabled as false, this is to avoid the differences while updating other resources.
 */
 resource "dsm_sobject" "aes_sobject_example" {
@@ -660,6 +660,6 @@ resource "dsm_sobject" "aes_sobject_example" {
     deactivate_rotated_key = true
     rotate_copied_keys = "all_external"
   }
-  destruct = "compromise" // other values: deactivate and destroy
+  destruct = "compromise" // other values: deactivate or destroy
 }
 ```
