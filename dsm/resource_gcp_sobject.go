@@ -243,24 +243,25 @@ func resourceReadGCPSobject(ctx context.Context, d *schema.ResourceData, m inter
 		if err := d.Set("links", req["links"]); err != nil {
 			return diag.FromErr(err)
 		}
-		externalData := make(map[string]interface{})
-		externalData1 := req["external"].(map[string]interface{})
-		for key, value := range(externalData1) {
-			if key == "id" {
-				id := value.(map[string]interface{})
-				for id_key, id_value := range(id){
-					if id_key == "version" {
-						externalData[id_key] = strconv.FormatFloat(id_value.(float64), 'f', -1, 64)
-						
-					} else {
-						externalData[id_key] = id_value
+		external_data := make(map[string]interface{})
+		response_external, ok := req["external"].(map[string]interface{})
+		if ok {
+			for key, value := range(response_external) {
+				if key == "id" {
+					id := value.(map[string]interface{})
+					for id_key, id_value := range(id){
+						if id_key == "version" {
+							external_data[id_key] = strconv.FormatFloat(id_value.(float64), 'f', -1, 64)
+						} else {
+							external_data[id_key] = id_value
+						}
 					}
+				} else if key == "hsm_group_id" {
+					external_data[key] = value
 				}
-			} else if key == "hsm_group_id" {
-				externalData[key] = value
 			}
 		}
-		if err := d.Set("external", externalData); err != nil {
+		if err := d.Set("external", external_data); err != nil {
 			return diag.FromErr(err)
 		}		
 		if err := d.Set("kid", req["kid"].(string)); err != nil {
@@ -326,9 +327,7 @@ func resourceUpdateGCPSobject(ctx context.Context, d *schema.ResourceData, m int
 		update_gcp_key["enabled"] = d.Get("enabled").(bool)
 	}
 	if d.HasChange("key_ops") {
-		if err := d.Get("key_ops").([]interface{}); len(err) > 0 {
-			update_gcp_key["key_ops"] = d.Get("key_ops")
-		}			
+		update_gcp_key["key_ops"] = d.Get("key_ops")
 	}
 	if d.HasChange("rotation_policy") {
 		if err := d.Get("rotation_policy").(map[string]interface{}); len(err) > 0 {

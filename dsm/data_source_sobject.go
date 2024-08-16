@@ -100,33 +100,32 @@ func dataSourceSobject() *schema.Resource {
 func dataSourceSobjectRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	var req map[string]interface{}
-	var err diag.Diagnostics
+	var req_err diag.Diagnostics
 
 	security_object := map[string]interface{}{
 		"name": d.Get("name").(string),
 	}
 
 	if d.Get("export").(bool) {
-		req, err = m.(*api_client).APICallBody("POST", "crypto/v1/keys/export", security_object)
-		if err != nil {
+		req, req_err = m.(*api_client).APICallBody("POST", "crypto/v1/keys/export", security_object)
+		if req_err != nil {
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "[DSM SDK] Unable to call DSM provider API client",
-				Detail:   fmt.Sprintf("[E]: API: POST crypto/v1/keys/export: %v", err),
+				Detail:   fmt.Sprintf("[E]: API: POST crypto/v1/keys/export: %v", req_err),
 			})
 			return diags
 		}
 	} else {
 		var reqList []interface{}
-		reqList, err = m.(*api_client).APICallList("GET", "crypto/v1/keys?name=" + d.Get("name").(string))
-		if err == nil && len(reqList) > 0 {
+		reqList, req_err = m.(*api_client).APICallList("GET", "crypto/v1/keys?name=" + d.Get("name").(string))
+		if req_err == nil && len(reqList) > 0 {
 			req = reqList[0].(map[string]interface{})
-		}
-		if err != nil {
+		} else {
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "[DSM SDK] Unable to call DSM provider API client",
-				Detail:   fmt.Sprintf("[E]: API: POST crypto/v1/keys?name=%s: %v", d.Get("name").(string), err),
+				Detail:   fmt.Sprintf("[E]: API: GET crypto/v1/keys?name=%s: %v", d.Get("name").(string), "sobject does not exist."),
 			})
 			return diags
 		}
