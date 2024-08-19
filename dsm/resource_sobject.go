@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"time"
+	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -20,7 +21,8 @@ func resourceSobject() *schema.Resource {
 		UpdateContext: resourceUpdateSobject,
 		DeleteContext: resourceDeleteSobject,
 		Description: "Creates a new security object. The returned resource object contains the UUID of the security object for further references.\n" +
-		"A key value can be imported as a security object. This resource also can rotate or copy a security object.",
+		"A key value can be imported as a security object. This resource also can rotate or copy a security object.\n" +
+		"For more examples, please refer Guides/dsm_security_object",
 		Schema: map[string]*schema.Schema{
 			"name": {
 			    Description: "The security object name.",
@@ -41,7 +43,8 @@ func resourceSobject() *schema.Resource {
 			    Description: "The security object type.\n" +
 			    "   * `Supported security objects`: AES, DES, DES3, RSA, DSA, KCDSA, EC, ECKCDSA, ARIA, SEED and Tokenization(fpe).",
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
+				Computed: true,
 			},
 			"key_size": {
 			    Description: "The security object size. It should not be given only when the obj_type is EC and ECKCDSA.\n\n" +
@@ -54,9 +57,11 @@ func resourceSobject() *schema.Resource {
 				"| `DES` | 56 | ENCRYPT, DECRYPT, WRAPKEY, UNWRAPKEY, DERIVEKEY, APPMANAGEABLE, EXPORT |\n" +
 				"| `DES3` | 112, 168 | ENCRYPT, DECRYPT, WRAPKEY, UNWRAPKEY, DERIVEKEY, MACGENERATE, MACVERIFY, APPMANAGEABLE, EXPORT |\n" +
 				"| `ARIA` | 128, 192, 256 | ENCRYPT, DECRYPT, WRAPKEY, UNWRAPKEY, DERIVEKEY, MACGENERATE, MACVERIFY, APPMANAGEABLE, EXPORT |\n" +
-				"| `SEED` | 128 | ENCRYPT, DECRYPT, WRAPKEY, UNWRAPKEY, DERIVEKEY, EXPORT |\n",
+				"| `SEED` | 128 | ENCRYPT, DECRYPT, WRAPKEY, UNWRAPKEY, DERIVEKEY, EXPORT |\n" +
+				"| `HMAC` | 112 to 8192 | DERIVEKEY, MACGENERATE, MACVERIFY, APPMANAGEABLE, EXPORT |\n",
 				Type:     schema.TypeInt,
 				Optional: true,
+				Computed: true,
 			},
 			"kid": {
 			    Description: "The security object ID from Fortanix DSM.",
@@ -95,7 +100,7 @@ func resourceSobject() *schema.Resource {
 				},
 			},
 			"rotation_policy": {
-				Description: "Policy to rotate a Security Object, configure the below parameters.\n" +
+				Description: "Policy to rotate a Security Object, configure the below parameters. This is not supported while importing the security object.\n" +
 				"   * `interval_days`: Rotate the key for every given number of days.\n" +
 				"   * `interval_months`: Rotate the key for every given number of months.\n" +
 				"   * `effective_at`: Start of the rotation policy time.\n" +
@@ -171,7 +176,7 @@ func resourceSobject() *schema.Resource {
 				"      description = " + "\"The policy document. This is a JSON formatted string.\"" + "\n" +
 				"      default = <<-EOF \n" +
 				"              {\n" +
-				"               " + "\"description\"" + ":" + "\"Credit card\"" + "\n" +
+				"               " + "\"description\"" + ":" + "\"Credit card\"," + "\n" +
 				"               " + "\"format\"" + ": {\n" +
 				"               " + "\"char_set\"" + ": [\n" +
 				"                    [\n" +
@@ -229,11 +234,13 @@ func resourceSobject() *schema.Resource {
 					Type: schema.TypeString,
 				},
 				Optional: true,
+				Computed: true,
 			},
 			"allowed_missing_justifications": {
 			    Description: " Boolean value which allows missing justifications even if not provided to the security object. The values are True / False.",
 				Type:     schema.TypeBool,
 				Optional: true,
+				Computed: true,
 			},
 			"description": {
 			    Description: "The security object description.",
@@ -246,7 +253,7 @@ func resourceSobject() *schema.Resource {
 			    "   * The values are true/false.",
 				Type:     schema.TypeBool,
 				Optional: true,
-				Computed: true,
+				Default: true,
 			},
 			"state": {
 			    Description: "The state of the secret security object.\n" +
@@ -259,6 +266,7 @@ func resourceSobject() *schema.Resource {
 			    Description: "The security object expiry date in RFC format.",
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"elliptic_curve": {
 				Description: "Standardized elliptic curve. It should be given only when the obj_type is EC or ECKCDSA.\n\n" +
@@ -268,6 +276,7 @@ func resourceSobject() *schema.Resource {
 				"| `ECKCDSA` | SecP192K1, SecP224K1, SecP256K1  NistP192, NistP224, NistP256, NistP384, NistP521 | APPMANAGEABLE, SIGN, VERIFY, EXPORT |\n",
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"value": {
 			    Description: "Sobject content when importing content.",
@@ -282,6 +291,7 @@ func resourceSobject() *schema.Resource {
 				"| `KCDSA` | 224, 256| 224, 256: When KCDSA key_size is 2048.\n",
 				Type:     schema.TypeInt,
 				Optional: true,
+				Computed: true,
 			},
 			"hash_alg": {
 			    Description: "Hashing Algorithm for KCDSA and ECKCDSA.\n\n" +
@@ -291,6 +301,48 @@ func resourceSobject() *schema.Resource {
 				"| `KCDSA` | SHA224, SHA256 |\n",
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
+			},
+			"key": {
+				Description: "Copy a local security object.",
+				Type:     schema.TypeMap,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"destruct": {
+				Description: "Key destruction. Key can be destroyed or deactivated or compromised.\n\n" +
+				"   * Allowed values are compromise/deactivate/destroy.",
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"bls": {
+				Description: "BLS key configuration. This should be used when obj_type is `BLS`\n" +
+				"   * `variant`: Allowed values are small_signatures/small_public_keys.\n\n" +
+				"| obj_type | key_ops |\n" +
+				"| -------- |-------- |\n" +
+				"| `BLS` | APPMANAGEABLE, SIGN, VERIFY, EXPORT |",
+				Type:     schema.TypeMap,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type:     schema.TypeString,
+				},
+			},
+			"lms": {
+				Description: "LMS key configuration. This should be used when obj_type is `LMS`\n" +
+				"   * `l1_height`: Allowed values are 5/10/15/20/25\n" +
+				"   * `l2_height`(Optional): Allowed values are 5/10/15/20/25\n" +
+				"   * `node_size`: Allowed values are 24/32\n\n" +
+				"| obj_type | key_ops |\n" +
+				"| -------- |-------- |\n" +
+				"| `LMS` | APPMANAGEABLE, SIGN, VERIFY |",
+				Type:     schema.TypeMap,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type:     schema.TypeString,
+				},
 			},
 		},
 		Importer: &schema.ResourceImporter{
@@ -299,6 +351,8 @@ func resourceSobject() *schema.Resource {
 	}
 }
 
+// global variables
+var error_summary = "[DSM SDK] Unable to call DSM provider API client:"
 // [-]: Custom Functions
 // contains: Need to validate whether a string exists in a []string
 func contains(s []string, str string) bool {
@@ -325,56 +379,104 @@ func unmarshalStringToJson(inputString string) (interface{}, error) {
 // createSO: Create Security Object
 func createSO(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	if err := d.Get("destruct").(string); len(err) > 0 {
+		return invokeErrorDiagsNoSummary(fmt.Sprintf("destruct parameter should not be configured during creation of a security object, it should be configured during update."))
+	}
+
 	endpoint := "crypto/v1/keys"
 	key_size := d.Get("key_size").(int)
 	obj_type := d.Get("obj_type").(string)
 	elliptic_curve := d.Get("elliptic_curve").(string)
 	hash_alg := d.Get("hash_alg").(string)
 	subgroup_size := d.Get("subgroup_size").(int)
+	lms := d.Get("lms").(map[string]interface{})
+	bls := d.Get("bls").(map[string]interface{})
 	method := "POST"
 
 	security_object := map[string]interface{}{
 		"name":        d.Get("name").(string),
-		"obj_type":    obj_type,
 		"group_id":    d.Get("group_id").(string),
 		"description": d.Get("description").(string),
+		"enabled": d.Get("enabled").(bool),
 	}
 
 	if _, ok := d.GetOk("value"); ok {
+		security_object["obj_type"] = obj_type
 		security_object["value"] = d.Get("value").(string)
 		method = "PUT"
-	} else {
+	} else if _, ok := d.GetOk("key"); ok{
+		// copy a key logic
+		if len(obj_type) > 0 || key_size > 0 || len(elliptic_curve) > 0 || len(bls) > 0 || len(lms) > 0 || len(hash_alg) > 0 || subgroup_size > 0 {
+			return invokeErrorDiagsNoSummary("obj_type, key_size, hash_alg, subgroup_size, elliptic_curve, bls or lms should not be specified while copying a key.")
+		}
+		key_copy := d.Get("key").(map[string]interface{})
+		var is_kid bool
+		for k, _ := range key_copy {
+			if k == "kid" {
+			is_kid = true
+				break
+			}
+		}
+		if is_kid {
+			// copy API
+			endpoint = endpoint + "/copy"
+			security_object["key"] = key_copy
+		} else {
+			return invokeErrorDiagsNoSummary("kid should be specified while copying a security object, kid is an id of another security object.")
+		}
+	}else {
+		if len(obj_type) == 0 {
+			return invokeErrorDiagsNoSummary(fmt.Sprintf("obj_type should be specified for while creating a security object"))
+		}
+		security_object["obj_type"] = obj_type
 		if obj_type == "EC" || obj_type == "ECKCDSA" {
-			if key_size > 0 || len(elliptic_curve) == 0 {
-				diags = append(diags, diag.Diagnostic{
-					Severity: diag.Error,
-					Detail:   fmt.Sprintf("key_size should not be specified and elliptic_curve should be specified for %s", obj_type),
-				})
-				return diags
+			if key_size > 0 || len(elliptic_curve) == 0 || len(bls) > 0 || len(lms) > 0 {
+				return invokeErrorDiagsNoSummary(fmt.Sprintf("key_size, bls and lms should not be specified and elliptic_curve should be specified for %s", obj_type))
 			} else {
 				security_object["elliptic_curve"] = elliptic_curve
 			}
-		} else if key_size == 0 || len(elliptic_curve) > 0 {
-			diags = append(diags, diag.Diagnostic{
-				Severity: diag.Error,
-				Detail:   fmt.Sprintf("key_size should be specified and elliptic_curve should not be specified for %s", obj_type),
-			})
-			return diags
+		} else if obj_type == "BLS" {
+			if key_size > 0 || len(bls) == 0 ||  len(elliptic_curve) > 0 || len(lms) > 0 {
+				return invokeErrorDiagsNoSummary(fmt.Sprintf("key_size, elliptic_curve and lms should not be specified and bls should be specified for %s", obj_type))
+			} else {
+				security_object["bls"] = bls
+			}
+		} else if obj_type == "LMS" {
+			if key_size > 0 || len(lms) == 0 || len(elliptic_curve) > 0 || len(bls) > 0 {
+				  return invokeErrorDiagsNoSummary(fmt.Sprintf("key_size, elliptic_curve and bls should not be specified and LMS should be specified for %s", obj_type))
+			  } else {
+				 lms_heights := []int{}
+				 l1_height, h1 := lms["l1_height"].(string)
+				 l2_height, h2 := lms["l2_height"].(string)
+				 l_node_size, ns := lms["node_size"].(string)
+				 if !h1 || !ns {
+					return invokeErrorDiagsNoSummary(fmt.Sprintf("l1_height and node_size should be specified and l2_height is optional for %s", obj_type))
+				 }
+				 hval, _ := strconv.Atoi(l1_height)
+				 lms_heights = append(lms_heights, hval)
+				 if h2{
+					hval, _ := strconv.Atoi(l2_height)
+					lms_heights = append(lms_heights, hval)
+				 }
+				 lms_node_size, _ := strconv.Atoi(l_node_size)
+				 security_object["lms"] = map[string]interface{}{
+					"node_size": lms_node_size,
+					"heights": lms_heights,
+				 }
+			}
+		} else if key_size == 0 || len(elliptic_curve) > 0 || len(bls) > 0 || len(lms) > 0 {
+			return invokeErrorDiagsNoSummary(fmt.Sprintf("elliptic_curve, bls and lms should not be specified and key_size should be specified for %s", obj_type))
 		} else {
 			security_object["key_size"] = key_size
 		}
 	}
-
-	if rfcdate := d.Get("expiry_date").(string); len(rfcdate) > 0 {
-		layoutRFC := "2006-01-02T15:04:05Z"
-		layoutDSM := "20060102T150405Z"
-		ddate, newerr := time.Parse(layoutRFC, rfcdate)
-		if newerr != nil {
-			return diag.FromErr(newerr)
+	if err := d.Get("expiry_date").(string); len(err) > 0 {
+		sobj_deactivation_date, date_error := parseTimeToDSM(err)
+		if date_error != nil {
+			return date_error
 		}
-		security_object["deactivation_date"] = ddate.Format(layoutDSM)
+		security_object["deactivation_date"] = sobj_deactivation_date
 	}
-
 	if err := d.Get("key_ops").([]interface{}); len(err) > 0 {
 		security_object["key_ops"] = d.Get("key_ops")
 	}
@@ -404,11 +506,13 @@ func createSO(ctx context.Context, d *schema.ResourceData, m interface{}) diag.D
 		if allowed_key_justifications_policy != nil {
 			security_object["google_access_reason_policy"] = map[string]interface{}{
 				"allow": allowed_key_justifications_policy,
+				"allow_missing_reason": false,
 			}
 		}
 	} else if ok2 {
 		if allowed_missing_justifications != nil {
 			security_object["google_access_reason_policy"] = map[string]interface{}{
+				"allow": []string{},
 				"allow_missing_reason": allowed_missing_justifications,
 			}
 		}
@@ -418,11 +522,7 @@ func createSO(ctx context.Context, d *schema.ResourceData, m interface{}) diag.D
 	// This prevents issues for existing users of fpe_radix.
 	// This logic was added in v0.5.30 to support the transition from `fpe_radix` to `fpe` for new users while maintaining support for existing configurations.
 	if d.Get("fpe").(string) != "" && d.Get("fpe_radix").(int) != 0 {
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "only one of these two can be given in the Terraform configuration: fpe, fpe_radix. This check ensures backward compatibility for users previously using 'fpe_radix'. New users are encouraged to use the 'fpe' object.",
-		})
-		return diags
+		return invokeErrorDiagsNoSummary("only one of these two can be given in the Terraform configuration: fpe, fpe_radix. This check ensures backward compatibility for users previously using 'fpe_radix'. New users are encouraged to use the 'fpe' object.")
 	}
 	if fpe_policy := d.Get("fpe").(string); len(fpe_policy) > 0 {
 		security_object["fpe"] = json.RawMessage(d.Get("fpe").(string))
@@ -438,7 +538,6 @@ func createSO(ctx context.Context, d *schema.ResourceData, m interface{}) diag.D
 	if rotation_policy := d.Get("rotation_policy").(map[string]interface{}); len(rotation_policy) > 0 {
 		security_object["rotation_policy"] = sobj_rotation_policy_write(rotation_policy)
 	}
-
 	if len(hash_alg) > 0 && obj_type == "KCDSA" {
 		kcdsa := make(map[string]interface{})
 		kcdsa["hash_alg"] = hash_alg
@@ -481,7 +580,7 @@ func resourceCreateSobject(ctx context.Context, d *schema.ResourceData, m interf
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "[DSM SDK] Unable to call DSM provider API client",
-				Detail:   "[E]: API: GET crypto/v1/keys/rekey: 'rotate_from' missing",
+				Detail:   "[E]: API: POST crypto/v1/keys/rekey: 'rotate_from' missing",
 			})
 			return diags
 		}
@@ -491,7 +590,7 @@ func resourceCreateSobject(ctx context.Context, d *schema.ResourceData, m interf
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "[DSM SDK] Unable to call DSM provider API client",
-			Detail:   fmt.Sprintf("[E]: API: GET crypto/v1/keys: %v", err),
+			Detail:   fmt.Sprintf("[E]: API: POST crypto/v1/keys: %v", err),
 		})
 		return diags
 	}
@@ -503,7 +602,7 @@ func resourceCreateSobject(ctx context.Context, d *schema.ResourceData, m interf
 func resourceReadSobject(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	req, statuscode, err := m.(*api_client).APICall("GET", fmt.Sprintf("crypto/v1/keys/%s", d.Id()))
+	req, statuscode, err := m.(*api_client).APICall("GET", fmt.Sprintf("crypto/v1/keys/%s?show_destroyed=true&show_deleted=true", d.Id()))
 	if statuscode == 404 {
 		d.SetId("")
 	} else {
@@ -541,12 +640,32 @@ func resourceReadSobject(ctx context.Context, d *schema.ResourceData, m interfac
 		}
 		if _, ok := req["google_access_reason_policy"]; ok {
 			google_access_reason_policy := req["google_access_reason_policy"].(map[string]interface{})
-			if err := d.Set("allowed_key_justifications_policy", google_access_reason_policy["allow"]); err != nil {
+			tf_state_garp, is_tf_state_garp  := d.GetOk("allowed_key_justifications_policy")
+			var is_same_garp bool
+			if is_tf_state_garp {
+				is_same_garp = compTwoArrays(tf_state_garp, google_access_reason_policy["allow"])
+			}
+			if is_same_garp {
+				if err := d.Set("allowed_key_justifications_policy", tf_state_garp); err != nil {
+					return diag.FromErr(err)
+				}
+			} else if err := d.Set("allowed_key_justifications_policy", google_access_reason_policy["allow"]); err != nil {
 				return diag.FromErr(err)
 			}
 			if err := d.Set("allowed_missing_justifications", google_access_reason_policy["allow_missing_reason"]); err != nil {
 				return diag.FromErr(err)
 			}
+		} else{
+		    /*
+		        allowed_key_justifications_policy is either Optional or Computed.
+		        It is being made as Computed, because when a key is copied, KAJ will also get copied.
+		        In this case, it will become a computed value.
+
+		        If allowed_key_justifications_policy is not set, while updating it shows a difference as it will set to null value.
+		        Hence, it needs to set as an empty value.
+		    */
+		    empty_array := []string{}
+		    d.Set("allowed_key_justifications_policy", empty_array)
 		}
 		if err := d.Set("kid", req["kid"].(string)); err != nil {
 			return diag.FromErr(err)
@@ -701,6 +820,27 @@ func resourceReadSobject(ctx context.Context, d *schema.ResourceData, m interfac
 				return diag.FromErr(err)
 			}
 		}
+		empty_map := make(map[string]int)
+		if _, ok := req["bls"]; ok {
+			if err := d.Set("bls", req["bls"].(map[string]interface{})); err != nil {
+				return diag.FromErr(err)
+			}
+		} else {
+			/*
+				bls is either Optional or Computed.
+				It is being made as Computed, because when a key is copied, bls will also get copied.
+				Incase of a bls key, it will set the correct value, else it will set as a null.
+
+				As it sets as a null for other key types, it shows a difference while updating.
+				Hence, it needs to set as empty.
+			*/
+			d.Set("bls", empty_map)
+		}
+		if _, ok := req["lms"]; ok {
+			if err := d.Set("lms", set_lms_read_sobject(req["lms"].(map[string]interface{}))); err != nil {
+				return diag.FromErr(err)
+			}
+		}
 
 		// FYOO: clear values that are irrelevant
 		d.Set("rotate", "")
@@ -713,6 +853,17 @@ func resourceUpdateSobject(ctx context.Context, d *schema.ResourceData, m interf
 	var diags diag.Diagnostics
 	var has_changed = false
 
+    // Destruct the security_object
+	if d.HasChange("destruct") {
+		if err := d.Get("destruct").(string); len(err) > 0 {
+			destruct_key := destructSobject(d, m)
+			if destruct_key != nil {
+				d.Set("destruct", "")
+				return destruct_key
+			}
+			return resourceReadSobject(ctx, d, m)
+		}
+	}
 	// already has been replaced so "rotate" and "rotate_from" does not apply
 	_, replacement := d.GetOk("replacement")
 	_, replaced := d.GetOk("replaced")
@@ -738,14 +889,10 @@ func resourceUpdateSobject(ctx context.Context, d *schema.ResourceData, m interf
 		has_changed = true
 	}
 	if d.HasChanges("allowed_key_justifications_policy", "allowed_missing_justifications") {
-
 		google_access_reason_policy := make(map[string]interface{})
-
 		google_access_reason_policy["allow"] = d.Get("allowed_key_justifications_policy")
 		google_access_reason_policy["allow_missing_reason"] = d.Get("allowed_missing_justifications")
-
 		has_changed = true
-
 		security_object["google_access_reason_policy"] = google_access_reason_policy
 	}
 	if d.HasChange("key_ops") {
@@ -769,48 +916,59 @@ func resourceUpdateSobject(ctx context.Context, d *schema.ResourceData, m interf
 		security_object["rotation_policy"] = sobj_rotation_policy_write(rotation_policy)
 		has_changed = true
 	}
+	if d.HasChange("group_id") {
+		security_object["group_id"] = d.Get("group_id").(string)
+		has_changed = true
+	}
+	// Expiry date cannot be modified if it is already set.
+	state := d.Get("state").(string)
+	if d.HasChange("expiry_date") && (state != "Compromised" && state != "Deactivated" && state != "Destroyed"){
+		old_expiry_date, new_expiry_date := d.GetChange("expiry_date")
+		if old_expiry_date == nil || len(old_expiry_date.(string)) == 0 {
+			sobj_deactivation_date, date_error := parseTimeToDSM(d.Get("expiry_date").(string))
+			if date_error != nil {
+				return date_error
+			}
+			security_object["deactivation_date"] = sobj_deactivation_date
+		} else {
+			d.Set("expiry_date", old_expiry_date)
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Detail:   fmt.Sprintf("[E]: API: PATCH crypto/v1/keys: expiry_date cannot be changed once it is set. Please retain it to old value: %s -> %s", new_expiry_date, old_expiry_date),
+			})
+			return diags
+		}
+		has_changed = true
+	}
+	if d.HasChange("enabled") {
+		security_object["enabled"] = d.Get("enabled").(bool)
+		has_changed = true
+	}
 	if d.HasChange("fpe") {
-		old_fpe, new_fpe := d.GetChange("fpe")
-		d.Set("fpe", old_fpe)
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "fpe cannot modify on update",
-			Detail:   fmt.Sprintf("[E]: API: PATCH crypto/v1/keys: fpe cannot change on update. Please retain it to old value: %s -> %s", old_fpe, new_fpe),
-		})
-		return diags
+		return undoTFstate("fpe", d)
 	}
 	if d.HasChange("hash_alg") {
-		old_ha, new_ha := d.GetChange("hash_alg")
-		d.Set("hash_alg", old_ha)
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "hash_alg cannot modify on update",
-			Detail:   fmt.Sprintf("[E]: API: PATCH crypto/v1/keys: hash_alg cannot change on update. Please retain it to old value: %s -> %s", old_ha, new_ha),
-		})
-		return diags
+		return undoTFstate("hash_alg", d)
 	}
 	if d.HasChange("subgroup_size") {
-		old_sz, new_sz := d.GetChange("dsa")
-		d.Set("subgroup_size", old_sz)
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "dsa cannot modify on update",
-			Detail:   fmt.Sprintf("[E]: API: PATCH crypto/v1/keys: subgroup_size cannot change on update. Please retain it to old value: %s -> %s", old_sz, new_sz),
-		})
-		return diags
+		return undoTFstate("subgroup_size", d)
 	}
 	if d.HasChange("elliptic_curve") {
-		old_ec, new_ec := d.GetChange("elliptic_curve")
-		d.Set("elliptic_curve", old_ec)
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "elliptic_curve cannot modify on update",
-			Detail:   fmt.Sprintf("[E]: API: PATCH crypto/v1/keys: elliptic_curve cannot change on update. Please retain it to old value: %s -> %s", old_ec, new_ec),
-		})
-		return diags
+		return undoTFstate("elliptic_curve", d)
+	}
+	if d.HasChange("bls") {
+        return undoTFstate("bls", d)
+    }
+	if d.HasChange("lms") {
+		return undoTFstate("lms", d)
 	}
 
 	if has_changed {
+	    // If the security_object is Compromised/Deactivated/Destroyed, modify is forbidden
+	    if state == "Compromised" || state == "Deactivated" || state == "Destroyed" {
+	        summary := "Security Object cannot be modified."
+	        return invokeErrorDiagsWithSummary(summary, fmt.Sprintf("[E] Security Object cannot be modified as it is in the state of %s", state))
+        }
 		if debug_output {
 			tflog.Warn(ctx, "Sobject has changed, calling API")
 		}
@@ -868,4 +1026,52 @@ func resourceDeleteSobject(ctx context.Context, d *schema.ResourceData, m interf
 
 	d.SetId("")
 	return nil
+}
+
+// destruct the sobject, deactivate, compromise and destroy
+func destructSobject(d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	destruct_key := d.Get("destruct").(string)
+	endpoint := ""
+	destruct_body := map[string]interface{}{}
+	if destruct_key == "deactivate" {
+		destruct_body["code"] = "Unspecified"
+		endpoint = fmt.Sprintf("crypto/v1/keys/%s/revoke", d.Id())
+	} else if destruct_key == "compromise" {
+		destruct_body["code"] = "KeyCompromise"
+		destruct_body["message"] = "Key has been compromised"
+		destruct_body["compromise_occurance_date"] = time.Now().Format("20060102T150405Z")
+		endpoint = fmt.Sprintf("crypto/v1/keys/%s/revoke", d.Id())
+	}else if destruct_key == "destroy" {
+		endpoint = fmt.Sprintf("crypto/v1/keys/%s/destroy", d.Id())
+		destruct_body = nil
+	} else {
+		return invokeErrorDiagsWithSummary(fmt.Sprintf("Invalid option for the parameter 'destruct'"), error_summary)
+	}
+
+	if destruct_body != nil {
+		_, err := m.(*api_client).APICallBody("POST", endpoint, destruct_body)
+		if err != nil {
+			return invokeErrorDiagsWithSummary(fmt.Sprintf("[E]: API: POST %s: %v", endpoint, err), error_summary)
+		}
+	} else {
+		_, _, err := m.(*api_client).APICall("POST", endpoint)
+		if err != nil {
+			return invokeErrorDiagsWithSummary(fmt.Sprintf("[E]: API: POST %s: %v", endpoint, err), error_summary)
+		}
+	}
+	return diags
+}
+
+
+// expiry_date create and update
+func parseTimeToDSM(expiry_date string) (string, diag.Diagnostics){
+	layoutRFC := "2006-01-02T15:04:05Z"
+	layoutDSM := "20060102T150405Z"
+	ddate, newerr := time.Parse(layoutRFC, expiry_date)
+	if newerr != nil {
+		return "", diag.FromErr(newerr)
+	}
+	return ddate.Format(layoutDSM), nil
 }

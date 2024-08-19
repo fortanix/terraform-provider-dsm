@@ -194,3 +194,73 @@ func sobj_rotation_policy_read(rp map[string]interface{}) map[string]interface{}
         }
         return rotation_policy
 }
+
+// To read the security object rotation_policy
+func set_lms_read_sobject(lms map[string]interface{}) map[string]interface{}  {
+        lms_data := make(map[string]interface{})
+        for k, v := range  lms{
+            /* while reading the lms value from terraform the interval_days attribute is assigned as float64 datatype.
+               Hence it will be converted to string from float object.
+            */
+            if k == "node_size" || k == "l1_height" || k == "l2_height" {
+                lms_data[k] = strconv.FormatFloat(v.(float64), 'f', -1, 64)
+             }
+        }
+        return lms_data
+}
+
+
+// Compare two array strings whether they are equal or not irrespective of the order.
+func compTwoArrays(x interface{}, y interface{}) bool{
+	x_array_set := x.([]interface{})
+	y_array_set := y.([]interface{})
+
+	xMap := make(map[string]int)
+	yMap := make(map[string]int)
+	for _, xElem := range x_array_set {
+		xMap[xElem.(string)]++
+	}
+	for _, yElem := range y_array_set {
+		yMap[yElem.(string)]++
+	}
+	for xMapKey, xMapVal := range xMap {
+		if yMap[xMapKey] != xMapVal {
+			return false
+		}
+	}
+	return true
+}
+
+// return diagnostics without summary
+func invokeErrorDiagsNoSummary(detail string) diag.Diagnostics {
+	var diags diag.Diagnostics
+	diags = append(diags, diag.Diagnostic{
+		Severity: diag.Error,
+		Detail:   detail,
+	})
+	return diags
+}
+
+// return diagnostics with summary
+func invokeErrorDiagsWithSummary(detail string, summary string) diag.Diagnostics {
+	var diags diag.Diagnostics
+	diags = append(diags, diag.Diagnostic{
+		Severity: diag.Error,
+		Summary: summary,
+		Detail:   detail,
+	})
+	return diags
+}
+
+// undo the tf state value from new to old if there is a failure
+func undoTFstate(param_type string, d *schema.ResourceData) diag.Diagnostics {
+	var diags diag.Diagnostics
+	old_val, new_val := d.GetChange(param_type)
+	d.Set(param_type, old_val)
+	diags = append(diags, diag.Diagnostic{
+		  Severity: diag.Error,
+		  Summary:  param_type + " cannot modify on update",
+		  Detail:   fmt.Sprintf("[E]: API: PATCH crypto/v1/keys: %s cannot change on update. Please retain it to old value: %s -> %s", param_type, old_val, new_val),
+	})
+	return diags
+}
