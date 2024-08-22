@@ -4,11 +4,16 @@ page_title: "dsm_azure_sobject Resource - terraform-provider-dsm"
 subcategory: ""
 description: |-
   Creates a new security object in Azure key vault. This is a Bring-Your-Own-Key (BYOK) method and copies an existing DSM local security object to Azure KV as a Customer Managed Key (CMK).
+  Azure sobject can also rotate and enable schedule deletion. For examples of rotate and schedule deletion, refer Guides/dsm_azure_sobject.
+  Note: Once schedule deletion is enabled, Azure sobject can't be modified.
 ---
 
 # dsm_azure_sobject (Resource)
 
 Creates a new security object in Azure key vault. This is a Bring-Your-Own-Key (BYOK) method and copies an existing DSM local security object to Azure KV as a Customer Managed Key (CMK).
+Azure sobject can also rotate and enable schedule deletion. For examples of rotate and schedule deletion, refer Guides/dsm_azure_sobject.
+
+**Note**: Once schedule deletion is enabled, Azure sobject can't be modified.
 
 ## Example Usage
 
@@ -123,12 +128,17 @@ resource "dsm_azure_sobject" "sobject" {
 | `EC` | NistP256, NistP384, NistP521,SecP256K1 | APPMANAGEABLE, SIGN, VERIFY, AGREEKEY, EXPORT
 - `key_size` (Number) The size of the security object.
 - `obj_type` (String) The type of security object.
+- `rotate` (String) The security object rotation. Specify the method to use for key rotation:
+   * `DSM`: To use the same key material.
+   * `AZURE`: To rotate from a AZURE key. The key material of new key will be stored in AZURE.
+- `rotate_from` (String) Name of the security object to be rotated.
 - `rotation_policy` (Map of String) Policy to rotate a Security Object, configure the below parameters.
    * `interval_days`: Rotate the key for every given number of days.
    * `interval_months`: Rotate the key for every given number of months.
    * `effective_at`: Start of the rotation policy time.
    * `deactivate_rotated_key`: Deactivate original key after rotation true/false.
    * **Note:** Either interval_days or interval_months should be given, but not both.
+- `schedule_deletion` (Boolean) Schedule the security object to delete. Enable schedule deletion to delete it.
 - `state` (String) The key states of the Azure KV key. The values are Created, Deleted, Purged.
 
 ### Read-Only
@@ -137,6 +147,12 @@ resource "dsm_azure_sobject" "sobject" {
 - `creator` (Map of String) The creator of the security object from Fortanix DSM.
    * `user`: If the security object was created by a user, the computed value will be the matching user id.
    * `app`: If the security object was created by a app, the computed value will be the matching app id.
+- `dsm_name` (String) The security object name from Fortanix DSM (matches the name provided during creation).
+- `external` (Map of String) AWS CMK level metadata:
+   * `Version`
+   * `Azure_key_name`
+   * `Azure_key_state`
+   * `Azure_backup`
 - `id` (String) The ID of this resource.
 - `kid` (String) The security object ID from Fortanix DSM.
 - `links` (Map of String) Link between local security object and Azure KV security object.

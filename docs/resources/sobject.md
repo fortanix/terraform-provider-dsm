@@ -5,14 +5,14 @@ subcategory: ""
 description: |-
   Creates a new security object. The returned resource object contains the UUID of the security object for further references.
   A key value can be imported as a security object. This resource also can rotate or copy a security object.
-  For more examples, please refer Guides/dsm_security_object
+  For more examples, please refer Guides/dsm_sobject.
 ---
 
 # dsm_sobject (Resource)
 
 Creates a new security object. The returned resource object contains the UUID of the security object for further references.
 A key value can be imported as a security object. This resource also can rotate or copy a security object.
-For more examples, please refer Guides/dsm_security_object
+For more examples, please refer Guides/dsm_sobject.
 
 ## Example Usage
 

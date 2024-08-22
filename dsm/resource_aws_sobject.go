@@ -13,7 +13,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -36,7 +35,10 @@ func resourceAWSSobject() *schema.Resource {
 		ReadContext:   resourceReadAWSSobject,
 		UpdateContext: resourceUpdateAWSSobject,
 		DeleteContext: resourceDeleteAWSSobject,
-		Description: "Creates a new security object in AWS KMS. This is a Bring-Your-Own-Key (BYOK) method and copies an existing DSM local security object to AWS KMS as a Customer Managed Key (CMK).The returned resource object contains the UUID of the security object for further references.",
+		Description: "Creates a new security object in AWS KMS. This is a Bring-Your-Own-Key (BYOK) method and copies an existing DSM local security object to AWS KMS as a Customer Managed Key (CMK).The returned resource object contains the UUID of the security object for further references.\n" +
+		"AWS sobject can also rotate and enable schedule deletion. For more examples, refer Guides/dsm_aws_sobject, Guides/rotate_with_AWS_option and rotate_with_DSM_option.\n\n" +
+		"**Temporary Credentials**: AWS sobject can also be created using AWS temporary credentials. Please refer the below example for temporary credentials.\n\n" +
+		"**Note**: Once schedule deletion is enabled, AWS sobject can't be modified.",
 		Schema: map[string]*schema.Schema{
 			"name": {
 			    Description: "The security object name.",
@@ -118,10 +120,12 @@ func resourceAWSSobject() *schema.Resource {
 			},
 			"custom_metadata": {
 			    Description: "AWS KMS key level metadata information.\n" +
-			    "   *`aws-aliases`: Key name within AWS KMS.\n" +
-			    "   *`aws-policy`: JSON format of AWS policy that should be enforced for the key.",
+			    "   * `aws-aliases`: Key name within AWS KMS.\n" +
+			    "   * `aws-policy`: JSON format of AWS policy that should be enforced for the key.\n" +
+			    "   * **Note:** Any other DSM custom metadata can be configured.",
 				Type:     schema.TypeMap,
 				Optional: true,
+				Computed: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
@@ -168,6 +172,7 @@ func resourceAWSSobject() *schema.Resource {
 				"| `EC` | NistP256, NistP384, NistP521,SecP256K1 | APPMANAGEABLE, SIGN, VERIFY, AGREEKEY, EXPORT",
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
@@ -182,11 +187,13 @@ func resourceAWSSobject() *schema.Resource {
 			    Description: "Whether the security object will be enabled or disabled. The values are true/false.",
 				Type:     schema.TypeBool,
 				Optional: true,
+				Default: true,
 			},
 			"state": {
-			    Description: "The key states of the AWS key. The values are PendingDeletion, Enabled, Disabled and PendingImport.",
+			    Description: "The key states of the AWS key. The supported values are PendingDeletion, Enabled, Disabled and PendingImport.",
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"pending_window_in_days": {
 			    Description: "input the value for “days” after which the AWS key will be deleted.\n" +
@@ -195,6 +202,7 @@ func resourceAWSSobject() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Default:  7,
+				ValidateFunc: validation.IntAtLeast(7),
 			},
 			"expiry_date": {
 			    Description: "The security object expiry date in RFC format.",
@@ -214,6 +222,12 @@ func resourceAWSSobject() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"schedule_deletion": {
+				Description: "Enable schedule_deletion to delete the key in AWS KMS.",
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 		},
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -225,12 +239,8 @@ func resourceAWSSobject() *schema.Resource {
 func resourceCreateAWSSobject(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	endpoint := "crypto/v1/keys/copy"
-
 	if rotate := d.Get("rotate").(string); len(rotate) > 0 {
 		if rotate_from := d.Get("rotate_from").(string); len(rotate_from) <= 0 {
-			if rotate == "AWS" {
-				endpoint = "crypto/v1/keys/rekey"
-			}
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "[DSM SDK] Unable to call DSM provider API client",
@@ -245,18 +255,18 @@ func resourceCreateAWSSobject(ctx context.Context, d *schema.ResourceData, m int
 		"group_id":    d.Get("group_id").(string),
 		"key":         d.Get("key"),
 		"description": d.Get("description").(string),
+		"enabled":     d.Get("enabled").(bool),
 	}
-
-	if rfcdate := d.Get("expiry_date").(string); len(rfcdate) > 0 {
-		layoutRFC := "2006-01-02T15:04:05Z"
-		layoutDSM := "20060102T150405Z"
-		ddate, newerr := time.Parse(layoutRFC, rfcdate)
-		if newerr != nil {
-			return diag.FromErr(newerr)
+	if err := d.Get("expiry_date").(string); len(err) > 0 {
+		sobj_deactivation_date, date_error := parseTimeToDSM(err)
+		if date_error != nil {
+			return date_error
 		}
-		security_object["deactivation_date"] = ddate.Format(layoutDSM)
+		security_object["deactivation_date"] = sobj_deactivation_date
 	}
-
+	if err := d.Get("key_ops").([]interface{}); len(err) > 0 {
+		security_object["key_ops"] = d.Get("key_ops")
+	}
 	if err := d.Get("custom_metadata").(map[string]interface{}); len(err) > 0 {
 		security_object["custom_metadata"] = d.Get("custom_metadata")
 	}
@@ -292,6 +302,23 @@ func resourceCreateAWSSobject(ctx context.Context, d *schema.ResourceData, m int
 	}
 
 	d.SetId(req["kid"].(string))
+    /*
+	schedule deletion:
+	Few customers may create the key and schedule for the deletion immediately for about 30 days.
+	So, schedule_deletion is enabled in create functionality also.
+	If schedule_deletion fails, it returns a warning and adds the security object to tf state.
+	*/
+	if d.Get("schedule_deletion").(bool) {
+		schedule_deletion := map[string]interface{}{
+			"pending_window_in_days": d.Get("pending_window_in_days").(int),
+		}
+		_, err := m.(*api_client).APICallBody("POST", fmt.Sprintf("crypto/v1/keys/%s/schedule_deletion", d.Id()), schedule_deletion)
+		if err != nil {
+		    // to update the tf state
+			resourceReadAWSSobject(ctx, d, m)
+			return scheduleDeletionWarning(d, err)
+		}
+	}
 	return resourceReadAWSSobject(ctx, d, m)
 }
 
@@ -299,7 +326,7 @@ func resourceCreateAWSSobject(ctx context.Context, d *schema.ResourceData, m int
 func resourceReadAWSSobject(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	req, statuscode, err := m.(*api_client).APICall("GET", fmt.Sprintf("crypto/v1/keys/%s", d.Id()))
+	req, statuscode, err := m.(*api_client).APICall("GET", fmt.Sprintf("crypto/v1/keys/%s?show_destroyed=true&show_deleted=true", d.Id()))
 	if statuscode == 404 {
 		d.SetId("")
 	} else {
@@ -340,12 +367,15 @@ func resourceReadAWSSobject(ctx context.Context, d *schema.ResourceData, m inter
 		if err := d.Set("group_id", req["group_id"].(string)); err != nil {
 			return diag.FromErr(err)
 		}
+		empty_array := []string{}
 		if _, ok := req["links"]; ok {
 			if links := req["links"].(map[string]interface{}); len(links) > 0 {
 				if _, copiedToExists := req["links"].(map[string]interface{})["copiedTo"]; copiedToExists {
 					if err := d.Set("copied_to", req["links"].(map[string]interface{})["copiedTo"].([]interface{})); err != nil {
 						return diag.FromErr(err)
 					}
+				} else {
+				    d.Set("copied_to", empty_array)
 				}
 				if _, copiedFromExists := req["links"].(map[string]interface{})["copiedFrom"]; copiedFromExists {
 					if err := d.Set("copied_from", req["links"].(map[string]interface{})["copiedFrom"].(string)); err != nil {
@@ -373,9 +403,17 @@ func resourceReadAWSSobject(ctx context.Context, d *schema.ResourceData, m inter
 		if err := d.Set("creator", req["creator"]); err != nil {
 			return diag.FromErr(err)
 		}
-		if err := d.Set("custom_metadata", req["custom_metadata"]); err != nil {
-			return diag.FromErr(err)
+		tfstate_custom_metadata := d.Get("custom_metadata").(map[string]interface{})
+		if len(tfstate_custom_metadata) > 0 {
+			if err := d.Set("custom_metadata", tfstate_custom_metadata); err != nil {
+				return diag.FromErr(err)
+			}
+		} else {
+			if err := d.Set("custom_metadata", req["custom_metadata"]); err != nil {
+				return diag.FromErr(err)
+			}
 		}
+
 		external := &TFAWSSobjectExternal{
 			Key_arn:           awssobject.External.Id.Key_arn,
 			Key_id:            awssobject.External.Id.Key_id,
@@ -388,6 +426,11 @@ func resourceReadAWSSobject(ctx context.Context, d *schema.ResourceData, m inter
 		json.Unmarshal(externalRec, &externalInt)
 		if err := d.Set("external", externalInt); err != nil {
 			return diag.FromErr(err)
+		}
+		if key_ops_read, ok := req["key_ops"]; ok {
+		    if err := setKeyOpsTfState(d, key_ops_read); err != nil {
+                return err
+            }
 		}
 		if err := d.Set("key_ops", req["key_ops"]); err != nil {
 			return diag.FromErr(err)
@@ -405,13 +448,11 @@ func resourceReadAWSSobject(ctx context.Context, d *schema.ResourceData, m inter
 		}
 		if rfcdate, ok := req["deactivation_date"]; ok {
 			// FYOO: once it's set, you can't remove deactivation date
-			layoutRFC := "2006-01-02T15:04:05Z"
-			layoutDSM := "20060102T150405Z"
-			ddate, newerr := time.Parse(layoutDSM, rfcdate.(string))
-			if newerr != nil {
-				return diag.FromErr(newerr)
+			sobj_deactivation_date, date_error := parseTimeToDSM(rfcdate.(string))
+			if date_error != nil {
+				return date_error
 			}
-			if newerr = d.Set("expiry_date", ddate.Format(layoutRFC)); newerr != nil {
+			if newerr := d.Set("expiry_date", sobj_deactivation_date); newerr != nil {
 				return diag.FromErr(newerr)
 			}
 		}
@@ -431,8 +472,24 @@ func resourceReadAWSSobject(ctx context.Context, d *schema.ResourceData, m inter
 
 // [U]: Update AWS Security Object
 func resourceUpdateAWSSobject(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-
+    var diags diag.Diagnostics
+	if d.HasChange("schedule_deletion") {
+		if d.Get("schedule_deletion").(bool) {
+			schedule_deletion := map[string]interface{}{
+				"pending_window_in_days": d.Get("pending_window_in_days").(int),
+			}
+			if d.Get("external").(map[string]interface{})["Key_state"] != "PendingDeletion" {
+				_, err := m.(*api_client).APICallBody("POST", fmt.Sprintf("crypto/v1/keys/%s/schedule_deletion", d.Id()), schedule_deletion)
+				if err != nil {
+					return invokeErrorDiagsWithSummary(error_summary, fmt.Sprintf("[E]: API: POST crypto/v1/keys/%s/schedule_deletion, %v", d.Id(), err))
+				}
+			}
+			return resourceReadAWSSobject(ctx, d, m)
+		}
+	}
+	if d.HasChange("key") {
+		return undoTFstate("key", d)
+	}
 	// already has been replaced so "rotate" and "rotate_from" does not apply
 	_, replacement := d.GetOk("replacement")
 	_, replaced := d.GetOk("replaced")
@@ -441,58 +498,95 @@ func resourceUpdateAWSSobject(ctx context.Context, d *schema.ResourceData, m int
 		d.Set("rotate_from", "")
 	}
 
+	update_aws_sobject := map[string]interface{}{
+		"kid": d.Id(),
+	}
+	has_change := false
 	if d.HasChange("custom_metadata") {
 		if err := d.Get("custom_metadata").(map[string]interface{}); len(err) > 0 {
-			update_aws_metadata := map[string]interface{}{
-				"kid": d.Id(),
-			}
+
 			old_custom_metadata, _ := d.GetChange("custom_metadata")
-			//update_aws_metadata["custom_metadata"] = old_custom_metadata
+			//update_aws_sobject["custom_metadata"] = old_custom_metadata
 
 			// FYOO: Needs work
-			update_aws_metadata["custom_metadata"] = make(map[string]interface{})
+			update_aws_sobject["custom_metadata"] = make(map[string]interface{})
 
 			if newAlias, ok := d.Get("custom_metadata").(map[string]interface{})["aws-aliases"]; ok {
 				if replacement {
-					update_aws_metadata["custom_metadata"].(map[string]interface{})["aws-aliases"] = old_custom_metadata.(map[string]interface{})["aws-aliases"]
+					update_aws_sobject["custom_metadata"].(map[string]interface{})["aws-aliases"] = old_custom_metadata.(map[string]interface{})["aws-aliases"]
 				} else {
-					update_aws_metadata["custom_metadata"].(map[string]interface{})["aws-aliases"] = newAlias.(string)
+					update_aws_sobject["custom_metadata"].(map[string]interface{})["aws-aliases"] = newAlias.(string)
 				}
 			}
 
 			if newPolicy, ok := d.Get("custom_metadata").(map[string]interface{})["aws-policy"]; ok {
-				update_aws_metadata["custom_metadata"].(map[string]interface{})["aws-policy"] = newPolicy
+				update_aws_sobject["custom_metadata"].(map[string]interface{})["aws-policy"] = newPolicy
 			} else {
-				update_aws_metadata["custom_metadata"].(map[string]interface{})["aws-policy"] = old_custom_metadata.(map[string]interface{})["aws-policy"]
+				update_aws_sobject["custom_metadata"].(map[string]interface{})["aws-policy"] = old_custom_metadata.(map[string]interface{})["aws-policy"]
 			}
 
 			for k := range d.Get("custom_metadata").(map[string]interface{}) {
 				if strings.HasPrefix(k, "aws-tag-") {
-					update_aws_metadata["custom_metadata"].(map[string]interface{})[k] = d.Get("custom_metadata").(map[string]interface{})[k]
+					update_aws_sobject["custom_metadata"].(map[string]interface{})[k] = d.Get("custom_metadata").(map[string]interface{})[k]
 				}
 			}
 
 			// FYOO: Get tags
 			if d.HasChange("aws_tags") {
 				if err := d.Get("aws_tags").(map[string]interface{}); len(err) > 0 {
-					if _, cmExists := update_aws_metadata["custom_metadata"]; !cmExists {
-						update_aws_metadata["custom_metadata"] = make(map[string]interface{})
+					if _, cmExists := update_aws_sobject["custom_metadata"]; !cmExists {
+						update_aws_sobject["custom_metadata"] = make(map[string]interface{})
 					}
 					for aws_tags_k := range d.Get("aws_tags").(map[string]interface{}) {
-						update_aws_metadata["custom_metadata"].(map[string]interface{})[(fmt.Sprintf("aws-tag-%s", aws_tags_k))] = d.Get("aws_tags").(map[string]interface{})[aws_tags_k]
+						update_aws_sobject["custom_metadata"].(map[string]interface{})[(fmt.Sprintf("aws-tag-%s", aws_tags_k))] = d.Get("aws_tags").(map[string]interface{})[aws_tags_k]
 					}
 				}
 			}
+			has_change = true
+		}
+	}
+	if d.HasChange("expiry_date") {
+		sobj_deactivation_date, date_error := parseTimeToDSM(d.Get("expiry_date").(string))
+		if date_error != nil {
+			return date_error
+		}
+		update_aws_sobject["deactivation_date"] = sobj_deactivation_date
+		has_change = true
+	}
+	if d.HasChange("name") {
+		update_aws_sobject["name"] = d.Get("name").(string)
+		has_change = true
+	}
+	if d.HasChange("description") {
+		update_aws_sobject["description"] = d.Get("description").(string)
+		has_change = true
+	}
+	if d.HasChange("enabled") {
+		update_aws_sobject["enabled"] = d.Get("enabled").(bool)
+		has_change = true
+	}
+	if d.HasChange("rotation_policy") {
+		if rotation_policy := d.Get("rotation_policy").(map[string]interface{}); len(rotation_policy) > 0 {
+			update_aws_sobject["rotation_policy"] = sobj_rotation_policy_write(rotation_policy)
+			has_change = true
+		}
+	}
+	if d.HasChange("key_ops") {
+		update_aws_sobject["key_ops"] = d.Get("key_ops")
+		has_change = true
+	}
 
-			_, err := m.(*api_client).APICallBody("PATCH", fmt.Sprintf("crypto/v1/keys/%s", d.Id()), update_aws_metadata)
-			if err != nil {
-				diags = append(diags, diag.Diagnostic{
-					Severity: diag.Error,
-					Summary:  "[DSM SDK] Unable to call DSM provider API client",
-					Detail:   fmt.Sprintf("[E]: API: PATCH crypto/v1/keys: %v", err),
-				})
-				return diags
-			}
+	if has_change {
+		_, err := m.(*api_client).APICallBody("PATCH", fmt.Sprintf("crypto/v1/keys/%s", d.Id()), update_aws_sobject)
+		if err != nil {
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "[DSM SDK] Unable to call DSM provider API client",
+				Detail:   fmt.Sprintf("[E]: API: PATCH crypto/v1/keys: %v", err),
+			})
+			// sets back to original tf state
+			resourceReadAWSSobject(ctx, d, m)
+			return diags
 		}
 	}
 
@@ -501,49 +595,6 @@ func resourceUpdateAWSSobject(ctx context.Context, d *schema.ResourceData, m int
 
 // [D]: Delete AWS Security Object
 func resourceDeleteAWSSobject(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	// FIXME: Since deleting, might as well remove the alias if exists
-	if _, ok := d.Get("custom_metadata").(map[string]interface{})["aws-aliases"]; ok {
-		remove_aws_alias := map[string]interface{}{
-			"kid": d.Id(),
-		}
-		remove_aws_alias["custom_metadata"] = map[string]interface{}{
-			"aws-aliases": "",
-			"aws-policy":  d.Get("custom_metadata").(map[string]interface{})["aws-policy"],
-		}
-		_, err := m.(*api_client).APICallBody("PATCH", fmt.Sprintf("crypto/v1/keys/%s", d.Id()), remove_aws_alias)
-		if err != nil {
-			diags = append(diags, diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  "[DSM SDK] Unable to call DSM provider API client",
-				Detail:   fmt.Sprintf("[E]: API: PATCH crypto/v1/keys: %v", err),
-			})
-			return diags
-		}
-	}
-
-	// FIXME: Need to schedule deletion then delete the key - default is set to 7 days for now (need to specify)
-	delete_object := map[string]interface{}{
-		"pending_window_in_days": d.Get("pending_window_in_days").(int),
-	}
-	if d.Get("custom_metadata").(map[string]interface{})["aws-key-state"] != "PendingDeletion" {
-		_, err := m.(*api_client).APICallBody("POST", fmt.Sprintf("crypto/v1/keys/%s/schedule_deletion", d.Id()), delete_object)
-		if err != nil {
-			return err
-		}
-	}
-
-	_, statuscode, err := m.(*api_client).APICall("DELETE", fmt.Sprintf("crypto/v1/keys/%s", d.Id()))
-	if (err != nil) && (statuscode != 404) {
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "[DSM SDK] Unable to call DSM provider API client",
-			Detail:   fmt.Sprintf("[E]: API: DELETE crypto/v1/keys: %v", err),
-		})
-		return diags
-	}
-
-	d.SetId("")
-	return nil
+	//commom.go
+	return deleteBYOKDestroyedSobject(d, m)
 }

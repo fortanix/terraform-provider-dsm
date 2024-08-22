@@ -1,3 +1,6 @@
+/*
+How to create an AWS KMS key with static credentials ?
+*/
 // Create a normal group
 resource "dsm_group" "normal_group" {
   name = "normal_group"
@@ -111,4 +114,5 @@ resource "dsm_aws_sobject" "aws_sobject_temp_creds" {
 }
 
 
-// Note: For rotation of a key please refer Guides/rotate_with_AWS_option.
+// Note: For rotation of a key, please refer Guides/rotate_with_AWS_option, Guides/rotate_with_DSM_option.
+// Note: For schedule deletion of a key, please refer Guides/dsm_aws_sobject
