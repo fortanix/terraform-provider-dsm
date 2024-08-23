@@ -55,7 +55,7 @@ func dataSourceAWSGroup() *schema.Resource {
 			"description": {
 				Description: "The AWS KMS group object description.",
 				Type:     schema.TypeString,
-				Optional: true,
+				Computed: true,
 				Default:  "",
 			},
 			"access_key": {

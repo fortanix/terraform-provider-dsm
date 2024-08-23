@@ -58,6 +58,8 @@ resource "dsm_secret" "secret_rotate" {
 
 ### Optional
 
+- `allowed_key_justifications_policy` (List of String)
+- `allowed_missing_justifications` (Boolean)
 - `custom_metadata` (Map of String) The user defined security object attributes added to the key’s metadata.
 - `description` (String) The Fortanix DSM security object description.
 - `enabled` (Boolean) Whether the security object is Enabled or Disabled. The values are true/false.
