@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -142,6 +143,17 @@ func resourceSecret() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"allowed_key_justifications_policy": {
+				Type: schema.TypeList,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+				Optional: true,
+			},
+			"allowed_missing_justifications": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 		},
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -194,6 +206,29 @@ func resourceCreateSecret(ctx context.Context, d *schema.ResourceData, m interfa
 		}
 		endpoint = fmt.Sprintf("sys/v1/plugins/%s", string(reqfpi))
 		operation = "POST"
+	}
+	allowed_key_justifications_policy, allow_exists := d.GetOk("allowed_key_justifications_policy")
+	allowed_missing_justifications, allow_missing_reason_exists := d.GetOk("allowed_missing_justifications")
+
+	if allow_exists && allow_missing_reason_exists {
+		if allowed_key_justifications_policy != nil && allowed_missing_justifications != nil {
+			plugin_object["google_access_reason_policy"] = map[string]interface{}{
+				"allow":                allowed_key_justifications_policy,
+				"allow_missing_reason": allowed_missing_justifications,
+			}
+		}
+	} else if allow_exists {
+		if allowed_key_justifications_policy != nil {
+			plugin_object["google_access_reason_policy"] = map[string]interface{}{
+				"allow": allowed_key_justifications_policy,
+			}
+		}
+	} else if allow_missing_reason_exists {
+		if allowed_missing_justifications != nil {
+			plugin_object["google_access_reason_policy"] = map[string]interface{}{
+				"allow_missing_reason": allowed_missing_justifications,
+			}
+		}
 	}
 
 	req, err := m.(*api_client).APICallBody(operation, endpoint, plugin_object)
@@ -256,6 +291,15 @@ func resourceReadSecret(ctx context.Context, d *schema.ResourceData, m interface
 				return diag.FromErr(err)
 			}
 		}
+		if _, ok := res["google_access_reason_policy"]; ok {
+			google_access_reason_policy := res["google_access_reason_policy"].(map[string]interface{})
+			if err := d.Set("allowed_key_justifications_policy", google_access_reason_policy["allow"]); err != nil {
+				return diag.FromErr(err)
+			}
+			if err := d.Set("allowed_missing_justifications", google_access_reason_policy["allow_missing_reason"]); err != nil {
+				return diag.FromErr(err)
+			}
+		}
 		if err := d.Set("enabled", res["enabled"].(bool)); err != nil {
 			return diag.FromErr(err)
 		}
@@ -304,7 +348,81 @@ func resourceReadSecret(ctx context.Context, d *schema.ResourceData, m interface
 
 // [U]: Update Security Object
 func resourceUpdateSecret(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	return nil
+	var has_changed = false
+	var diags diag.Diagnostics
+
+	var plugin_object = map[string]interface{}{
+		"kid": d.Get("kid").(string),
+	}
+
+	if d.HasChange("name") {
+		plugin_object["name"] = d.Get("name").(string)
+		has_changed = true
+	}
+
+	if d.HasChange("description") {
+		plugin_object["description"] = d.Get("description").(string)
+		has_changed = true
+	}
+
+	if d.HasChange("custom_metadata") {
+		plugin_object["custom_metadata"] = d.Get("custom_metadata").(map[string]interface{})
+		has_changed = true
+	}
+
+	if d.HasChange("enabled") {
+		plugin_object["enabled"] = d.Get("enabled").(bool)
+		has_changed = true
+	}
+
+	if d.HasChange("state") {
+		plugin_object["state"] = d.Get("state").(string)
+		has_changed = true
+	}
+
+	if d.HasChanges("allowed_key_justifications_policy", "allowed_missing_justifications") {
+		google_access_reason_policy := make(map[string]interface{})
+
+		if allow := d.Get("allowed_key_justifications_policy"); allow != nil {
+			google_access_reason_policy["allow"] = allow
+		}
+		if allow_missing := d.Get("allowed_missing_justifications"); allow_missing != nil {
+			google_access_reason_policy["allow_missing_reason"] = allow_missing
+		}
+
+		plugin_object["google_access_reason_policy"] = google_access_reason_policy
+		has_changed = true
+	}
+
+	if d.HasChange("expiry_date") {
+		if rfcdate := d.Get("expiry_date").(string); len(rfcdate) > 0 {
+			layoutRFC := "2006-01-02T15:04:05Z"
+			layoutDSM := "20060102T150405Z"
+			ddate, newerr := time.Parse(layoutRFC, rfcdate)
+			if newerr != nil {
+				return diag.FromErr(newerr)
+			}
+			plugin_object["deactivation_date"] = ddate.Format(layoutDSM)
+			has_changed = true
+		}
+	}
+
+	if has_changed {
+		if debug_output {
+			tflog.Warn(ctx, "Secret has changed, calling API.")
+		}
+		_, err := m.(*api_client).APICallBody("PATCH", fmt.Sprintf("crypto/v1/keys/%s", d.Id()), plugin_object)
+		if err != nil {
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "[DSM SDK] Unable to call DSM provider API client",
+				Detail:   fmt.Sprintf("[E]: API: PATCH crypto/v1/keys: %v", err),
+			})
+			return diags
+		}
+	}
+
+	return resourceReadSecret(ctx, d, m)
 }
 
 // [D]: Delete Security Object
