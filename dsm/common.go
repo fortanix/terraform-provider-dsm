@@ -264,3 +264,18 @@ func undoTFstate(param_type string, d *schema.ResourceData) diag.Diagnostics {
 	})
 	return diags
 }
+
+// Validate the role of an app
+func appRoleValidation(d *schema.ResourceData, app_object map[string]interface{}, role string) diag.Diagnostics{
+	if default_group, ok := d.GetOk("default_group"); ok {
+		if role == "admin" {
+			return invokeErrorDiagsNoSummary("[E] Admin app cannot be added in the group. Remove default_group to create an app.")
+		}
+		app_object["default_group"] = default_group.(string)
+		// add groups and it's permissions
+		formAddGroups(d, app_object)
+	} else if role == "crypto"{
+		return invokeErrorDiagsNoSummary("[E] default_group should be configured for a crypto app. Add default_group to create an app.")
+	}
+	return nil
+}

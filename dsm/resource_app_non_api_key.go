@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"encoding/base64"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -56,7 +57,7 @@ func resourceAppNonAPIKey() *schema.Resource {
 			"default_group": {
 			    Description: "The Fortanix DSM group object id to be mapped to the app by default.",
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
 			"other_group": {
 			    Description: "The Fortanix DSM group object id the app needs to be assigned to. If you want to delete the existing groups from an app, remove the ids during update.",
@@ -131,6 +132,15 @@ func resourceAppNonAPIKey() *schema.Resource {
 					Optional: true,
 				},
 			},
+			"role": {
+				Description: "Role of a DSM app. The allowed values are crypto and admin.\n" +
+				"   * `crypto`: To perform the crypto operations.\n" +
+				"   * `admin`: To perform the admin operations.",
+				Type:     schema.TypeString,
+				Optional: true,
+				Default: "crypto",
+				ValidateFunc: validation.StringInSlice([]string{"crypto", "admin"}, true),
+			},
 		},
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -142,16 +152,18 @@ func resourceAppNonAPIKey() *schema.Resource {
 func resourceCreateAppNonAPIKey(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
+	role := d.Get("role").(string)
 	app_object := map[string]interface{}{
 		"name":          d.Get("name").(string),
-		"default_group": d.Get("default_group").(string),
 		"app_Type":    "default",
 		"description": d.Get("description").(string),
+		"role": role,
 	}
-	// add groups and it's permissions
-	formAddGroups(d, app_object)
 	if am := d.Get("authentication_method").(map[string]interface{}); len(am) > 0 {
 		formCredential(d, app_object, am)
+	}
+	if err := appRoleValidation(d, app_object, role); err != nil {
+		return err
 	}
 	req, err := m.(*api_client).APICallBody("POST", "sys/v1/apps", app_object)
 	if err != nil {
@@ -186,8 +198,10 @@ func resourceReadAppNonAPIKey(ctx context.Context, d *schema.ResourceData, m int
 	if err := d.Set("app_id", req["app_id"].(string)); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("default_group", req["default_group"].(string)); err != nil {
-		return diag.FromErr(err)
+	if _, ok := req["default_group"]; ok {
+		if err := d.Set("default_group", req["default_group"].(string)); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 	if err := d.Set("acct_id", req["acct_id"].(string)); err != nil {
 		return diag.FromErr(err)
@@ -199,6 +213,9 @@ func resourceReadAppNonAPIKey(ctx context.Context, d *schema.ResourceData, m int
 		if err := d.Set("description", req["description"].(string)); err != nil {
 			return diag.FromErr(err)
 		}
+	}
+	if err := d.Set("role", req["role"].(string)); err != nil {
+		return diag.FromErr(err)
 	}
 	req, _, err = m.(*api_client).APICall("GET", fmt.Sprintf("sys/v1/apps/%s/credential", d.Id()))
 	if err != nil {
@@ -229,6 +246,10 @@ func resourceReadAppNonAPIKey(ctx context.Context, d *schema.ResourceData, m int
 func resourceUpdateAppNonAPIKey(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
+	if d.HasChange("role") {
+		old_role, new_role := d.GetChange("role")
+		return invokeErrorDiagsWithSummary(error_summary, fmt.Sprintf("[E]: API: PATCH sys/v1/apps/%s: role cannot be changed once it is set. Please retain it to old value: %s -> %s", d.Id(), old_role, new_role))
+	}
 	app_object := make(map[string]interface{})
 	app_object["description"] = d.Get("description")
 	app_object["name"] = d.Get("name")

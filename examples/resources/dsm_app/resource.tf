@@ -71,3 +71,29 @@ dsm_group.group2.id
 )
 }
 
+/*
+How to rotate an API key ?
+- Set new_credential as true, it will regenerate an API key.
+*/
+resource "dsm_app" "app" {
+  name = "app"
+  default_group = dsm_group.group1.id
+  other_group = [dsm_group.group2.id, dsm_group.group3.id]
+  other_group_permissions = local.other_groups
+  new_credential = true
+  lifecycle {
+    ignore_changes = ["new_crendential"]
+  }
+}
+
+/*
+How to create an admin app?
+- Set role as admin.
+*/
+resource "dsm_app" "app" {
+  name = "app"
+  default_group = dsm_group.group1.id
+  other_group = [dsm_group.group2.id, dsm_group.group3.id]
+  other_group_permissions = local.other_groups
+  role = "admin"
+}
