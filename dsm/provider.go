@@ -102,7 +102,8 @@ func Provider() *schema.Provider {
 			"dsm_acc_crypto_policy":   resourceAccountCryptoPolicy(),
 			"dsm_plugin":              resourcePlugin(),
 			"dsm_app_non_api_key":     resourceAppNonAPIKey(),
-            		"dsm_gcp_sobject":         resourceGCPSobject(),
+			"dsm_gcp_sobject":         resourceGCPSobject(),
+			"dsm_admin_app":           resourceAdminApp(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"dsm_aws_group":    dataSourceAWSGroup(),
