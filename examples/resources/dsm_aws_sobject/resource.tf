@@ -8,49 +8,48 @@ resource "dsm_group" "normal_group" {
 
 // Create AWS group
 resource "dsm_group" "aws_group" {
-  name = "aws_group"
+  name        = "aws_group"
   description = "AWS group"
   hmg = jsonencode(
     {
       url = "kms.us-east-1.amazonaws.com"
       tls = {
         mode = "required"
-        validate_hostname: false,
+        validate_hostname : false,
         ca = {
           ca_set = "global_roots"
         }
       }
-      kind = "AWSKMS"
+      kind       = "AWSKMS"
       access_key = "XXXXXXXXXXXXXXXXXXXX"
       secret_key = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-      region = "us-east-1"
-      service = "kms"
-    })
+      region     = "us-east-1"
+      service    = "kms"
+  })
 }
 
 // Create an AES key inside DSM
 resource "dsm_sobject" "aes_sobject" {
-  name            = "aes_sobject"
-  obj_type        = "AES"
-  group_id        = dsm_group.normal_group.id
-  key_size        = 256
-  key_ops         = ["EXPORT", "ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "DERIVEKEY", "MACGENERATE", "MACVERIFY", "APPMANAGEABLE"]
+  name     = "aes_sobject"
+  obj_type = "AES"
+  group_id = dsm_group.normal_group.id
+  key_size = 256
+  key_ops  = ["EXPORT", "ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "DERIVEKEY", "MACGENERATE", "MACVERIFY", "APPMANAGEABLE"]
 }
 
 // AWS sobject creation(Copies the key from DSM)
 resource "dsm_aws_sobject" "aws_sobject" {
-  name = "aws_sobject"
-  group_id = dsm_group.aws_group.id
+  name        = "aws_sobject"
+  group_id    = dsm_group.aws_group.id
   description = "AWS sobject"
-  enabled = true
-  expiry_date     = "2025-02-02T17:04:05Z"
-  key_ops         = ["EXPORT", "ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "DERIVEKEY", "MACGENERATE", "MACVERIFY", "APPMANAGEABLE"]
+  expiry_date = "2025-02-02T17:04:05Z"
+  key_ops     = ["EXPORT", "ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "DERIVEKEY", "MACGENERATE", "MACVERIFY", "APPMANAGEABLE"]
   key = {
     kid = dsm_sobject.aes_sobject.id
   }
   custom_metadata = {
     aws-aliases = "dsm_aws_sobject"
-    aws-policy = "{\"Version\":\"2012-10-17\",\"Id\":\"key-default-1\",\"Statement\":[{\"Sid\":\"EnableIAMUserPermissions\",\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"arn:aws:iam::XXXXXXXXXXXX:root\"},\"Action\":\"kms:*\",\"Resource\":\"*\"}]}"
+    aws-policy  = "{\"Version\":\"2012-10-17\",\"Id\":\"key-default-1\",\"Statement\":[{\"Sid\":\"EnableIAMUserPermissions\",\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"arn:aws:iam::XXXXXXXXXXXX:root\"},\"Action\":\"kms:*\",\"Resource\":\"*\"}]}"
   }
   aws_tags = {
     test-key = "test-value"
@@ -77,39 +76,38 @@ provider "dsm" {
 }
 // Step3: Create a group
 resource "dsm_group" "aws_group_no_credentials" {
-  name = "aws_group_no_credentials"
+  name        = "aws_group_no_credentials"
   description = "AWS group"
   hmg = jsonencode(
     {
       url = "kms.us-east-1.amazonaws.com"
       tls = {
         mode = "required"
-        validate_hostname: false,
+        validate_hostname : false,
         ca = {
           ca_set = "global_roots"
         }
       }
-      kind = "AWSKMS"
-      region = "us-east-1"
+      kind    = "AWSKMS"
+      region  = "us-east-1"
       service = "kms"
-    })
+  })
 }
 
 
 // Step4: AWS sobject creation(Copies the key from DSM)
 resource "dsm_aws_sobject" "aws_sobject_temp_creds" {
-  name = "aws_sobject_temp_creds"
-  group_id = dsm_group.aws_group_no_credentials.id
+  name        = "aws_sobject_temp_creds"
+  group_id    = dsm_group.aws_group_no_credentials.id
   description = "AWS sobject"
-  enabled = true
-  expiry_date     = "2025-02-02T17:04:05Z"
-  key_ops         = ["EXPORT", "ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "DERIVEKEY", "MACGENERATE", "MACVERIFY", "APPMANAGEABLE"]
+  expiry_date = "2025-02-02T17:04:05Z"
+  key_ops     = ["EXPORT", "ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "DERIVEKEY", "MACGENERATE", "MACVERIFY", "APPMANAGEABLE"]
   key = {
     kid = dsm_sobject.aes_sobject.id
   }
   custom_metadata = {
     aws-aliases = "dsm_aws_sobject_temp_creds"
-    aws-policy = "{\"Version\":\"2012-10-17\",\"Id\":\"key-default-1\",\"Statement\":[{\"Sid\":\"EnableIAMUserPermissions\",\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"arn:aws:iam::XXXXXXXXXXXX:root\"},\"Action\":\"kms:*\",\"Resource\":\"*\"}]}"
+    aws-policy  = "{\"Version\":\"2012-10-17\",\"Id\":\"key-default-1\",\"Statement\":[{\"Sid\":\"EnableIAMUserPermissions\",\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"arn:aws:iam::XXXXXXXXXXXX:root\"},\"Action\":\"kms:*\",\"Resource\":\"*\"}]}"
   }
 }
 

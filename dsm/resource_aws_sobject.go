@@ -37,8 +37,16 @@ func resourceAWSSobject() *schema.Resource {
 		DeleteContext: resourceDeleteAWSSobject,
 		Description: "Creates a new security object in AWS KMS. This is a Bring-Your-Own-Key (BYOK) method and copies an existing DSM local security object to AWS KMS as a Customer Managed Key (CMK).The returned resource object contains the UUID of the security object for further references.\n" +
 		"AWS sobject can also rotate and enable schedule deletion. For more examples, refer Guides/dsm_aws_sobject, Guides/rotate_with_AWS_option and rotate_with_DSM_option.\n\n" +
-		"**Temporary Credentials**: AWS sobject can also be created using AWS temporary credentials. Please refer the below example for temporary credentials.\n\n" +
-		"**Note**: Once schedule deletion is enabled, AWS sobject can't be modified.",
+		"**Temporary Credentials**: AWS security object can also be created using AWS temporary credentials. Please refer the below example for temporary credentials.\n\n" +
+		"**Note**: Once schedule deletion is enabled, AWS security object can't be modified.\n\n" +
+		"**Deletion of a dsm_aws_sobject**: Unlike dsm_sobject, deletion of a dsm_aws_sobject is not normal.\n\n" +
+		"**Steps to delete a dsm_azure_sobject:**\n" +
+		"   * Enable schedule_deletion as shown in the examples of guides/dsm_azure_sobject.\n" +
+		"   * Enable delete_key_material as shown in the examples of guides/dsm_azure_sobject.\n" +
+		"   * A dsm_aws_sobject can be deleted completely only when its state is `destroyed`.\n" +
+		"   * A dsm_aws_sobject comes to destroyed state when the key is deleted from Azure key vault.\n" +
+		"   * To know whether it is in a destroyed state or not, sync keys operation should be performed.\n" +
+		"   * Currently, sync keys is not supported by terraform. This can be done in UI by going to the group and HSM/KMS. Then click on `SYNC KEYS`.",
 		Schema: map[string]*schema.Schema{
 			"name": {
 			    Description: "The security object name.",
@@ -156,12 +164,12 @@ func resourceAWSSobject() *schema.Resource {
 			"obj_type": {
 			    Description: "The type of security object.",
 				Type:     schema.TypeString,
-				Optional: true,
+				Computed: true,
 			},
 			"key_size": {
 			    Description: "The size of the security object.",
 				Type:     schema.TypeInt,
-				Optional: true,
+				Computed: true,
 			},
 			"key_ops": {
 			    Description: "The security object operations permitted.\n\n" +
@@ -184,7 +192,7 @@ func resourceAWSSobject() *schema.Resource {
 				Default:  "",
 			},
 			"enabled": {
-			    Description: "Whether the security object will be enabled or disabled. The values are true/false.",
+			    Description: "Whether the security object will be enabled or disabled. The supported values are true/false.",
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default: true,
@@ -194,15 +202,6 @@ func resourceAWSSobject() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
-			},
-			"pending_window_in_days": {
-			    Description: "input the value for “days” after which the AWS key will be deleted.\n" +
-			    "   * The default value is 7 days.\n" +
-			    "   * The minimum value is 7 days.",
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  7,
-				ValidateFunc: validation.IntAtLeast(7),
 			},
 			"expiry_date": {
 			    Description: "The security object expiry date in RFC format.",
@@ -223,7 +222,16 @@ func resourceAWSSobject() *schema.Resource {
 				Optional: true,
 			},
 			"schedule_deletion": {
-				Description: "Enable schedule_deletion to delete the key in AWS KMS.",
+				Description: "Schedule key deletion in AWS KMS. Key is not usable for Sign/Verify, Wrap/Unwrap or Encrypt/Decrypt operations once it is deleted. Minimum value is 7 days.\n" +
+				"**Note:** This can enabled only after creation.",
+				Type:     schema.TypeInt,
+				Optional: true,
+				ValidateFunc: validation.IntAtLeast(7),
+			},
+			"delete_key_material": {
+				Description: "Delete key material in AWS KMS. Deleting key material makes all data encrypted under the customer master key (CMK) unrecoverable unless you later import the same key material from DSM into the CMK." +
+				"The DSM source key is not affected by this operation. The supported values are true/false." +
+				"**Note:** This can enabled only after creation.",
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -239,6 +247,9 @@ func resourceAWSSobject() *schema.Resource {
 func resourceCreateAWSSobject(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	endpoint := "crypto/v1/keys/copy"
+	if d.Get("schedule_deletion").(int) > 0 || d.Get("delete_key_material").(bool){
+		return invokeErrorDiagsNoSummary("[E] schedule_deletion or delete_key_material should be enabled only after creation.")
+	}
 	if rotate := d.Get("rotate").(string); len(rotate) > 0 {
 		if rotate_from := d.Get("rotate_from").(string); len(rotate_from) <= 0 {
 			diags = append(diags, diag.Diagnostic{
@@ -302,23 +313,6 @@ func resourceCreateAWSSobject(ctx context.Context, d *schema.ResourceData, m int
 	}
 
 	d.SetId(req["kid"].(string))
-    /*
-	schedule deletion:
-	Few customers may create the key and schedule for the deletion immediately for about 30 days.
-	So, schedule_deletion is enabled in create functionality also.
-	If schedule_deletion fails, it returns a warning and adds the security object to tf state.
-	*/
-	if d.Get("schedule_deletion").(bool) {
-		schedule_deletion := map[string]interface{}{
-			"pending_window_in_days": d.Get("pending_window_in_days").(int),
-		}
-		_, err := m.(*api_client).APICallBody("POST", fmt.Sprintf("crypto/v1/keys/%s/schedule_deletion", d.Id()), schedule_deletion)
-		if err != nil {
-		    // to update the tf state
-			resourceReadAWSSobject(ctx, d, m)
-			return scheduleDeletionWarning(d, err)
-		}
-	}
 	return resourceReadAWSSobject(ctx, d, m)
 }
 
@@ -473,22 +467,35 @@ func resourceReadAWSSobject(ctx context.Context, d *schema.ResourceData, m inter
 // [U]: Update AWS Security Object
 func resourceUpdateAWSSobject(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
     var diags diag.Diagnostics
+    if d.HasChange("key") {
+        return undoTFstate("key", d)
+    }
 	if d.HasChange("schedule_deletion") {
-		if d.Get("schedule_deletion").(bool) {
+		if pending_window_in_days := d.Get("schedule_deletion").(int); pending_window_in_days > 6 {
 			schedule_deletion := map[string]interface{}{
-				"pending_window_in_days": d.Get("pending_window_in_days").(int),
+				"pending_window_in_days": pending_window_in_days,
 			}
 			if d.Get("external").(map[string]interface{})["Key_state"] != "PendingDeletion" {
 				_, err := m.(*api_client).APICallBody("POST", fmt.Sprintf("crypto/v1/keys/%s/schedule_deletion", d.Id()), schedule_deletion)
 				if err != nil {
+					d.Set("schedule_deletion", nil)
 					return invokeErrorDiagsWithSummary(error_summary, fmt.Sprintf("[E]: API: POST crypto/v1/keys/%s/schedule_deletion, %v", d.Id(), err))
 				}
+			} else {
+				return showWarning("The security object is already scheduled for the deletion.")
 			}
-			return resourceReadAWSSobject(ctx, d, m)
+			if !(d.HasChange("delete_key_material") && d.Get("delete_key_material").(bool)){
+				return resourceReadAWSSobject(ctx, d, m)
+			}
 		}
 	}
-	if d.HasChange("key") {
-		return undoTFstate("key", d)
+	if d.HasChange("delete_key_material") && d.Get("delete_key_material").(bool){
+		err := deleteKeyMateialBYOKSobject(d, m)
+		if err != nil {
+			d.Set("delete_key_material", false)
+			return err
+		}
+		return resourceReadAWSSobject(ctx, d, m)
 	}
 	// already has been replaced so "rotate" and "rotate_from" does not apply
 	_, replacement := d.GetOk("replacement")
@@ -562,6 +569,15 @@ func resourceUpdateAWSSobject(ctx context.Context, d *schema.ResourceData, m int
 		has_change = true
 	}
 	if d.HasChange("enabled") {
+		/*
+		When the key is in destroyed state, then enabled will be set to false.
+		In this case terraform plan/apply will detect the changes for enabled.
+		Then terraform apply fails, in this scenario we should show a warning to the user.
+		*/
+		resourceReadAWSSobject(ctx, d, m)
+		if d.Get("state").(string) == "Destroyed" {
+			return showWarning("The security object is in destroyed state. It can be deleted now.")
+		}
 		update_aws_sobject["enabled"] = d.Get("enabled").(bool)
 		has_change = true
 	}
@@ -595,6 +611,10 @@ func resourceUpdateAWSSobject(ctx context.Context, d *schema.ResourceData, m int
 
 // [D]: Delete AWS Security Object
 func resourceDeleteAWSSobject(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	//commom.go
+	/* Before destroying, tf state should be updated. If the dsm_aws_sobject state is not in destroyed state,
+		It will give an error.
+	*/
+	resourceReadAWSSobject(ctx, d, m)
+	//common.go
 	return deleteBYOKDestroyedSobject(d, m)
 }

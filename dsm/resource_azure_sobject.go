@@ -35,8 +35,16 @@ func resourceAzureSobject() *schema.Resource {
 		UpdateContext: resourceUpdateAzureSobject,
 		DeleteContext: resourceDeleteAzureSobject,
 		Description: "Creates a new security object in Azure key vault. This is a Bring-Your-Own-Key (BYOK) method and copies an existing DSM local security object to Azure KV as a Customer Managed Key (CMK).\n" +
-		"Azure sobject can also rotate and enable schedule deletion. For examples of rotate and schedule deletion, refer Guides/dsm_azure_sobject.\n\n" +
-		"**Note**: Once schedule deletion is enabled, Azure sobject can't be modified.",
+		"Azure sobject can also rotate, enable soft deletion and purge the key. For examples of rotate and soft deletion, refer Guides/dsm_azure_sobject.\n\n" +
+		"**Note**: Once soft deletion is enabled, Azure sobject can't be modified.\n\n" +
+		"**Deletion of a dsm_azure_sobject:** Unlike dsm_sobject, deletion of a dsm_azure_sobject is not normal.\n\n" +
+		"**Steps to delete a dsm_azure_sobject**:\n\n" +
+		"   * Enable soft_deletion as shown in the examples of guides/dsm_azure_sobject.\n" +
+		"   * Enable purge_deleted_key after soft_deletion as shown in the examples of guides/dsm_azure_sobject.\n" +
+		"   * A dsm_azure_sobject can be deleted completely only when its state is `destroyed`.\n" +
+		"   * A dsm_azure_sobject comes to destroyed state when the key is deleted from Azure key vault.\n" +
+		"   * To know whether it is in a destroyed state or not, sync keys operation should be performed.\n" +
+		"   * Currently, sync keys is not supported by terraform. This can be done in UI by going to the group and HSM/KMS. Then click on `SYNC KEYS`.",
 		Schema: map[string]*schema.Schema{
 			"name": {
 			    Description: "The security object name.",
@@ -116,13 +124,11 @@ func resourceAzureSobject() *schema.Resource {
 			"obj_type": {
 			    Description: "The type of security object.",
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 			"key_size": {
 			    Description: "The size of the security object.",
 				Type:     schema.TypeInt,
-				Optional: true,
 				Computed: true,
 			},
 			"key_ops": {
@@ -174,9 +180,19 @@ func resourceAzureSobject() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"schedule_deletion": {
-				Description: "Schedule the security object to delete. Enable schedule deletion to delete it.",
+			"soft_deletion": {
+				Description: "Enable soft key deletion in Azure key vault. Key is not usable for Sign/Verify, Wrap/Unwrap or Encrypt/Decrypt operations once it is deleted. The supported values are true/false.\n" +
+				" **Note:**  This should be enabled only after the creation.",
 				Type:     schema.TypeBool,
+				Default:  false,
+				Optional: true,
+			},
+			"purge_deleted_key": {
+				Description: "Purge deleted key in Azure key vault.purging the key makes all data encrypted with it unrecoverable unless you later import the same key material from Fortanix DSM into the Azure key." +
+				"The DSM source key is not affected by this operation. The supported values are true/false.\n" +
+				" **Note:**  This should be enabled only after the creation.",
+				Type:     schema.TypeBool,
+				Default:  false,
 				Optional: true,
 			},
 			"external": {
@@ -201,6 +217,9 @@ func resourceAzureSobject() *schema.Resource {
 // [C]: Create Azure Security Object
 func resourceCreateAzureSobject(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	if d.Get("soft_deletion").(bool) || d.Get("purge_deleted_key").(bool){
+        return invokeErrorDiagsNoSummary("[E] soft_deletion or purge_deleted_key should be enabled only after creation.")
+    }
 	endpoint := "crypto/v1/keys/copy"
 	if rotate := d.Get("rotate").(string); len(rotate) > 0 {
 		if rotate_from := d.Get("rotate_from").(string); len(rotate_from) <= 0 {
@@ -250,25 +269,6 @@ func resourceCreateAzureSobject(ctx context.Context, d *schema.ResourceData, m i
 	}
 
 	d.SetId(req["kid"].(string))
-	/*
-	schedule deletion:
-	Few customers may create the key and schedule for the deletion immediately for about 30 days.
-	So, schedule_deletion is enabled in create functionality also.
-	If schedule_deletion fails, it returns a warning and adds the security object to tf state.
-	*/
-	if d.Get("schedule_deletion").(bool) {
-        schedule_deletion := map[string]interface{}{}
-        if d.Get("external").(map[string]interface{})["Azure_key_state"] != "deleted" {
-            _, err := m.(*api_client).APICallBody("POST", fmt.Sprintf("crypto/v1/keys/%s/schedule_deletion", d.Id()), schedule_deletion)
-            if err != nil {
-                if err != nil {
-                    // to update the tf state
-                    resourceReadAzureSobject(ctx, d, m)
-                    return scheduleDeletionWarning(d, err)
-                }
-            }
-        }
-    }
 	return resourceReadAzureSobject(ctx, d, m)
 }
 
@@ -395,16 +395,35 @@ func resourceUpdateAzureSobject(ctx context.Context, d *schema.ResourceData, m i
 	if d.HasChange("key") {
 		return undoTFstate("key", d)
 	}
-	if d.Get("schedule_deletion").(bool) {
-		schedule_deletion := map[string]interface{}{}
+	if d.HasChange("soft_deletion") && d.Get("soft_deletion").(bool) {
+		soft_deletion := map[string]interface{}{}
 		if d.Get("external").(map[string]interface{})["Azure_key_state"] != "deleted" {
-			_, err := m.(*api_client).APICallBody("POST", fmt.Sprintf("crypto/v1/keys/%s/schedule_deletion", d.Id()), schedule_deletion)
+			_, err := m.(*api_client).APICallBody("POST", fmt.Sprintf("crypto/v1/keys/%s/schedule_deletion", d.Id()), soft_deletion)
 			if err != nil {
+				d.Set("soft_deletion", false)
 			    return invokeErrorDiagsWithSummary(error_summary, fmt.Sprintf("[E]: API: POST crypto/v1/keys/%s/schedule_deletion, %v", d.Id(), err))
 			}
+		} else {
+			return showWarning("The security object is already scheduled for the deletion.")
 		}
-		return resourceReadAzureSobject(ctx, d, m)
+		if !d.Get("purge_deleted_key").(bool){
+			return resourceReadAzureSobject(ctx, d, m)
+		}
 	}
+	if d.HasChange("purge_deleted_key") && d.Get("purge_deleted_key").(bool) {
+		// To get the latest Azure_key_state status
+		resourceReadAzureSobject(ctx, d, m)
+		if d.Get("external").(map[string]interface{})["Azure_key_state"] == "deleted" {
+			err := deleteKeyMateialBYOKSobject(d, m)
+			if err != nil {
+				d.Set("purge_deleted_key", false)
+				return invokeErrorDiagsWithSummary(error_summary, fmt.Sprintf("[E]: API: POST crypto/v1/keys/%s/delete_key_material, %v", d.Id(), err))
+			}
+		}
+		d.Set("purge_deleted_key", false)
+		return showWarning("The purge key cannot be done until the soft deletion is done for the key.")
+	}
+
 	update_azure_sobject := map[string]interface{}{
 		"kid": d.Id(),
 	}
@@ -424,6 +443,15 @@ func resourceUpdateAzureSobject(ctx context.Context, d *schema.ResourceData, m i
 		}
 	}
 	if d.HasChange("enabled") {
+		/*
+		When the key is in destroyed state, then enabled will be set to false.
+		In this case terraform plan/apply will detect the changes for enabled.
+		Then terraform apply fails, in this scenario we should show a warning to the user.
+		*/
+		resourceReadAzureSobject(ctx, d, m)
+		if d.Get("state").(string) == "Destroyed" {
+			return showWarning("The security object is in destroyed state. It can be deleted now.")
+		}
 		update_azure_sobject["enabled"] = d.Get("enabled").(bool)
 		has_change = true
 	}
@@ -463,5 +491,9 @@ func resourceUpdateAzureSobject(ctx context.Context, d *schema.ResourceData, m i
 
 // [D]: Delete Azure Security Object
 func resourceDeleteAzureSobject(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-    return deleteBYOKDestroyedSobject(d, m)
+	/* Before destroying, tf state should be updated. If the dsm_azure_sobject state is not in destroyed state,
+		It will give an error.
+	*/
+	resourceReadAzureSobject(ctx, d, m)
+	return deleteBYOKDestroyedSobject(d, m)
 }

@@ -64,9 +64,6 @@ resource "dsm_sobject" "rsa_key_dsm_rotate1" {
   obj_type = "RSA"
   rotate   = "DSM"
   rotate_from = dsm_sobject.rsa_key_dsm.name
-  lifecycle {
-    ignore_changes = [rotate, rotate_from]
-  }
 }
 
 // Copy above RSA key to azure key vault
@@ -83,9 +80,6 @@ resource "dsm_azure_sobject" "rsa_key_azure_rotate1" {
   key_ops         = ["SIGN", "VERIFY", "ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "EXPORT", "APPMANAGEABLE", "HIGHVOLUME"]
   rotate   = "DSM"
   rotate_from = dsm_azure_sobject.rsa_key_azure.name
-  lifecycle {
-    ignore_changes = [rotate, rotate_from]
-  }
 }
 
 
@@ -100,9 +94,6 @@ resource "dsm_sobject" "rsa_key_dsm_rotate2" {
   obj_type = "RSA"
   rotate   = "DSM"
   rotate_from = dsm_sobject.rsa_key_dsm.name
-  lifecycle {
-    ignore_changes = [rotate, rotate_from]
-  }
 }
 
 // Copy above RSA key to azure key vault
@@ -119,9 +110,6 @@ resource "dsm_azure_sobject" "rsa_key_azure_rotate2" {
   key_ops         = ["SIGN", "VERIFY", "ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "EXPORT", "APPMANAGEABLE", "HIGHVOLUME"]
   rotate   = "DSM"
   rotate_from = dsm_azure_sobject.rsa_key_azure.name
-  lifecycle {
-    ignore_changes = [rotate, rotate_from]
-  }
 }
 ```
 
@@ -188,9 +176,6 @@ resource "dsm_sobject" "rsa_key_dsm_rotate1" {
   obj_type = "RSA"
   rotate   = "AZURE"
   rotate_from = dsm_sobject.rsa_key_dsm.name
-  lifecycle {
-    ignore_changes = [rotate, rotate_from]
-  }
 }
 
 // Copy above RSA key to azure key vault
@@ -207,9 +192,6 @@ resource "dsm_azure_sobject" "rsa_key_azure_rotate1" {
   key_ops         = ["SIGN", "VERIFY", "ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "EXPORT", "APPMANAGEABLE", "HIGHVOLUME"]
   rotate   = "AZURE"
   rotate_from = dsm_azure_sobject.rsa_key_azure.name
-  lifecycle {
-    ignore_changes = [rotate, rotate_from]
-  }
 }
 
 
@@ -224,9 +206,6 @@ resource "dsm_sobject" "rsa_key_dsm_rotate2" {
   obj_type = "RSA"
   rotate   = "AZURE"
   rotate_from = dsm_sobject.rsa_key_dsm.name
-  lifecycle {
-    ignore_changes = [rotate, rotate_from]
-  }
 }
 
 // Copy above RSA key to azure key vault
@@ -243,19 +222,16 @@ resource "dsm_azure_sobject" "rsa_key_azure_rotate2" {
   key_ops         = ["SIGN", "VERIFY", "ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "EXPORT", "APPMANAGEABLE", "HIGHVOLUME"]
   rotate   = "AZURE"
   rotate_from = dsm_azure_sobject.rsa_key_azure.name
-  lifecycle {
-    ignore_changes = [rotate, rotate_from]
-  }
 }
 ```
 
-***Schedule deletion of AWS security object***
+***Soft deletion and Purge key of an Azure security object***
 
 ```terraform
-// Schedule an DSM Azure security object to delete
+// Soft deletion of dsm_azure_sobject
 /*
-Enable schedule_deletion as true.
-This can be enabled during both creation and updation. 
+Enable soft_deletion as true.
+This can be enabled only during update. 
 */
 resource "dsm_azure_sobject" "rsa_key_azure" {
   name            = "rsa_key_azure"
@@ -268,9 +244,45 @@ resource "dsm_azure_sobject" "rsa_key_azure" {
     azure-key-name = "rsa-key-azure"
   }
   key_ops         = ["SIGN", "VERIFY", "ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "EXPORT", "APPMANAGEABLE", "HIGHVOLUME"]
-  schedule_deletion = true
+  soft_deletion = true
 }
 
+// Purging a dsm_azure_sobject.
+/*Enable purge_deleted_key as true.
+This can be enabled only during update. 
+*/
+resource "dsm_azure_sobject" "rsa_key_azure" {
+  name            = "rsa_key_azure"
+  group_id        = dsm_group.azure_group.id
+  key             = {
+    kid =  dsm_sobject.rsa_key_dsm.id
+  }
+  custom_metadata = {
+    azure-key-state =  "Enabled"
+    azure-key-name = "rsa-key-azure"
+  }
+  key_ops         = ["SIGN", "VERIFY", "ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "EXPORT", "APPMANAGEABLE", "HIGHVOLUME"]
+  purge_deleted_key = true
+}
+
+// Soft deletion and Purging a key in a single request.
+/*
+First it does the soft deletion and then purging the key.
+*/
+resource "dsm_azure_sobject" "rsa_key_azure" {
+  name            = "rsa_key_azure"
+  group_id        = dsm_group.azure_group.id
+  key             = {
+    kid =  dsm_sobject.rsa_key_dsm.id
+  }
+  custom_metadata = {
+    azure-key-state =  "Enabled"
+    azure-key-name = "rsa-key-azure"
+  }
+  key_ops         = ["SIGN", "VERIFY", "ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "EXPORT", "APPMANAGEABLE", "HIGHVOLUME"]
+  soft_deletion = true
+  purge_deleted_key = true
+}
 ```
 
 

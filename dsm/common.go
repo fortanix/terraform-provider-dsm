@@ -321,11 +321,34 @@ Throw a warning, if schedule_deletion fails after create.
 func scheduleDeletionWarning(d *schema.ResourceData, err diag.Diagnostics) diag.Diagnostics {
     var diags diag.Diagnostics
     error_summary := fmt.Sprintf("[DSM SDK] Creation of a security object is successful, but failed to schedule the deletion of a security object %s", d.Get("name").(string))
-    d.Set("schedule_deletion", false)
     diags = append(diags, diag.Diagnostic{
         Severity: diag.Warning,
         Summary:  error_summary,
-        Detail:   fmt.Sprintf("[E]: API: POST crypto/v1/keys/%s/schedule_deletion, %v", error_summary, d.Id(), err),
+        Detail:   fmt.Sprintf("[W]: API: POST crypto/v1/keys/%s/schedule_deletion, %v", error_summary, d.Id(), err),
     })
     return diags
 }
+
+/*
+Throw a warning, if the key is already scheduled for deletion.
+*/
+func showWarning(msg string) diag.Diagnostics {
+	var diags diag.Diagnostics
+	diags = append(diags, diag.Diagnostic{
+		Severity: diag.Warning,
+		Detail:   fmt.Sprintf("[W]: %s", msg),
+	})
+	return diags
+}
+
+
+// Delete key material. (AZURE and AWS)
+func deleteKeyMateialBYOKSobject(d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	error_summary := "[DSM SDK] Unable to call DSM provider API client"
+    _, statuscode, err := m.(*api_client).APICall("POST", fmt.Sprintf("crypto/v1/keys/%s/delete_key_material", d.Id()))
+    if (err != nil) && (statuscode != 200) {
+        return invokeErrorDiagsWithSummary(error_summary, fmt.Sprintf("[E]: API: POST crypto/v1/keys: %v", err))
+    }
+	return nil
+}
+
