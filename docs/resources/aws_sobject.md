@@ -35,7 +35,7 @@ AWS sobject can also rotate and enable schedule deletion. For more examples, ref
 
 ```terraform
 /*
-How to create an AWS KMS key with static credentials ?
+How to create an AWS KMS key with static credentials
 */
 // Create a normal group
 resource "dsm_group" "normal_group" {
@@ -73,7 +73,7 @@ resource "dsm_sobject" "aes_sobject" {
   key_ops  = ["EXPORT", "ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "DERIVEKEY", "MACGENERATE", "MACVERIFY", "APPMANAGEABLE"]
 }
 
-// AWS sobject creation(Copies the key from DSM)
+// Create the AWS key by copying the dsm_object as a virtual key in the AWS group
 resource "dsm_aws_sobject" "aws_sobject" {
   name        = "aws_sobject"
   group_id    = dsm_group.aws_group.id
@@ -93,7 +93,7 @@ resource "dsm_aws_sobject" "aws_sobject" {
 }
 
 /*
-How to create an AWS KMS key with temporary credentials ?
+How to create an AWS KMS key with temporary credentials
 */
 
 // Step1: export AWS_ACCESS_KEY_ID, AWS_ACCESS_SECRET_KEY and AWS_SESSION_TOKEN

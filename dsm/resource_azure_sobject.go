@@ -34,7 +34,7 @@ func resourceAzureSobject() *schema.Resource {
 		ReadContext:   resourceReadAzureSobject,
 		UpdateContext: resourceUpdateAzureSobject,
 		DeleteContext: resourceDeleteAzureSobject,
-		Description: "Creates a new security object in Azure key vault. This is a Bring-Your-Own-Key (BYOK) method and copies an existing DSM local security object to Azure KV as a Customer Managed Key (CMK).\n" +
+		Description: "Creates a new security object in Azure key vault. This is a Bring-Your-Own-Key (BYOK) method and copies an existing DSM local security object to Azure KV as a Customer Managed Key (CMK).\n\n" +
 		"Azure sobject can also rotate, enable soft deletion and purge the key. For examples of rotate and soft deletion, refer Guides/dsm_azure_sobject.\n\n" +
 		"**Note**: Once soft deletion is enabled, Azure sobject can't be modified.\n\n" +
 		"**Deletion of a dsm_azure_sobject:** Unlike dsm_sobject, deletion of a dsm_azure_sobject is not normal.\n\n" +

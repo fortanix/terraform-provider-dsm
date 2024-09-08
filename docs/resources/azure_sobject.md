@@ -14,6 +14,7 @@ description: |-
 # dsm_azure_sobject (Resource)
 
 Creates a new security object in Azure key vault. This is a Bring-Your-Own-Key (BYOK) method and copies an existing DSM local security object to Azure KV as a Customer Managed Key (CMK).
+
 Azure sobject can also rotate, enable soft deletion and purge the key. For examples of rotate and soft deletion, refer Guides/dsm_azure_sobject.
 
 **Note**: Once soft deletion is enabled, Azure sobject can't be modified.
@@ -68,9 +69,7 @@ resource "dsm_sobject" "dsm_sobject" {
   obj_type = "RSA"
 }
 
-/* Copy a key to azure key vault using the above DSM security object.
-By default it creates a key as a software protected key.
-*/
+// Create the Azure key by copying the dsm_object as a virtual key in the Azure group
 resource "dsm_azure_sobject" "azure_sobject" {
   name        = "azure_sobject"
   group_id    = dsm_group.azure_group.id
@@ -90,7 +89,7 @@ resource "dsm_azure_sobject" "azure_sobject" {
   }
 }
 
-/* Copy a key to azure key vault using the above DSM security object.
+/* Create the Azure key by copying the dsm_object as a virtual key in the Azure group
 It is an example of hardware protected key in PREMIUM key vault.
 */
 resource "dsm_azure_sobject" "sobject" {

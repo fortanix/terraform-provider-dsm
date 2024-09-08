@@ -266,7 +266,10 @@ func undoTFstate(param_type string, d *schema.ResourceData) diag.Diagnostics {
 	return diags
 }
 
-// expiry_date create and update
+// expiry_date
+// This function is to parse the date given by the end user.
+// eg: User gives the expiry_date as 2025-01-02T15:04:05Z.
+// Then it parses to 20250102T150405Z.
 func parseTimeToDSM(expiry_date string) (string, diag.Diagnostics){
 	layoutRFC := "2006-01-02T15:04:05Z"
 	layoutDSM := "20060102T150405Z"
@@ -277,10 +280,9 @@ func parseTimeToDSM(expiry_date string) (string, diag.Diagnostics){
 	return ddate.Format(layoutDSM), nil
 }
 
-/* Set the key_ops in tf state.
-This function is required, request key_ops order and response key_ops order mighet differ.
-Hence, during `terraform plan`, if there are no changes in key_ops, it should not show any changes.
-*/
+// Set the key_ops in tf state.
+// This function is required, request key_ops order and response key_ops order mighet differ.
+// Hence, during `terraform plan`, if there are no changes in key_ops, it should not show any changes.
 func setKeyOpsTfState(d *schema.ResourceData, key_ops interface{}) diag.Diagnostics{
 	is_same_key_ops := compTwoArrays(key_ops, d.Get("key_ops"))
 	if is_same_key_ops {
@@ -295,9 +297,8 @@ func setKeyOpsTfState(d *schema.ResourceData, key_ops interface{}) diag.Diagnost
 	return nil
 }
 
-/*
-A BYOK security object can be deleted only when it is in Destroyed state.
-*/
+
+// A BYOK security object can be deleted only when it is in Destroyed state.
 func deleteBYOKDestroyedSobject(d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	/*
 	BYOK object can be deleted only after destruction.
@@ -315,23 +316,8 @@ func deleteBYOKDestroyedSobject(d *schema.ResourceData, m interface{}) diag.Diag
 	return nil
 }
 
-/*
-Throw a warning, if schedule_deletion fails after create.
-*/
-func scheduleDeletionWarning(d *schema.ResourceData, err diag.Diagnostics) diag.Diagnostics {
-    var diags diag.Diagnostics
-    error_summary := fmt.Sprintf("[DSM SDK] Creation of a security object is successful, but failed to schedule the deletion of a security object %s", d.Get("name").(string))
-    diags = append(diags, diag.Diagnostic{
-        Severity: diag.Warning,
-        Summary:  error_summary,
-        Detail:   fmt.Sprintf("[W]: API: POST crypto/v1/keys/%s/schedule_deletion, %v", error_summary, d.Id(), err),
-    })
-    return diags
-}
 
-/*
-Throw a warning, if the key is already scheduled for deletion.
-*/
+// Throw a warning, if the key is already scheduled for deletion.
 func showWarning(msg string) diag.Diagnostics {
 	var diags diag.Diagnostics
 	diags = append(diags, diag.Diagnostic{

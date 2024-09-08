@@ -513,8 +513,6 @@ func resourceUpdateAWSSobject(ctx context.Context, d *schema.ResourceData, m int
 		if err := d.Get("custom_metadata").(map[string]interface{}); len(err) > 0 {
 
 			old_custom_metadata, _ := d.GetChange("custom_metadata")
-			//update_aws_sobject["custom_metadata"] = old_custom_metadata
-
 			// FYOO: Needs work
 			update_aws_sobject["custom_metadata"] = make(map[string]interface{})
 

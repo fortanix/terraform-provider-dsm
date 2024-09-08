@@ -1,6 +1,6 @@
-***Rotation of dsm_aws_sobject***
+# Rotation of dsm_aws_sobject
 
-**Rotate with DSM Option**
+## Rotate with DSM Option
 
 ```terraform
 resource "dsm_group" "normal_group" {
@@ -52,8 +52,6 @@ resource "dsm_aws_sobject" "aws_sobject" {
   }
 }
 
-// 1st Rotation
-
 // 1st Rotation of dsm_sobject
 resource "dsm_sobject" "aes_sobject_rotate1" {
   name            = "aes_sobject"
@@ -78,8 +76,6 @@ resource "dsm_aws_sobject" "aws_sobject_rotate1" {
   rotate = "DSM"
   rotate_from = dsm_aws_sobject.aws_sobject.name // Name of the old dsm_aws_sobject
 }
-
-// 2nd Rotation
 
 // 2nd Rotation of dsm_sobject
 resource "dsm_sobject" "aes_sobject_rotate2" {
@@ -107,11 +103,9 @@ resource "dsm_aws_sobject" "aws_sobject_rotate2" {
 }
 ```
 
-**Rotate with AWS Option**
+## Rotate with AWS Option
 
 ```terraform
-// 1st Rotation
-
 // 1st Rotation of dsm_sobject
 resource "dsm_sobject" "aes_sobject_rotate1" {
 name            = "aes_sobject"
@@ -136,8 +130,6 @@ kid = dsm_sobject.aes_sobject_rotate1.id // 1st Rotated dsm_sbject
 rotate = "AWS"
 rotate_from = dsm_aws_sobject.aws_sobject.name // Name of the old dsm_aws_sobject
 }
-
-// 2nd Rotation
 
 // 2nd Rotation of dsm_sobject
 resource "dsm_sobject" "aes_sobject_rotate2" {
@@ -167,9 +159,9 @@ rotate_from     = dsm_aws_sobject.aws_sobject_rotate1.name // Name of the old ds
 ```
 
 
-***Schedule deletion and Delete Key Material of an AWS security object***
+# Schedule deletion and Delete Key Material of an AWS security object
 
-**Following attributes should be specified for schedule deletion**
+## Following attributes should be specified for schedule deletion
 
 *1. schedule_deletion*
 
@@ -201,9 +193,10 @@ resource "dsm_aws_sobject" "dsm_aws_sobject" {
 }
 ```
 
-**Following attributes should be specified for Delete key material**
+## Following attributes should be specified for Delete key material
 
 *1. delete_key_material*
+
 ```terraform
 /*
 Enable delete_key_material as true.
@@ -230,7 +223,7 @@ resource "dsm_aws_sobject" "dsm_aws_sobject" {
 }
 ```
 
-**Both schedule_deletion and delete_key_material can be enabled in a single terraform request**
+## Both schedule_deletion and delete_key_material can be enabled in a single terraform request
 
 ```terraform
 /*

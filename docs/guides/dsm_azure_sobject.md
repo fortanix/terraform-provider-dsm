@@ -1,6 +1,6 @@
-***Rotation of dsm_azure_sobject***
+# Rotation of dsm_azure_sobject
 
-**Rotate with DSM Option**
+## Rotate with DSM Option
 
 ```terraform
 // Create a normal group
@@ -113,7 +113,7 @@ resource "dsm_azure_sobject" "rsa_key_azure_rotate2" {
 }
 ```
 
-**Rotate with AZURE Option**
+## Rotate with AZURE Option
 
 ```terraform
 // Create a normal group
@@ -225,7 +225,7 @@ resource "dsm_azure_sobject" "rsa_key_azure_rotate2" {
 }
 ```
 
-***Soft deletion and Purge key of an Azure security object***
+## Soft deletion and Purge key of an Azure security object
 
 ```terraform
 // Soft deletion of dsm_azure_sobject
