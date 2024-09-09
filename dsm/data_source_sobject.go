@@ -11,6 +11,7 @@ package dsm
 import (
 	"context"
 	"fmt"
+	"net/url"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -118,7 +119,8 @@ func dataSourceSobjectRead(ctx context.Context, d *schema.ResourceData, m interf
 		}
 	} else {
 		var reqList []interface{}
-		reqList, req_err = m.(*api_client).APICallList("GET", "crypto/v1/keys?name=" + d.Get("name").(string))
+		encodedName := url.QueryEscape(d.Get("name").(string))
+		reqList, req_err = m.(*api_client).APICallList("GET", "crypto/v1/keys?name=" + encodedName) 
 		if req_err == nil && len(reqList) > 0 {
 			req = reqList[0].(map[string]interface{})
 		} else {
