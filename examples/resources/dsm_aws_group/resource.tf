@@ -6,9 +6,6 @@ provider "dsm" {
 
 resource "dsm_aws_group" "dsm_aws_group_terraform" {
   name = "dsm_aws_group_terraform"
-  /*
-  name in DSM Fortanix is 'dsm_aws_group_terraform-aws-us-east-2'.
-  */
   description = "AWS group"
   access_key = "XXXXXXXXXXXXXXXXXXXX"
   secret_key = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
