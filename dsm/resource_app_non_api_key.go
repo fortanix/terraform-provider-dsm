@@ -303,6 +303,8 @@ func formCredential(d *schema.ResourceData, app_object map[string]interface{}, a
 				credential_type = "certificate"
 			} else if v == "trustedca" {
 				credential_type = "trustedca"
+			} else if v == "secret" {
+			    credential_type = "secret"
 			}
 		} else if k == "certificate" {
 			authentication_method["certificate"] = v.(string)
@@ -318,8 +320,11 @@ func formCredential(d *schema.ResourceData, app_object map[string]interface{}, a
 			credential["subject_general"] = ip_address
 		}
 	}
-	if credential_type != "certificate" {
-		authentication_method[credential_type] = credential
+	if credential_type != "secret" {
+	    if credential_type != "certificate" {
+            authentication_method[credential_type] = credential
+        }
+        app_object["credential"] = authentication_method
 	}
-	app_object["credential"] = authentication_method
+
 }

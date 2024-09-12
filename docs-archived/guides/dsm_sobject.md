@@ -448,11 +448,11 @@ resource "dsm_sobject" "lms_sobject_example" {
 
 ```terraform
 resource "dsm_sobject" "tokenization_sobject_example" {
-  name     = "tokenization_sobject_example"
-  group_id = dsm_group.group1_example.id
-  obj_type = "AES"
-  key_size = 256
-  fpe = var.fpeOptionsExample
+  name            = "tokenization_sobject_example"
+  group_id        = dsm_group.group1_example.id
+  obj_type        = "AES"
+  key_size        = 256
+  fpe             = var.fpeOptionsExample
   key_ops         = [
     "ENCRYPT",
     "DECRYPT",
@@ -508,12 +508,12 @@ variable "fpeOptionsExample" {
 To import any type of security object, value should be provided.
 */
 resource "dsm_sobject" "certificate" {
-  name = "certificate_creation"
-  obj_type = "CERTIFICATE"
-  group_id = dsm_group.group.id
-  value = "XXXXXXXXXXXX<CERTIFICATE_value_in_a_string_format>XXXXXXXXXXXXXX"
+  name            = "certificate_creation"
+  obj_type        = "CERTIFICATE"
+  group_id        = dsm_group.group.id
+  value           = "XXXXXXXXXXXX<CERTIFICATE_value_in_a_string_format>XXXXXXXXXXXXXX"
   expiry_date     = "2025-02-02T17:04:05Z"
-  enabled = true
+  enabled         = true
   key_ops         = [
     "ENCRYPT",
     "VERIFY",
@@ -574,7 +574,7 @@ resource "dsm_sobject" "aes_sobject_example" {
 resource "dsm_sobject" "aes_sobject_example_copy" {
   name            = "aes_sobject_example_copy"
   group_id        = dsm_group.group.id
-  key = {
+  key             = {
     kid = dsm_sobject.aes_sobject_example.id
   }
   key_ops         = [
@@ -608,12 +608,12 @@ resource "dsm_sobject" "aes_sobject_example_copy" {
 
 ```terraform
 resource "dsm_sobject" "aes_sobject_example_rotate" {
-  name = "aes_sobject_example_rotate"
-  obj_type = "AES"
-  group_id = dsm_group.group.id
-  key_size = 256
-  key_ops = ["EXPORT", "ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "DERIVEKEY", "MACGENERATE", "MACVERIFY", "APPMANAGEABLE"]
-  rotate = "DSM"
+  name        = "aes_sobject_example_rotate"
+  obj_type    = "AES"
+  group_id    = dsm_group.group.id
+  key_size    = 256
+  key_ops     = ["EXPORT", "ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "DERIVEKEY", "MACGENERATE", "MACVERIFY", "APPMANAGEABLE"]
+  rotate      = "DSM"
   // Name of the above security object
   rotate_from = "aes_sobject_example"
 }
@@ -643,7 +643,7 @@ resource "dsm_sobject" "aes_sobject_example" {
     "APPMANAGEABLE",
     "EXPORT"
   ]
-  enabled         = false
+  enabled         = true
   expiry_date     = "2025-02-02T17:04:05Z"
   description     = "aes sobject description"
   custom_metadata = {
@@ -661,5 +661,10 @@ resource "dsm_sobject" "aes_sobject_example" {
     rotate_copied_keys = "all_external"
   }
   destruct = "compromise" // other values: deactivate or destroy
+  // Once compromised or destroyed, enabled will set to false. So, on terraform apply/plan, it ignores `enabled` parameter.
+  // Once deactivated, original expiry date will set to the time of deactivation. So, on terraform apply/plan, it ignores `expiry_date` parameter.
+  lifecycle {
+    ignore_changes = [enabled, expiry_date]
+  }
 }
 ```
