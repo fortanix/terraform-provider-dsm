@@ -490,10 +490,10 @@ func resourceUpdateAzureSobject(ctx context.Context, d *schema.ResourceData, m i
 }
 
 // [D]: Delete Azure Security Object
+// Before destroying, tf state should be updated. If the dsm_azure_sobject state is not in destroyed state,
+// It will give an error.
 func resourceDeleteAzureSobject(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	// Before destroying, tf state should be updated. If the dsm_azure_sobject state is not in destroyed state,
-	//	It will give an error.
-	//
+
 	resourceReadAzureSobject(ctx, d, m)
 	return deleteBYOKDestroyedSobject(d, m)
 }

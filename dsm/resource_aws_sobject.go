@@ -606,10 +606,9 @@ func resourceUpdateAWSSobject(ctx context.Context, d *schema.ResourceData, m int
 }
 
 // [D]: Delete AWS Security Object
+// Before destroying, tf state should be updated. If the dsm_azure_sobject state is not in destroyed state,
+// It will give an error.
 func resourceDeleteAWSSobject(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	// Before destroying, tf state should be updated. If the dsm_aws_sobject state is not in destroyed state,
-	//	It will give an error.
 	resourceReadAWSSobject(ctx, d, m)
-	//common.go
 	return deleteBYOKDestroyedSobject(d, m)
 }
