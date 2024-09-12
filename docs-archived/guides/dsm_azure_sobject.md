@@ -40,7 +40,6 @@ resource "dsm_sobject" "rsa_key_dsm" {
 
 # Copy above RSA security object to azure key vault
 resource "dsm_azure_sobject" "rsa_key_azure" {
-
   name     = "rsa_key_azure"
   group_id = dsm_group.azure_group.id
   key = {
