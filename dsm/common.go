@@ -281,7 +281,7 @@ func parseTimeToDSM(expiry_date string) (string, diag.Diagnostics){
 }
 
 // Set the key_ops in tf state.
-// This function is required, request key_ops order and response key_ops order mighet differ.
+// This function is required, request key_ops order and response key_ops order might differ.
 // Hence, during `terraform plan`, if there are no changes in key_ops, it should not show any changes.
 func setKeyOpsTfState(d *schema.ResourceData, key_ops interface{}) diag.Diagnostics{
 	is_same_key_ops := compTwoArrays(key_ops, d.Get("key_ops"))

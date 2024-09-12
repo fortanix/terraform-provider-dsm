@@ -1,4 +1,4 @@
-// Create Azure group
+# Create Azure group
 resource "dsm_group" "azure_group" {
   name        = "azure_group"
   description = "azure_group"
@@ -20,12 +20,12 @@ resource "dsm_group" "azure_group" {
   })
 }
 
-// Create a normal group
+# Create a normal group
 resource "dsm_group" "normal_group" {
   name = "normal_group"
 }
 
-// Create a RSA key in normal group
+# Create a RSA key in normal group
 resource "dsm_sobject" "dsm_sobject" {
   name     = "dsm_sobject"
   group_id = dsm_group.normal_group.id
@@ -34,8 +34,8 @@ resource "dsm_sobject" "dsm_sobject" {
   obj_type = "RSA"
 }
 
-/* Create the Azure key by copying the dsm_object as a virtual key in the Azure group
-   By default it creates a key as a software protected key. */
+# Create the Azure key by copying the dsm_object as a virtual key in the Azure group
+# By default it creates a key as a software protected key.
 resource "dsm_azure_sobject" "azure_sobject" {
   name        = "azure_sobject"
   group_id    = dsm_group.azure_group.id
@@ -55,9 +55,8 @@ resource "dsm_azure_sobject" "azure_sobject" {
   }
 }
 
-/* Create the Azure key by copying the dsm_object as a virtual key in the Azure group
-It is an example of hardware protected key in PREMIUM key vault.
-*/
+# Create the Azure key by copying the dsm_object as a virtual key in the Azure group
+# It is an example of hardware protected key in PREMIUM key vault.
 resource "dsm_azure_sobject" "sobject" {
   name        = "azure_sobject"
   group_id    = dsm_group.azure_group.id

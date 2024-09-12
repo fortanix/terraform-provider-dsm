@@ -33,7 +33,7 @@ Azure sobject can also rotate, enable soft deletion and purge the key. For examp
 ## Example Usage
 
 ```terraform
-// Create Azure group
+# Create Azure group
 resource "dsm_group" "azure_group" {
   name        = "azure_group"
   description = "azure_group"
@@ -55,12 +55,12 @@ resource "dsm_group" "azure_group" {
   })
 }
 
-// Create a normal group
+# Create a normal group
 resource "dsm_group" "normal_group" {
   name = "normal_group"
 }
 
-// Create a RSA key in normal group
+# Create a RSA key in normal group
 resource "dsm_sobject" "dsm_sobject" {
   name     = "dsm_sobject"
   group_id = dsm_group.normal_group.id
@@ -69,7 +69,8 @@ resource "dsm_sobject" "dsm_sobject" {
   obj_type = "RSA"
 }
 
-// Create the Azure key by copying the dsm_object as a virtual key in the Azure group
+# Create the Azure key by copying the dsm_object as a virtual key in the Azure group
+# By default it creates a key as a software protected key.
 resource "dsm_azure_sobject" "azure_sobject" {
   name        = "azure_sobject"
   group_id    = dsm_group.azure_group.id
@@ -89,9 +90,8 @@ resource "dsm_azure_sobject" "azure_sobject" {
   }
 }
 
-/* Create the Azure key by copying the dsm_object as a virtual key in the Azure group
-It is an example of hardware protected key in PREMIUM key vault.
-*/
+# Create the Azure key by copying the dsm_object as a virtual key in the Azure group
+# It is an example of hardware protected key in PREMIUM key vault.
 resource "dsm_azure_sobject" "sobject" {
   name        = "azure_sobject"
   group_id    = dsm_group.azure_group.id
@@ -137,7 +137,7 @@ resource "dsm_azure_sobject" "sobject" {
 | -------- | -------- |-------- |
 | `RSA` | 2048, 3072, 4096 | APPMANAGEABLE, SIGN, VERIFY, ENCRYPT, DECRYPT, WRAPKEY, UNWRAPKEY, EXPORT |
 | `EC` | NistP256, NistP384, NistP521,SecP256K1 | APPMANAGEABLE, SIGN, VERIFY, AGREEKEY, EXPORT
-- `purge_deleted_key` (Boolean) Purge deleted key in Azure key vault.purging the key makes all data encrypted with it unrecoverable unless you later import the same key material from Fortanix DSM into the Azure key.The DSM source key is not affected by this operation. The supported values are true/false.
+- `purge_deleted_key` (Boolean) Purge deleted key in Azure key vault. Purging the key makes all data encrypted with it unrecoverable unless you later import the same key material from Fortanix DSM into the Azure key vault.The DSM source key is not affected by this operation. The supported values are true/false.
  **Note:**  This should be enabled only after the creation.
 - `rotate` (String) The security object rotation. Specify the method to use for key rotation:
    * `DSM`: To use the same key material.

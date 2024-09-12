@@ -36,15 +36,15 @@ func resourceAWSSobject() *schema.Resource {
 		UpdateContext: resourceUpdateAWSSobject,
 		DeleteContext: resourceDeleteAWSSobject,
 		Description: "Creates a new security object in AWS KMS. This is a Bring-Your-Own-Key (BYOK) method and copies an existing DSM local security object to AWS KMS as a Customer Managed Key (CMK).The returned resource object contains the UUID of the security object for further references.\n" +
-		"AWS sobject can also rotate and enable schedule deletion. For more examples, refer Guides/dsm_aws_sobject, Guides/rotate_with_AWS_option and rotate_with_DSM_option.\n\n" +
+		"AWS security object can also rotate and enable scheduled deletion. For more examples, refer Guides/dsm_aws_sobject, Guides/rotate_with_AWS_option and rotate_with_DSM_option.\n\n" +
 		"**Temporary Credentials**: AWS security object can also be created using AWS temporary credentials. Please refer the below example for temporary credentials.\n\n" +
-		"**Note**: Once schedule deletion is enabled, AWS security object can't be modified.\n\n" +
+		"**Note**: Once scheduled deletion is enabled, AWS security object can't be modified.\n\n" +
 		"**Deletion of a dsm_aws_sobject**: Unlike dsm_sobject, deletion of a dsm_aws_sobject is not normal.\n\n" +
 		"**Steps to delete a dsm_azure_sobject:**\n" +
 		"   * Enable schedule_deletion as shown in the examples of guides/dsm_azure_sobject.\n" +
 		"   * Enable delete_key_material as shown in the examples of guides/dsm_azure_sobject.\n" +
 		"   * A dsm_aws_sobject can be deleted completely only when its state is `destroyed`.\n" +
-		"   * A dsm_aws_sobject comes to destroyed state when the key is deleted from Azure key vault.\n" +
+		"   * A dsm_aws_sobject is destroyed when the key is deleted from Azure key vault.\n" +
 		"   * To know whether it is in a destroyed state or not, sync keys operation should be performed.\n" +
 		"   * Currently, sync keys is not supported by terraform. This can be done in UI by going to the group and HSM/KMS. Then click on `SYNC KEYS`.",
 		Schema: map[string]*schema.Schema{
@@ -567,11 +567,9 @@ func resourceUpdateAWSSobject(ctx context.Context, d *schema.ResourceData, m int
 		has_change = true
 	}
 	if d.HasChange("enabled") {
-		/*
-		When the key is in destroyed state, then enabled will be set to false.
-		In this case terraform plan/apply will detect the changes for enabled.
-		Then terraform apply fails, in this scenario we should show a warning to the user.
-		*/
+		// When the key is in destroyed state, then enabled will be set to false.
+		// In this case terraform plan/apply will detect the changes for enabled.
+		// Then terraform apply fails, in this scenario we should show a warning to the user.
 		resourceReadAWSSobject(ctx, d, m)
 		if d.Get("state").(string) == "Destroyed" {
 			return showWarning("The security object is in destroyed state. It can be deleted now.")
@@ -609,9 +607,8 @@ func resourceUpdateAWSSobject(ctx context.Context, d *schema.ResourceData, m int
 
 // [D]: Delete AWS Security Object
 func resourceDeleteAWSSobject(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	/* Before destroying, tf state should be updated. If the dsm_aws_sobject state is not in destroyed state,
-		It will give an error.
-	*/
+	// Before destroying, tf state should be updated. If the dsm_aws_sobject state is not in destroyed state,
+	//	It will give an error.
 	resourceReadAWSSobject(ctx, d, m)
 	//common.go
 	return deleteBYOKDestroyedSobject(d, m)

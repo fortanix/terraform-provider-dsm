@@ -4,22 +4,22 @@ page_title: "dsm_aws_sobject Resource - terraform-provider-dsm"
 subcategory: ""
 description: |-
   Creates a new security object in AWS KMS. This is a Bring-Your-Own-Key (BYOK) method and copies an existing DSM local security object to AWS KMS as a Customer Managed Key (CMK).The returned resource object contains the UUID of the security object for further references.
-  AWS sobject can also rotate and enable schedule deletion. For more examples, refer Guides/dsm_aws_sobject, Guides/rotate_with_AWS_option and rotate_with_DSM_option.
+  AWS security object can also rotate and enable scheduled deletion. For more examples, refer Guides/dsm_aws_sobject, Guides/rotate_with_AWS_option and rotate_with_DSM_option.
   Temporary Credentials: AWS security object can also be created using AWS temporary credentials. Please refer the below example for temporary credentials.
-  Note: Once schedule deletion is enabled, AWS security object can't be modified.
+  Note: Once scheduled deletion is enabled, AWS security object can't be modified.
   Deletion of a dsm_aws_sobject: Unlike dsm_sobject, deletion of a dsm_aws_sobject is not normal.
   Steps to delete a dsm_azure_sobject:
-  Enable schedule_deletion as shown in the examples of guides/dsm_azure_sobject.Enable delete_key_material as shown in the examples of guides/dsm_azure_sobject.A dsm_aws_sobject can be deleted completely only when its state is destroyed.A dsm_aws_sobject comes to destroyed state when the key is deleted from Azure key vault.To know whether it is in a destroyed state or not, sync keys operation should be performed.Currently, sync keys is not supported by terraform. This can be done in UI by going to the group and HSM/KMS. Then click on SYNC KEYS.
+  Enable schedule_deletion as shown in the examples of guides/dsm_azure_sobject.Enable delete_key_material as shown in the examples of guides/dsm_azure_sobject.A dsm_aws_sobject can be deleted completely only when its state is destroyed.A dsm_aws_sobject is destroyed when the key is deleted from Azure key vault.To know whether it is in a destroyed state or not, sync keys operation should be performed.Currently, sync keys is not supported by terraform. This can be done in UI by going to the group and HSM/KMS. Then click on SYNC KEYS.
 ---
 
 # dsm_aws_sobject (Resource)
 
 Creates a new security object in AWS KMS. This is a Bring-Your-Own-Key (BYOK) method and copies an existing DSM local security object to AWS KMS as a Customer Managed Key (CMK).The returned resource object contains the UUID of the security object for further references.
-AWS sobject can also rotate and enable schedule deletion. For more examples, refer Guides/dsm_aws_sobject, Guides/rotate_with_AWS_option and rotate_with_DSM_option.
+AWS security object can also rotate and enable scheduled deletion. For more examples, refer Guides/dsm_aws_sobject, Guides/rotate_with_AWS_option and rotate_with_DSM_option.
 
 **Temporary Credentials**: AWS security object can also be created using AWS temporary credentials. Please refer the below example for temporary credentials.
 
-**Note**: Once schedule deletion is enabled, AWS security object can't be modified.
+**Note**: Once scheduled deletion is enabled, AWS security object can't be modified.
 
 **Deletion of a dsm_aws_sobject**: Unlike dsm_sobject, deletion of a dsm_aws_sobject is not normal.
 
@@ -27,22 +27,21 @@ AWS sobject can also rotate and enable schedule deletion. For more examples, ref
    * Enable schedule_deletion as shown in the examples of guides/dsm_azure_sobject.
    * Enable delete_key_material as shown in the examples of guides/dsm_azure_sobject.
    * A dsm_aws_sobject can be deleted completely only when its state is `destroyed`.
-   * A dsm_aws_sobject comes to destroyed state when the key is deleted from Azure key vault.
+   * A dsm_aws_sobject is destroyed when the key is deleted from Azure key vault.
    * To know whether it is in a destroyed state or not, sync keys operation should be performed.
    * Currently, sync keys is not supported by terraform. This can be done in UI by going to the group and HSM/KMS. Then click on `SYNC KEYS`.
 
 ## Example Usage
 
 ```terraform
-/*
-How to create an AWS KMS key with static credentials
-*/
-// Create a normal group
+# How to create an AWS KMS key with static credentials
+
+# Create a normal group
 resource "dsm_group" "normal_group" {
   name = "normal_group"
 }
 
-// Create AWS group
+# Create AWS group
 resource "dsm_group" "aws_group" {
   name        = "aws_group"
   description = "AWS group"
@@ -50,8 +49,8 @@ resource "dsm_group" "aws_group" {
     {
       url = "kms.us-east-1.amazonaws.com"
       tls = {
-        mode = "required"
-        validate_hostname : false,
+        mode              = "required"
+        validate_hostname = false,
         ca = {
           ca_set = "global_roots"
         }
@@ -64,7 +63,7 @@ resource "dsm_group" "aws_group" {
   })
 }
 
-// Create an AES key inside DSM
+# Create an AES key inside DSM
 resource "dsm_sobject" "aes_sobject" {
   name     = "aes_sobject"
   obj_type = "AES"
@@ -73,7 +72,7 @@ resource "dsm_sobject" "aes_sobject" {
   key_ops  = ["EXPORT", "ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "DERIVEKEY", "MACGENERATE", "MACVERIFY", "APPMANAGEABLE"]
 }
 
-// Create the AWS key by copying the dsm_object as a virtual key in the AWS group
+# Create the AWS key by copying the dsm_object as a virtual key in the AWS group
 resource "dsm_aws_sobject" "aws_sobject" {
   name        = "aws_sobject"
   group_id    = dsm_group.aws_group.id
@@ -85,32 +84,33 @@ resource "dsm_aws_sobject" "aws_sobject" {
   }
   custom_metadata = {
     aws-aliases = "dsm_aws_sobject"
-    aws-policy  = "{\"Version\":\"2012-10-17\",\"Id\":\"key-default-1\",\"Statement\":[{\"Sid\":\"EnableIAMUserPermissions\",\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"arn:aws:iam::XXXXXXXXXXXX:root\"},\"Action\":\"kms:*\",\"Resource\":\"*\"}]}"
+    # This is an example of a default policy.
+    aws-policy = "{\"Version\":\"2012-10-17\",\"Id\":\"key-default-1\",\"Statement\":[{\"Sid\":\"EnableIAMUserPermissions\",\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"arn:aws:iam::XXXXXXXXXXXX:root\"},\"Action\":\"kms:*\",\"Resource\":\"*\"}]}"
   }
   aws_tags = {
     test-key = "test-value"
   }
 }
 
-/*
-How to create an AWS KMS key with temporary credentials
-*/
 
-// Step1: export AWS_ACCESS_KEY_ID, AWS_ACCESS_SECRET_KEY and AWS_SESSION_TOKEN
-// or add AWS_ACCESS_KEY_ID, AWS_ACCESS_SECRET_KEY and AWS_SESSION_TOKEN to aws_profile like below.
+# How to create an AWS KMS key with temporary credentials
 
-/*
-[default]
-aws_access_key_id = XXXXXXXXXXXXXXXXXXXX
-aws_secret_access_key = XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-aws_session_token = XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-*/
+# Step 1: export AWS_ACCESS_KEY_ID, AWS_ACCESS_SECRET_KEY and AWS_SESSION_TOKEN
+# or add AWS_ACCESS_KEY_ID, AWS_ACCESS_SECRET_KEY and AWS_SESSION_TOKEN to aws_profile like below.
 
-// Step2: add aws_profile name and aws_region to the dsm provider. By default aws_region is "us-east-1"
+############################################################################################
+# [default]
+# aws_access_key_id = XXXXXXXXXXXXXXXXXXXX
+# aws_secret_access_key = XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+# aws_session_token = XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+############################################################################################
+
+# Step 2: add aws_profile name and aws_region to the dsm provider. By default aws_region is "us-east-1"
 provider "dsm" {
   aws_profile = "default"
 }
-// Step3: Create a group
+
+# Step 3: Create a group
 resource "dsm_group" "aws_group_no_credentials" {
   name        = "aws_group_no_credentials"
   description = "AWS group"
@@ -118,8 +118,8 @@ resource "dsm_group" "aws_group_no_credentials" {
     {
       url = "kms.us-east-1.amazonaws.com"
       tls = {
-        mode = "required"
-        validate_hostname : false,
+        mode              = "required"
+        validate_hostname = false,
         ca = {
           ca_set = "global_roots"
         }
@@ -130,8 +130,7 @@ resource "dsm_group" "aws_group_no_credentials" {
   })
 }
 
-
-// Step4: AWS sobject creation(Copies the key from DSM)
+# Step 4: AWS sobject creation(Copies the key from DSM)
 resource "dsm_aws_sobject" "aws_sobject_temp_creds" {
   name        = "aws_sobject_temp_creds"
   group_id    = dsm_group.aws_group_no_credentials.id
@@ -148,8 +147,8 @@ resource "dsm_aws_sobject" "aws_sobject_temp_creds" {
 }
 
 
-// Note: For rotation of a key, please refer Guides/rotate_with_AWS_option, Guides/rotate_with_DSM_option.
-// Note: For schedule deletion of a key, please refer Guides/dsm_aws_sobject
+# Note: For rotation of a key, please refer Guides/rotate_with_AWS_option, Guides/rotate_with_DSM_option.
+# Note: For schedule deletion of a key, please refer Guides/dsm_aws_sobject
 ```
 
 <!-- schema generated by tfplugindocs -->

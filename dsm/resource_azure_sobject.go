@@ -188,7 +188,7 @@ func resourceAzureSobject() *schema.Resource {
 				Optional: true,
 			},
 			"purge_deleted_key": {
-				Description: "Purge deleted key in Azure key vault.purging the key makes all data encrypted with it unrecoverable unless you later import the same key material from Fortanix DSM into the Azure key." +
+				Description: "Purge deleted key in Azure key vault. Purging the key makes all data encrypted with it unrecoverable unless you later import the same key material from Fortanix DSM into the Azure key vault." +
 				"The DSM source key is not affected by this operation. The supported values are true/false.\n" +
 				" **Note:**  This should be enabled only after the creation.",
 				Type:     schema.TypeBool,
@@ -491,9 +491,9 @@ func resourceUpdateAzureSobject(ctx context.Context, d *schema.ResourceData, m i
 
 // [D]: Delete Azure Security Object
 func resourceDeleteAzureSobject(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	/* Before destroying, tf state should be updated. If the dsm_azure_sobject state is not in destroyed state,
-		It will give an error.
-	*/
+	// Before destroying, tf state should be updated. If the dsm_azure_sobject state is not in destroyed state,
+	//	It will give an error.
+	//
 	resourceReadAzureSobject(ctx, d, m)
 	return deleteBYOKDestroyedSobject(d, m)
 }
