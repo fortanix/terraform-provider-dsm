@@ -22,7 +22,7 @@ func resourceSobject() *schema.Resource {
 		DeleteContext: resourceDeleteSobject,
 		Description: "Creates a new security object. The returned resource object contains the UUID of the security object for further references.\n" +
 		"A key value can be imported as a security object. This resource also can rotate or copy a security object.\n" +
-		"For more examples, please refer Guides/dsm_security_object",
+		"For more examples, please refer Guides/dsm_sobject.",
 		Schema: map[string]*schema.Schema{
 			"name": {
 			    Description: "The security object name.",
@@ -1062,16 +1062,4 @@ func destructSobject(d *schema.ResourceData, m interface{}) diag.Diagnostics {
 		}
 	}
 	return diags
-}
-
-
-// expiry_date create and update
-func parseTimeToDSM(expiry_date string) (string, diag.Diagnostics){
-	layoutRFC := "2006-01-02T15:04:05Z"
-	layoutDSM := "20060102T150405Z"
-	ddate, newerr := time.Parse(layoutRFC, expiry_date)
-	if newerr != nil {
-		return "", diag.FromErr(newerr)
-	}
-	return ddate.Format(layoutDSM), nil
 }
