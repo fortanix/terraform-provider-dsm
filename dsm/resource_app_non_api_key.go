@@ -17,12 +17,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// This resource supports non-api key appications.
+// This resource supports non-api key applications.
 // As of now, this supports the following:
 // 1. AWS XKS
 // 2. AWS IAM
 // 3. Certificate
-// 4. Trusted CA(dns_name and ip)
+// 4. Trusted CA (dns_name and ip)
 
 // In future we can add other applications as well
 

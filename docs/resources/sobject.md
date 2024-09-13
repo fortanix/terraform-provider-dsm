@@ -61,8 +61,8 @@ resource "dsm_sobject" "sobject" {
 ## copy a security object
 
 # Copy above security object.
-# When copying a security object obj_type, key_size, allowed_key_justifications_policy, allowed_key_justifications_policy, -
-# allowed_missing_justifications, lms or bls should not be configured.
+# When copying a security object obj_type, key_size, allowed_key_justifications_policy, allowed_missing_justifications,
+# lms or bls should not be configured.
 
 resource "dsm_sobject" "sobject_copy" {
   name     = "sobject_copy"

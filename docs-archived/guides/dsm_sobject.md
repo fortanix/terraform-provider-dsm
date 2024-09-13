@@ -623,9 +623,9 @@ resource "dsm_sobject" "aes_sobject_example_rotate" {
 
 ```terraform
 
-# Destruction can be done while update only. 
+# Destruction can be done only on updates to the security object. 
 # To destroy a security object, `destruct` parameter should be configured.
-# And make enabled as false, this is to avoid the differences while updating other resources.
+# And mark enabled as false, this is to avoid the differences while updating other resources.
 resource "dsm_sobject" "aes_sobject_example" {
   name     = "aes_sobject_example"
   obj_type = "AES"
