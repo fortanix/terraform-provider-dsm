@@ -220,7 +220,7 @@ func resourceCreateSecret(ctx context.Context, d *schema.ResourceData, m interfa
 		operation = "POST"
 	}
 	allowed_key_justifications_policy, allow_exists := d.GetOk("allowed_key_justifications_policy")
-	allowed_missing_justifications, allow_missing_reason_exists := d.GetOk("allowed_missing_justifications")
+	allowed_missing_justifications, allow_missing_justifications_exists := d.GetOk("allowed_missing_justifications")
 	
 	policy_data := map[string]interface{}{}
 	
@@ -228,7 +228,7 @@ func resourceCreateSecret(ctx context.Context, d *schema.ResourceData, m interfa
 		policy_data["allow"] = allowed_key_justifications_policy
 	}
 	
-	if allow_missing_reason_exists && allowed_missing_justifications != nil {
+	if allow_missing_justifications_exists && allowed_missing_justifications != nil {
 		policy_data["allow_missing_reason"] = allowed_missing_justifications
 	}
 	
