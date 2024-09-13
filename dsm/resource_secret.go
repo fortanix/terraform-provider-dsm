@@ -102,8 +102,7 @@ func resourceSecret() *schema.Resource {
 				"   * Allowed states are: None, PreActive, Active, Deactivated, Compromised, Destroyed, Deleted.",
 				Type:     schema.TypeString,
 				Optional: true,
-				Sensitive: false,
-				Computed: false,
+				Computed: true,
 			},
 			"expiry_date": {
 			    Description: " The security object expiry date in RFC format.",
@@ -144,6 +143,18 @@ func resourceSecret() *schema.Resource {
 				Computed: true,
 			},
 			"allowed_key_justifications_policy": {
+			    Description: "The security object key justification policies for GCP External Key Manager. The allowed permissions are:\n" +
+			    "   * CUSTOMER_INITIATED_SUPPORT\n" +
+			    "   * CUSTOMER_INITIATED_ACCESS\n" +
+			    "   * GOOGLE_INITIATED_SERVICE\n" +
+			    "   * GOOGLE_INITIATED_REVIEW\n" +
+			    "   * GOOGLE_INITIATED_SYSTEM_OPERATION\n" +
+			    "   * THIRD_PARTY_DATA_REQUEST\n" +
+			    "   * REASON_NOT_EXPECTED\n" +
+			    "   * REASON_UNSPECIFIED\n" +
+			    "   * MODIFIED_CUSTOMER_INITIATED_ACCESS\n" +
+			    "   * MODIFIED_GOOGLE_INITIATED_SYSTEM_OPERATION\n" +
+			    "   * GOOGLE_RESPONSE_TO_PRODUCTION_ALERT\n",
 				Type: schema.TypeList,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
@@ -151,6 +162,7 @@ func resourceSecret() *schema.Resource {
 				Optional: true,
 			},
 			"allowed_missing_justifications": {
+			    Description: "Boolean value which allows missing justifications even if not provided to the secret. The values are True / False.",
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
@@ -209,26 +221,20 @@ func resourceCreateSecret(ctx context.Context, d *schema.ResourceData, m interfa
 	}
 	allowed_key_justifications_policy, allow_exists := d.GetOk("allowed_key_justifications_policy")
 	allowed_missing_justifications, allow_missing_reason_exists := d.GetOk("allowed_missing_justifications")
-
-	if allow_exists && allow_missing_reason_exists {
-		if allowed_key_justifications_policy != nil && allowed_missing_justifications != nil {
-			plugin_object["google_access_reason_policy"] = map[string]interface{}{
-				"allow":                allowed_key_justifications_policy,
-				"allow_missing_reason": allowed_missing_justifications,
-			}
-		}
-	} else if allow_exists {
-		if allowed_key_justifications_policy != nil {
-			plugin_object["google_access_reason_policy"] = map[string]interface{}{
-				"allow": allowed_key_justifications_policy,
-			}
-		}
-	} else if allow_missing_reason_exists {
-		if allowed_missing_justifications != nil {
-			plugin_object["google_access_reason_policy"] = map[string]interface{}{
-				"allow_missing_reason": allowed_missing_justifications,
-			}
-		}
+	
+	policy_data := map[string]interface{}{}
+	
+	if allow_exists && allowed_key_justifications_policy != nil {
+		policy_data["allow"] = allowed_key_justifications_policy
+	}
+	
+	if allow_missing_reason_exists && allowed_missing_justifications != nil {
+		policy_data["allow_missing_reason"] = allowed_missing_justifications
+	}
+	
+	// Only update if there are entries
+	if len(policy_data) > 0 {
+		plugin_object["google_access_reason_policy" ] = policy_data
 	}
 
 	req, err := m.(*api_client).APICallBody(operation, endpoint, plugin_object)
@@ -293,12 +299,32 @@ func resourceReadSecret(ctx context.Context, d *schema.ResourceData, m interface
 		}
 		if _, ok := res["google_access_reason_policy"]; ok {
 			google_access_reason_policy := res["google_access_reason_policy"].(map[string]interface{})
-			if err := d.Set("allowed_key_justifications_policy", google_access_reason_policy["allow"]); err != nil {
+			tf_state_garp, is_tf_state_garp  := d.GetOk("allowed_key_justifications_policy")
+			var is_same_garp bool
+			if is_tf_state_garp {
+				is_same_garp = compTwoArrays(tf_state_garp, google_access_reason_policy["allow"])
+			}
+			if is_same_garp {
+				if err := d.Set("allowed_key_justifications_policy", tf_state_garp); err != nil {
+					return diag.FromErr(err)
+				}
+			} else if err := d.Set("allowed_key_justifications_policy", google_access_reason_policy["allow"]); err != nil {
 				return diag.FromErr(err)
 			}
 			if err := d.Set("allowed_missing_justifications", google_access_reason_policy["allow_missing_reason"]); err != nil {
 				return diag.FromErr(err)
 			}
+		} else{
+		    /*
+		        allowed_key_justifications_policy is either Optional or Computed.
+		        It is being made as Computed, because when a key is copied, KAJ will also get copied.
+		        In this case, it will become a computed value.
+
+		        If allowed_key_justifications_policy is not set, while updating it shows a difference as it will set to null value.
+		        Hence, it needs to be set as an empty value.
+		    */
+		    empty_array := []string{}
+		    d.Set("allowed_key_justifications_policy", empty_array)
 		}
 		if err := d.Set("enabled", res["enabled"].(bool)); err != nil {
 			return diag.FromErr(err)
@@ -317,6 +343,9 @@ func resourceReadSecret(ctx context.Context, d *schema.ResourceData, m interface
 			if newerr = d.Set("expiry_date", ddate.Format(layoutRFC)); newerr != nil {
 				return diag.FromErr(newerr)
 			}
+		}
+		if err := d.Set("copied_to", res["copied_to"]); err != nil {
+			return diag.FromErr(err)
 		}
 		if _, ok := res["links"]; ok {
 			if links := res["links"].(map[string]interface{}); len(links) > 0 {
@@ -375,16 +404,11 @@ func resourceUpdateSecret(ctx context.Context, d *schema.ResourceData, m interfa
 		has_changed = true
 	}
 
-	if d.HasChange("state") {
-		plugin_object["state"] = d.Get("state").(string)
-		has_changed = true
-	}
-
 	if d.HasChanges("allowed_key_justifications_policy", "allowed_missing_justifications") {
 		google_access_reason_policy := make(map[string]interface{})
 
-		if allow := d.Get("allowed_key_justifications_policy"); allow != nil {
-			google_access_reason_policy["allow"] = allow
+		if allowed_justifications := d.Get("allowed_key_justifications_policy"); allowed_justifications != nil {
+			google_access_reason_policy["allow"] = allowed_justifications
 		}
 		if allow_missing := d.Get("allowed_missing_justifications"); allow_missing != nil {
 			google_access_reason_policy["allow_missing_reason"] = allow_missing
