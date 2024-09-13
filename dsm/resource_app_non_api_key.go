@@ -17,17 +17,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-/*
-This resource supports non-api key appications.
-As of now, this supports the following:
-1. AWS XKS
-2. AWS IAM
-3. Certificate
-4. Trusted CA(dns_name and ip)
+// This resource supports non-api key appications.
+// As of now, this supports the following:
+// 1. AWS XKS
+// 2. AWS IAM
+// 3. Certificate
+// 4. Trusted CA(dns_name and ip)
 
-In future we can add other applications as well
+// In future we can add other applications as well
 
-*/
 
 // [-] Define App
 func resourceAppNonAPIKey() *schema.Resource {
@@ -303,6 +301,8 @@ func formCredential(d *schema.ResourceData, app_object map[string]interface{}, a
 				credential_type = "certificate"
 			} else if v == "trustedca" {
 				credential_type = "trustedca"
+			} else if v == "secret" {
+			    credential_type = "secret"
 			}
 		} else if k == "certificate" {
 			authentication_method["certificate"] = v.(string)
@@ -318,8 +318,12 @@ func formCredential(d *schema.ResourceData, app_object map[string]interface{}, a
 			credential["subject_general"] = ip_address
 		}
 	}
-	if credential_type != "certificate" {
-		authentication_method[credential_type] = credential
+	// When it is an api_key/secret, no additional attributes are required. Hence, ignoring it.
+	if credential_type != "secret" {
+		if credential_type != "certificate" {
+			authentication_method[credential_type] = credential
+		}
+		app_object["credential"] = authentication_method
 	}
-	app_object["credential"] = authentication_method
+
 }

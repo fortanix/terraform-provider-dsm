@@ -22,7 +22,7 @@ func resourceSobject() *schema.Resource {
 		DeleteContext: resourceDeleteSobject,
 		Description: "Creates a new security object. The returned resource object contains the UUID of the security object for further references.\n" +
 		"A key value can be imported as a security object. This resource also can rotate or copy a security object.\n" +
-		"For more examples, please refer Guides/dsm_sobject.",
+		"For more examples, please refer Guides/dsm_security_object",
 		Schema: map[string]*schema.Schema{
 			"name": {
 			    Description: "The security object name.",
@@ -249,11 +249,11 @@ func resourceSobject() *schema.Resource {
 				Default:  "",
 			},
 			"enabled": {
-			    Description: "Whether the security object is enabled or disabled.\n" +
+			    Description: "Enable or disable the Security object.\n" +
 			    "   * The values are true/false.",
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default: true,
+				Computed: true,
 			},
 			"state": {
 			    Description: "The state of the secret security object.\n" +
@@ -397,7 +397,6 @@ func createSO(ctx context.Context, d *schema.ResourceData, m interface{}) diag.D
 		"name":        d.Get("name").(string),
 		"group_id":    d.Get("group_id").(string),
 		"description": d.Get("description").(string),
-		"enabled": d.Get("enabled").(bool),
 	}
 
 	if _, ok := d.GetOk("value"); ok {
@@ -552,7 +551,9 @@ func createSO(ctx context.Context, d *schema.ResourceData, m interface{}) diag.D
 		dsa["subgroup_size"] = subgroup_size
 		security_object["dsa"] = dsa
 	}
-
+	if _, ok := d.GetOkExists("enabled"); ok {
+		security_object["enabled"] = d.Get("enabled").(bool)
+	}
 	if err := d.Get("rotate").(string); len(err) > 0 {
 		security_object["name"] = d.Get("rotate_from").(string)
 		endpoint = "crypto/v1/keys/rekey"
@@ -778,13 +779,17 @@ func resourceReadSobject(ctx context.Context, d *schema.ResourceData, m interfac
 				return diag.FromErr(newerr)
 			}
 		}
-		if err := req["obj_type"].(string); err == "RSA" {
-			openssh_pub_key, err := PublicPEMtoOpenSSH([]byte(req["pub_key"].(string)))
-			if err != nil {
-				return err
-			} else {
-				if err := d.Set("ssh_pub_key", openssh_pub_key); err != nil {
-					return diag.FromErr(err)
+		if err := req["obj_type"].(string);  err == "RSA" {
+		    // When a key is copied to byok, the below condition is needed.
+		    // Azure sobject and AWS sobject won't hold the value of pub_key. Hence, it needs to be checked before assigning.
+			if _, ok := req["pub_key"]; ok {
+				openssh_pub_key, err := PublicPEMtoOpenSSH([]byte(req["pub_key"].(string)))
+				if err != nil {
+					return err
+				} else {
+					if err := d.Set("ssh_pub_key", openssh_pub_key); err != nil {
+						return diag.FromErr(err)
+					}
 				}
 			}
 		}
@@ -872,6 +877,12 @@ func resourceUpdateSobject(ctx context.Context, d *schema.ResourceData, m interf
 		d.Set("rotate_from", "")
 	}
 
+	state := d.Get("state").(string)
+	if state == "Compromised" || state == "Deactivated" || state == "Destroyed" {
+		// If the security_object is Compromised/Deactivated/Destroyed, modify is forbidden
+		// Terraform changes(terraform plan/apply) can be ignored, Once the key is in one of the above states, a warning can be shown instead of showing an error.
+		return showWarning(fmt.Sprintf("Security Object cannot be modified as it is in the state of %s", state))
+	}
 	var security_object = map[string]interface{}{
 		"kid": d.Get("kid").(string),
 	}
@@ -921,8 +932,7 @@ func resourceUpdateSobject(ctx context.Context, d *schema.ResourceData, m interf
 		has_changed = true
 	}
 	// Expiry date cannot be modified if it is already set.
-	state := d.Get("state").(string)
-	if d.HasChange("expiry_date") && (state != "Compromised" && state != "Deactivated" && state != "Destroyed"){
+	if d.HasChange("expiry_date") {
 		old_expiry_date, new_expiry_date := d.GetChange("expiry_date")
 		if old_expiry_date == nil || len(old_expiry_date.(string)) == 0 {
 			sobj_deactivation_date, date_error := parseTimeToDSM(d.Get("expiry_date").(string))
@@ -964,11 +974,6 @@ func resourceUpdateSobject(ctx context.Context, d *schema.ResourceData, m interf
 	}
 
 	if has_changed {
-	    // If the security_object is Compromised/Deactivated/Destroyed, modify is forbidden
-	    if state == "Compromised" || state == "Deactivated" || state == "Destroyed" {
-	        summary := "Security Object cannot be modified."
-	        return invokeErrorDiagsWithSummary(summary, fmt.Sprintf("[E] Security Object cannot be modified as it is in the state of %s", state))
-        }
 		if debug_output {
 			tflog.Warn(ctx, "Sobject has changed, calling API")
 		}
