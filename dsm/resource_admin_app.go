@@ -106,7 +106,6 @@ func resourceAdminApp() *schema.Resource {
 
 // [C]: Create App
 func resourceCreateAdminApp(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
 
 	app_object := map[string]interface{}{
 		"name":          d.Get("name").(string),
@@ -119,12 +118,7 @@ func resourceCreateAdminApp(ctx context.Context, d *schema.ResourceData, m inter
 	}
 	req, err := m.(*api_client).APICallBody("POST", "sys/v1/apps", app_object)
 	if err != nil {
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "[DSM SDK] Unable to call DSM provider API client",
-			Detail:   fmt.Sprintf("[E]: API: POST sys/v1/apps: %v", err),
-		})
-		return diags
+		return invokeErrorDiagsWithSummary(fmt.Sprintf("[E]: API: POST sys/v1/apps: %v", err), error_summary)
 	}
 
 	d.SetId(req["app_id"].(string))
@@ -133,16 +127,10 @@ func resourceCreateAdminApp(ctx context.Context, d *schema.ResourceData, m inter
 
 // [R]: Read App
 func resourceReadAdminApp(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
 
 	req, _, err := m.(*api_client).APICall("GET", fmt.Sprintf("sys/v1/apps/%s", d.Id()))
 	if err != nil {
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "[DSM SDK] Unable to call DSM provider API client",
-			Detail:   fmt.Sprintf("[E]: API: GET sys/v1/apps: %v", err),
-		})
-		return diags
+		return invokeErrorDiagsWithSummary(fmt.Sprintf("[E]: API: GET sys/v1/apps: %v", err), error_summary)
 	}
 
 	if err := d.Set("name", req["name"].(string)); err != nil {
@@ -165,12 +153,7 @@ func resourceReadAdminApp(ctx context.Context, d *schema.ResourceData, m interfa
 
 	req, _, err = m.(*api_client).APICall("GET", fmt.Sprintf("sys/v1/apps/%s/credential", d.Id()))
 	if err != nil {
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "[DSM SDK] Unable to call DSM provider API client",
-			Detail:   fmt.Sprintf("[E]: API: GET sys/v1/apps/-/credential: %v", err),
-		})
-		return diags
+		return invokeErrorDiagsWithSummary(fmt.Sprintf("[E]: API: GET sys/v1/apps/-/credential: %v", err), error_summary)
 	}
 
 	credential := make(map[string]interface{})
@@ -190,25 +173,18 @@ func resourceReadAdminApp(ctx context.Context, d *schema.ResourceData, m interfa
 	if err := d.Set("new_credential", false); err != nil {
 		return diag.FromErr(err)
 	}
-	return diags
+	return nil
 }
 
 // [U]: Update App
 func resourceUpdateAdminApp(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	error_summary := "[DSM SDK] Unable to call DSM provider API client"
 	if d.Get("new_credential").(bool) {
 		reset_secret := map[string]interface{}{
 			"credential_migration_period": nil,
 		}
 		_, err := m.(*api_client).APICallBody("POST", fmt.Sprintf("sys/v1/apps/%s/reset_secret", d.Id()), reset_secret)
 		if err != nil {
-			diags = append(diags, diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  error_summary,
-				Detail:   fmt.Sprintf("[E]: API: GET sys/v1/apps/-/credential: %v", err),
-			})
-			return diags
+			return invokeErrorDiagsWithSummary(fmt.Sprintf("[E]: API: GET sys/v1/apps/-/credential: %v", err), error_summary)
 		}
 	}
 
@@ -225,13 +201,7 @@ func resourceUpdateAdminApp(ctx context.Context, d *schema.ResourceData, m inter
 	if len(app_object) > 0 {
 		req, err := m.(*api_client).APICallBody("PATCH", fmt.Sprintf("sys/v1/apps/%s", d.Id()), app_object)
 		if err != nil {
-			diags = append(diags, diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  error_summary,
-				Detail:   fmt.Sprintf("[E]: API: POST sys/v1/apps: %v", err),
-			})
-
-			return diags
+			return invokeErrorDiagsWithSummary(fmt.Sprintf("[E]: API: PATCH sys/v1/apps/%s: %v", d.Id(), err), error_summary)
 		}
 		d.SetId(req["app_id"].(string))
 	}
@@ -240,16 +210,10 @@ func resourceUpdateAdminApp(ctx context.Context, d *schema.ResourceData, m inter
 
 // [D]: Delete App
 func resourceDeleteAdminApp(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
 
 	_, statuscode, err := m.(*api_client).APICall("DELETE", fmt.Sprintf("sys/v1/apps/%s", d.Id()))
 	if (err != nil) && (statuscode != 404) {
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "[DSM SDK] Unable to call DSM provider API client",
-			Detail:   fmt.Sprintf("[E]: API: DELETE sys/v1/apps: %v", err),
-		})
-		return diags
+		return invokeErrorDiagsWithSummary(fmt.Sprintf("[E]: API: DELETE sys/v1/apps: %v", err), error_summary)
 	}
 
 	d.SetId("")

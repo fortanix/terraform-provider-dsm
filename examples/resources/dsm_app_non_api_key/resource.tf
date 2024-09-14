@@ -1,4 +1,4 @@
-// Create groups
+# Create groups
 resource "dsm_group" "group1" {
   name = "group1"
 }
@@ -11,11 +11,11 @@ resource "dsm_group" "group3" {
   name = "group3"
 }
 
-// Create an app of type AWS XKS
+# Create an app of type AWS XKS
 resource "dsm_app_non_api_key" "aws-xks-terraform" {
-  name           = "aws-xks-terraform"
-  default_group  = dsm_group.group1.id
-  other_group = [dsm_group.group2.id, dsm_group.group3.id]
+  name          = "aws-xks-terraform"
+  default_group = dsm_group.group1.id
+  other_group   = [dsm_group.group2.id, dsm_group.group3.id]
   // other_group_permissions - to change the default permissions
   other_group_permissions = local.other_groups
   authentication_method = {
@@ -23,16 +23,16 @@ resource "dsm_app_non_api_key" "aws-xks-terraform" {
   }
 }
 
-/*
-To modify the default group permissions, other_group_permissions can be used in a zipmap.
-In the above app the following permissions are assigned for each group:
-group1: SIGN,VERIFY,ENCRYPT,WRAPKEY,UNWRAPKEY,DERIVEKEY,MACGENERATE,MACVERIFY,EXPORT,MANAGE,AGREEKEY,AUDIT
-group2: SIGN,VERIFY,DECRYPT,WRAPKEY,UNWRAPKEY,DERIVEKEY,MACGENERATE,MACVERIFY,EXPORT,MANAGE,AGREEKEY,AUDIT
-group3: SIGN,VERIFY,ENCRYPT,DECRYPT,WRAPKEY,UNWRAPKEY,DERIVEKEY,MACGENERATE,MACVERIFY,EXPORT,MANAGE,AGREEKEY,AUDIT
+## To modify the default group permissions, other_group_permissions can be used in a zipmap.
 
-For group3, default permissions are assigned as it was not specified in the other_group_permissions.
-group should be specified only if default permissions need to be changed.
-*/
+# In the above app the following permissions are assigned for each group:
+# group1: SIGN,VERIFY,ENCRYPT,WRAPKEY,UNWRAPKEY,DERIVEKEY,MACGENERATE,MACVERIFY,EXPORT,MANAGE,AGREEKEY,AUDIT
+# group2: SIGN,VERIFY,DECRYPT,WRAPKEY,UNWRAPKEY,DERIVEKEY,MACGENERATE,MACVERIFY,EXPORT,MANAGE,AGREEKEY,AUDIT
+# group3: SIGN,VERIFY,ENCRYPT,DECRYPT,WRAPKEY,UNWRAPKEY,DERIVEKEY,MACGENERATE,MACVERIFY,EXPORT,MANAGE,AGREEKEY,AUDIT
+
+# For group3, default permissions are assigned as it was not specified in the other_group_permissions.
+# group should be specified only if default permissions need to be changed.
+
 
 locals {
   other_groups = zipmap(
@@ -47,53 +47,53 @@ locals {
   )
 }
 
-// Create an app of type AWS IAM
+# Create an app of type AWS IAM
 resource "dsm_app_non_api_key" "aws-iam-terraform" {
   // The app name must match the AWS ARN associated with the calling entity.
-  name           = "arn:aws:sts::XXXXXXXXXXXX:assumed-role/XXXXXXX>/XXXXXXX"
-  default_group  = dsm_group.group2.id
+  name          = "arn:aws:sts::XXXXXXXXXXXX:assumed-role/XXXXXXX>/XXXXXXX"
+  default_group = dsm_group.group2.id
   authentication_method = {
     type = "awsiam"
   }
 }
 
-// Create app of type certificate
+# Create app of type certificate
 resource "dsm_app_non_api_key" "app-certificate-terraform" {
-  name           = "app-certificate-terraform"
-  default_group  = dsm_group.group1.id
+  name          = "app-certificate-terraform"
+  default_group = dsm_group.group1.id
   authentication_method = {
-    type = "certificate"
+    type        = "certificate"
     certificate = "MIIC3jCCXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXa8YtwoA1"
   }
 }
 
-// Create an app of type Trusted CA using an ip address
+# Create an app of type Trusted CA using an ip address
 resource "dsm_app_non_api_key" "app-trustedca-ip-terraform" {
-  name           = "app-trustedca-ip-terraform"
-  default_group  = dsm_group.group2.id
+  name          = "app-trustedca-ip-terraform"
+  default_group = dsm_group.group2.id
   authentication_method = {
-    type = "trustedca"
+    type           = "trustedca"
     ca_certificate = "MIIC3jCCXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXa8YtwoA1"
-    ip_address = "XX.XX.XX.XX"
+    ip_address     = "XX.XX.XX.XX"
   }
 }
 
-// Create an app of type Trusted CA using dns_name
+# Create an app of type Trusted CA using dns_name
 resource "dsm_app_non_api_key" "app-trustedca-dnsname-terraform" {
-  name           = "app-trustedca-dnsname-terraform"
-  default_group  = dsm_group.group2.id
+  name          = "app-trustedca-dnsname-terraform"
+  default_group = dsm_group.group2.id
   authentication_method = {
-    type = "trustedca"
+    type           = "trustedca"
     ca_certificate = "MIIC3jCCXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXa8YtwoA1"
-    dns_name = "terraform.user.com"
+    dns_name       = "terraform.user.com"
   }
 }
 
-// An example on how to modify the existing permissions of a group in app
+# An example on how to modify the existing permissions of a group in app
 resource "dsm_app_non_api_key" "aws-xks-terraform" {
-  name           = "aws-xks-terraform"
-  default_group  = dsm_group.group1.id
-  other_group = [dsm_group.group2.id, dsm_group.group3.id]
+  name          = "aws-xks-terraform"
+  default_group = dsm_group.group1.id
+  other_group   = [dsm_group.group2.id, dsm_group.group3.id]
   // other_group_permissions - to change the default permissions
   other_group_permissions = local.other_groups
   // mod_group_permissions should be given while updating an app
@@ -104,7 +104,7 @@ resource "dsm_app_non_api_key" "aws-xks-terraform" {
 }
 
 
-// group1 and group2 permissions modification
+# group1 and group2 permissions modification
 locals {
   mod_groups = zipmap(
     [
