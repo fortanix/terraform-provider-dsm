@@ -11,6 +11,7 @@ package dsm
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -314,12 +315,15 @@ func resourceReadSecret(ctx context.Context, d *schema.ResourceData, m interface
 			return diag.FromErr(err)
 		}
 		if rfcdate, ok := res["deactivation_date"].(string); ok {
-			sobj_deactivation_date, date_error := parseTimeToDSM(rfcdate)
-			if date_error != nil {
-				return date_error
+			// FYOO: once it's set, you can't remove deactivation date
+			layoutRFC := "2006-01-02T15:04:05Z"
+			layoutDSM := "20060102T150405Z"
+			ddate, newerr := time.Parse(layoutDSM, rfcdate)
+			if newerr != nil {
+				return diag.FromErr(newerr)
 			}
-			if err := d.Set("expiry_date", sobj_deactivation_date); err != nil {
-				return diag.FromErr(err)
+			if newerr = d.Set("expiry_date", ddate.Format(layoutRFC)); newerr != nil {
+				return diag.FromErr(newerr)
 			}
 		}
 		if err := d.Set("copied_to", res["copied_to"]); err != nil {
