@@ -28,17 +28,16 @@ data "dsm_aws_group" "sample_aws_group" {
 
 ### Optional
 
-- `access_key` (String) The Access Key ID used to communicate with AWS KMS.
-- `description` (String) The AWS KMS group object description.
 - `scan` (Boolean) Syncs keys from AWS KMS to the AWS KMS group in DSM. Value is either true/false.
-- `secret_key` (String, Sensitive) AWS KMS Secret key.
 
 ### Read-Only
 
+- `access_key` (String) The Access Key ID used to communicate with AWS KMS.
 - `acct_id` (String) The Account ID from Fortanix DSM.
 - `creator` (Map of String) The creator of the security object from Fortanix DSM.
    * `user`: If the security object was created by a user, the computed value will be the matching user id.
    * `app`: If the security object was created by a app, the computed value will be the matching app id.
+- `description` (String) The AWS KMS group object description.
 - `group_id` (String) The AWS KMS group object ID from Fortanix DSM.
 - `id` (String) The ID of this resource.
 - `region` (String) The AWS region mapped to the group from which keys are imported.

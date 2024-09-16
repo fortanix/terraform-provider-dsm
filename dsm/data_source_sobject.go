@@ -11,6 +11,7 @@ package dsm
 import (
 	"context"
 	"fmt"
+	"net/url"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -100,26 +101,27 @@ func dataSourceSobject() *schema.Resource {
 func dataSourceSobjectRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	var req map[string]interface{}
-	var req_err diag.Diagnostics
+	var reqErr diag.Diagnostics
 
 	security_object := map[string]interface{}{
 		"name": d.Get("name").(string),
 	}
 
 	if d.Get("export").(bool) {
-		req, req_err = m.(*api_client).APICallBody("POST", "crypto/v1/keys/export", security_object)
-		if req_err != nil {
+		req, reqErr = m.(*api_client).APICallBody("POST", "crypto/v1/keys/export", security_object)
+		if reqErr != nil {
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "[DSM SDK] Unable to call DSM provider API client",
-				Detail:   fmt.Sprintf("[E]: API: POST crypto/v1/keys/export: %v", req_err),
+				Detail:   fmt.Sprintf("[E]: API: POST crypto/v1/keys/export: %v", reqErr),
 			})
 			return diags
 		}
 	} else {
 		var reqList []interface{}
-		reqList, req_err = m.(*api_client).APICallList("GET", "crypto/v1/keys?name=" + d.Get("name").(string))
-		if req_err == nil && len(reqList) > 0 {
+		encodedName := url.QueryEscape(d.Get("name").(string))
+		reqList, reqErr = m.(*api_client).APICallList("GET", "crypto/v1/keys?name=" + encodedName) 
+		if reqErr == nil && len(reqList) > 0 {
 			req = reqList[0].(map[string]interface{})
 		} else {
 			diags = append(diags, diag.Diagnostic{

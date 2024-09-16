@@ -55,21 +55,12 @@ func dataSourceAWSGroup() *schema.Resource {
 			"description": {
 				Description: "The AWS KMS group object description.",
 				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "",
+				Computed: true,
 			},
 			"access_key": {
 				Description: "The Access Key ID used to communicate with AWS KMS.",
 				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "na",
-			},
-			"secret_key": {
-				Description: "AWS KMS Secret key.",
-				Type:      schema.TypeString,
-				Optional:  true,
-				Default:   "na",
-				Sensitive: true,
+				Computed: true,
 			},
 			"scan": {
 				Description: "Syncs keys from AWS KMS to the AWS KMS group in DSM. Value is either true/false.",
@@ -153,8 +144,6 @@ func dataSourceAWSGroupRead(ctx context.Context, d *schema.ResourceData, m inter
 	for _, value := range awsgroup.Hmg {
 		d.Set("access_key", value.Access_key)
 	}
-	// FYOO: remove sensitive information
-	d.Set("secret_key", "")
 	// FYOO: if description is blank, DSM does not return
 	if _, ok := group_data["description"]; ok {
 		d.Set("description", group_data["description"].(string))

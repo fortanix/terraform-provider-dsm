@@ -95,5 +95,35 @@ func resourceUpdateAccountQuorumPolicy(ctx context.Context, d *schema.ResourceDa
 
 // [D]: Delete Account Quorum Policy
 func resourceDeleteAccountQuorumPolicy(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	return nil
+	var diags diag.Diagnostics
+
+	accountApprovalPolicyRead(ctx, d, m)
+
+	account_quorum_policy_object := make(map[string]interface{})
+	acct_id := d.Get("acct_id").(string)
+	operation := "PATCH"
+	url := "/sys/v1/approval_requests"
+
+	account_quorum_policy_object["method"] = operation
+	account_quorum_policy_object["operation"] = fmt.Sprintf("/sys/v1/accounts/%s", acct_id)
+	account_quorum_policy_object["body"] = map[string]interface{}{
+		"acct_id": acct_id,
+		"approval_policy": map[string]interface{}{
+			"policy": map[string]interface{}{},
+		},
+	}
+	operation = "POST"
+
+	_, err := m.(*api_client).APICallBody(operation, url, account_quorum_policy_object)
+	if err != nil {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "[DSM SDK] Unable to call DSM provider API client",
+			Detail:   fmt.Sprintf("[D]: API Call: %s %s: %v", operation, url, err),
+		})
+		return diags
+	}
+
+	d.SetId("")
+	return diags
 }
