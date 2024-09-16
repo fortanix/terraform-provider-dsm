@@ -11,7 +11,6 @@ package dsm
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -175,7 +174,6 @@ func resourceSecret() *schema.Resource {
 
 // [C]: Create Security Object
 func resourceCreateSecret(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
 	endpoint := "crypto/v1/keys"
 	operation := "PUT"
 
@@ -186,14 +184,12 @@ func resourceCreateSecret(ctx context.Context, d *schema.ResourceData, m interfa
 		"description": d.Get("description").(string),
 	}
 
-	if rfcdate := d.Get("expiry_date").(string); len(rfcdate) > 0 {
-		layoutRFC := "2006-01-02T15:04:05Z"
-		layoutDSM := "20060102T150405Z"
-		ddate, newerr := time.Parse(layoutRFC, rfcdate)
-		if newerr != nil {
-			return diag.FromErr(newerr)
+	if err := d.Get("expiry_date").(string); len(err) > 0 {
+		sobj_deactivation_date, date_error := parseTimeToDSM(err)
+		if date_error != nil {
+			return date_error
 		}
-		plugin_object["deactivation_date"] = ddate.Format(layoutDSM)
+		plugin_object["deactivation_date"] = sobj_deactivation_date
 	}
 
 	if d.Get("rotate").(bool) {
@@ -209,12 +205,7 @@ func resourceCreateSecret(ctx context.Context, d *schema.ResourceData, m interfa
 	} else {
 		reqfpi, err := m.(*api_client).FindPluginId("Terraform Plugin")
 		if err != nil {
-			diags = append(diags, diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  "[DSM SDK] Unable to call DSM provider API client",
-				Detail:   fmt.Sprintf("[E]: API: GET sys/v1/plugins: %v", err),
-			})
-			return diags
+			return invokeErrorDiagsWithSummary("[DSM SDK] Unable to call DSM provider API client", fmt.Sprintf("[E]: API: GET sys/v1/plugins: %v", err))
 		}
 		endpoint = fmt.Sprintf("sys/v1/plugins/%s", string(reqfpi))
 		operation = "POST"
@@ -239,12 +230,7 @@ func resourceCreateSecret(ctx context.Context, d *schema.ResourceData, m interfa
 
 	req, err := m.(*api_client).APICallBody(operation, endpoint, plugin_object)
 	if err != nil {
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "[DSM SDK] Unable to call DSM provider API client",
-			Detail:   fmt.Sprintf("[E]: API: POST sys/v1/plugins: %v", err),
-		})
-		return diags
+		return invokeErrorDiagsWithSummary("[DSM SDK] Unable to call DSM provider API client", fmt.Sprintf("[E]: API: POST sys/v1/plugins: %v", err))
 	}
 
 	d.SetId(req["kid"].(string))
@@ -260,12 +246,7 @@ func resourceReadSecret(ctx context.Context, d *schema.ResourceData, m interface
 		d.SetId("")
 	} else {
 		if err != nil {
-			diags = append(diags, diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  "[DSM SDK] Unable to call DSM provider API client",
-				Detail:   fmt.Sprintf("[E]: API: GET crypto/v1/keys: %v", err),
-			})
-			return diags
+			return invokeErrorDiagsWithSummary("[DSM SDK] Unable to call DSM provider API client", fmt.Sprintf("[E]: API: GET crypto/v1/keys: %v", err))
 		}
 
 		if err := d.Set("name", res["name"].(string)); err != nil {
@@ -333,15 +314,12 @@ func resourceReadSecret(ctx context.Context, d *schema.ResourceData, m interface
 			return diag.FromErr(err)
 		}
 		if rfcdate, ok := res["deactivation_date"].(string); ok {
-			// FYOO: once it's set, you can't remove deactivation date
-			layoutRFC := "2006-01-02T15:04:05Z"
-			layoutDSM := "20060102T150405Z"
-			ddate, newerr := time.Parse(layoutDSM, rfcdate)
-			if newerr != nil {
-				return diag.FromErr(newerr)
+			sobj_deactivation_date, date_error := parseTimeToDSM(rfcdate)
+			if date_error != nil {
+				return date_error
 			}
-			if newerr = d.Set("expiry_date", ddate.Format(layoutRFC)); newerr != nil {
-				return diag.FromErr(newerr)
+			if err := d.Set("expiry_date", sobj_deactivation_date); err != nil {
+				return diag.FromErr(err)
 			}
 		}
 		if err := d.Set("copied_to", res["copied_to"]); err != nil {
@@ -418,17 +396,24 @@ func resourceUpdateSecret(ctx context.Context, d *schema.ResourceData, m interfa
 		has_changed = true
 	}
 
+	// Expiry date cannot be modified if it is already set.
 	if d.HasChange("expiry_date") {
-		if rfcdate := d.Get("expiry_date").(string); len(rfcdate) > 0 {
-			layoutRFC := "2006-01-02T15:04:05Z"
-			layoutDSM := "20060102T150405Z"
-			ddate, newerr := time.Parse(layoutRFC, rfcdate)
-			if newerr != nil {
-				return diag.FromErr(newerr)
+		old_expiry_date, new_expiry_date := d.GetChange("expiry_date")
+		if old_expiry_date == nil || len(old_expiry_date.(string)) == 0 {
+			sobj_deactivation_date, date_error := parseTimeToDSM(d.Get("expiry_date").(string))
+			if date_error != nil {
+				return date_error
 			}
-			plugin_object["deactivation_date"] = ddate.Format(layoutDSM)
-			has_changed = true
+			plugin_object["deactivation_date"] = sobj_deactivation_date
+		} else {
+			d.Set("expiry_date", old_expiry_date)
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Detail:   fmt.Sprintf("[E]: API: PATCH crypto/v1/keys: expiry_date cannot be changed once it is set. Please retain it to old value: %s -> %s", new_expiry_date, old_expiry_date),
+			})
+			return diags
 		}
+		has_changed = true
 	}
 
 	if has_changed {
@@ -437,12 +422,7 @@ func resourceUpdateSecret(ctx context.Context, d *schema.ResourceData, m interfa
 		}
 		_, err := m.(*api_client).APICallBody("PATCH", fmt.Sprintf("crypto/v1/keys/%s", d.Id()), plugin_object)
 		if err != nil {
-			diags = append(diags, diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  "[DSM SDK] Unable to call DSM provider API client",
-				Detail:   fmt.Sprintf("[E]: API: PATCH crypto/v1/keys: %v", err),
-			})
-			return diags
+			return invokeErrorDiagsWithSummary("[DSM SDK] Unable to call DSM provider API client", fmt.Sprintf("[E]: API: PATCH crypto/v1/keys: %v", err))
 		}
 	}
 
