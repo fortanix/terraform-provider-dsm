@@ -41,12 +41,13 @@ func resourceAWSSobject() *schema.Resource {
 		"**Note**: Once scheduled deletion is enabled, AWS security object can't be modified.\n\n" +
 		"**Deletion of a dsm_aws_sobject**: Unlike dsm_sobject, deletion of a dsm_aws_sobject is not normal.\n\n" +
 		"**Steps to delete a dsm_azure_sobject:**\n" +
-		"   * Enable schedule_deletion as shown in the examples of guides/dsm_azure_sobject.\n" +
-		"   * Enable delete_key_material as shown in the examples of guides/dsm_azure_sobject.\n" +
+		"   * Enable `delete_key_material` as shown in the examples of `Guides/dsm_aws_sobject`.\n" +
+		"   * Enable `schedule_deletion` as shown in the examples of `Guides/dsm_aws_sobject`.\n" +
 		"   * A dsm_aws_sobject can be deleted completely only when its state is `destroyed`.\n" +
-		"   * A dsm_aws_sobject is destroyed when the key is deleted from Azure key vault.\n" +
+		"   * A dsm_aws_sobject comes to destroyed state when the key is deleted from AWS KMS.\n" +
 		"   * To know whether it is in a destroyed state or not, sync keys operation should be performed.\n" +
-		"   * Use dsm_aws_group data_source to sync the keys. Please refer Data Sources/dsm_aws_group.",
+		"   * Use `dsm_aws_group` data_source to sync the keys. Please refer `Data Sources/dsm_aws_group`.\n\n" +
+		"**Note**: `delete_key_material` can be skipped if `schedule_deletion` is enabled as it deletes the key material as well.",
 		Schema: map[string]*schema.Schema{
 			"name": {
 			    Description: "The security object name.",

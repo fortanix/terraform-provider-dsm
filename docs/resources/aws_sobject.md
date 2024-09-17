@@ -9,7 +9,8 @@ description: |-
   Note: Once scheduled deletion is enabled, AWS security object can't be modified.
   Deletion of a dsm_aws_sobject: Unlike dsm_sobject, deletion of a dsm_aws_sobject is not normal.
   Steps to delete a dsm_azure_sobject:
-  Enable schedule_deletion as shown in the examples of guides/dsm_azure_sobject.Enable delete_key_material as shown in the examples of guides/dsm_azure_sobject.A dsm_aws_sobject can be deleted completely only when its state is destroyed.A dsm_aws_sobject is destroyed when the key is deleted from Azure key vault.To know whether it is in a destroyed state or not, sync keys operation should be performed.Use dsm_aws_group data_source to sync the keys. Please refer Data Sources/dsm_aws_group.
+  Enable delete_key_material as shown in the examples of Guides/dsm_aws_sobject.Enable schedule_deletion as shown in the examples of Guides/dsm_aws_sobject.A dsm_aws_sobject can be deleted completely only when its state is destroyed.A dsm_aws_sobject comes to destroyed state when the key is deleted from AWS KMS.To know whether it is in a destroyed state or not, sync keys operation should be performed.Use dsm_aws_group data_source to sync the keys. Please refer Data Sources/dsm_aws_group.
+  Note: delete_key_material can be skipped if schedule_deletion is enabled as it deletes the key material as well.
 ---
 
 # dsm_aws_sobject (Resource)
@@ -24,12 +25,14 @@ AWS security object can also rotate and enable scheduled deletion. For more exam
 **Deletion of a dsm_aws_sobject**: Unlike dsm_sobject, deletion of a dsm_aws_sobject is not normal.
 
 **Steps to delete a dsm_azure_sobject:**
-   * Enable schedule_deletion as shown in the examples of guides/dsm_azure_sobject.
-   * Enable delete_key_material as shown in the examples of guides/dsm_azure_sobject.
+   * Enable `delete_key_material` as shown in the examples of `Guides/dsm_aws_sobject`.
+   * Enable `schedule_deletion` as shown in the examples of `Guides/dsm_aws_sobject`.
    * A dsm_aws_sobject can be deleted completely only when its state is `destroyed`.
-   * A dsm_aws_sobject is destroyed when the key is deleted from Azure key vault.
+   * A dsm_aws_sobject comes to destroyed state when the key is deleted from AWS KMS.
    * To know whether it is in a destroyed state or not, sync keys operation should be performed.
-   * Use dsm_aws_group data_source to sync the keys. Please refer Data Sources/dsm_aws_group.
+   * Use `dsm_aws_group` data_source to sync the keys. Please refer `Data Sources/dsm_aws_group`.
+
+**Note**: `delete_key_material` can be skipped if `schedule_deletion` is enabled as it deletes the key material as well.
 
 ## Example Usage
 
