@@ -322,6 +322,7 @@ func showWarning(msg string) diag.Diagnostics {
 	var diags diag.Diagnostics
 	diags = append(diags, diag.Diagnostic{
 		Severity: diag.Warning,
+		Summary:  "[DSM SDK] Unable to call DSM provider API client",
 		Detail:   fmt.Sprintf("[W]: %s", msg),
 	})
 	return diags

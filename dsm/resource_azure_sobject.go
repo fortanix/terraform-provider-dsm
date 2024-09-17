@@ -184,7 +184,6 @@ func resourceAzureSobject() *schema.Resource {
 				Description: "Enable soft key deletion in Azure key vault. Key is not usable for Sign/Verify, Wrap/Unwrap or Encrypt/Decrypt operations once it is deleted. The supported values are true/false.\n" +
 				" **Note:**  This should be enabled only after the creation.",
 				Type:     schema.TypeBool,
-				Default:  false,
 				Optional: true,
 			},
 			"purge_deleted_key": {
@@ -192,7 +191,6 @@ func resourceAzureSobject() *schema.Resource {
 				"The DSM source key is not affected by this operation. The supported values are true/false.\n" +
 				" **Note:**  This should be enabled only after the creation.",
 				Type:     schema.TypeBool,
-				Default:  false,
 				Optional: true,
 			},
 			"external": {
@@ -396,32 +394,49 @@ func resourceUpdateAzureSobject(ctx context.Context, d *schema.ResourceData, m i
 		return undoTFstate("key", d)
 	}
 	if d.HasChange("soft_deletion") && d.Get("soft_deletion").(bool) {
-		soft_deletion := map[string]interface{}{}
 		if d.Get("external").(map[string]interface{})["Azure_key_state"] != "deleted" {
+			soft_deletion := map[string]interface{}{}
 			_, err := m.(*api_client).APICallBody("POST", fmt.Sprintf("crypto/v1/keys/%s/schedule_deletion", d.Id()), soft_deletion)
 			if err != nil {
-				d.Set("soft_deletion", false)
-			    return invokeErrorDiagsWithSummary(error_summary, fmt.Sprintf("[E]: API: POST crypto/v1/keys/%s/schedule_deletion, %v", d.Id(), err))
+				d.Set("soft_deletion", nil)
+				if d.Get("purge_deleted_key").(bool){
+					// When soft_deletion fails, if purge_deleted_key is enabled as true, then it should revert to nil.
+					// If we don't set to nil, user will never be able to purge the key as tf detects no changes.
+					d.Set("purge_deleted_key", nil)
+				}
+				return invokeErrorDiagsWithSummary(error_summary, fmt.Sprintf("[E]: API: POST crypto/v1/keys/%s/schedule_deletion, %v", d.Id(), err))
 			}
 		} else {
 			return showWarning("The security object is already scheduled for the deletion.")
 		}
 		if !d.Get("purge_deleted_key").(bool){
 			return resourceReadAzureSobject(ctx, d, m)
+		} else {
+			// This is when purge_deleted_key is enabled along with soft_deletion.
+			// When a user has a bunch of azure keys and enables both soft_deletion and purge_deleted_key at a time,
+			// then there is a high possibility of getting the error 'key is being deleted' from AKV.
+			// As it takes sometime to delete the key at AKV, sleep is added for 5 seconds.
+			time.Sleep(3 * time.Second)
 		}
 	}
 	if d.HasChange("purge_deleted_key") && d.Get("purge_deleted_key").(bool) {
 		// To get the latest Azure_key_state status
 		resourceReadAzureSobject(ctx, d, m)
-		if d.Get("external").(map[string]interface{})["Azure_key_state"] == "deleted" {
-			err := deleteKeyMateialBYOKSobject(d, m)
-			if err != nil {
-				d.Set("purge_deleted_key", false)
-				return invokeErrorDiagsWithSummary(error_summary, fmt.Sprintf("[E]: API: POST crypto/v1/keys/%s/delete_key_material, %v", d.Id(), err))
+		azure_key_state := d.Get("external").(map[string]interface{})["Azure_key_state"]
+		if azure_key_state != "purged" {
+			if azure_key_state == "deleted" {
+				err := deleteKeyMateialBYOKSobject(d, m)
+				if err != nil {
+					d.Set("purge_deleted_key", nil)
+					return invokeErrorDiagsWithSummary(error_summary, fmt.Sprintf("[E]: API: POST crypto/v1/keys/%s/delete_key_material, %v", d.Id(), err))
+				}
+				return resourceReadAzureSobject(ctx, d, m)
 			}
+			d.Set("purge_deleted_key", nil)
+			return showWarning("The purge key cannot be done until the soft deletion is done for the key.")
+		} else {
+			return nil
 		}
-		d.Set("purge_deleted_key", false)
-		return showWarning("The purge key cannot be done until the soft deletion is done for the key.")
 	}
 
 	update_azure_sobject := map[string]interface{}{
