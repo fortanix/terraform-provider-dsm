@@ -46,7 +46,7 @@ func resourceAWSSobject() *schema.Resource {
 		"   * A dsm_aws_sobject can be deleted completely only when its state is `destroyed`.\n" +
 		"   * A dsm_aws_sobject is destroyed when the key is deleted from Azure key vault.\n" +
 		"   * To know whether it is in a destroyed state or not, sync keys operation should be performed.\n" +
-		"   * Currently, sync keys is not supported by terraform. This can be done in UI by going to the group and HSM/KMS. Then click on `SYNC KEYS`.",
+		"   * Use dsm_aws_group data_source to sync the keys. Please refer Data Sources/dsm_aws_group.",
 		Schema: map[string]*schema.Schema{
 			"name": {
 			    Description: "The security object name.",
