@@ -415,7 +415,7 @@ func resourceUpdateAzureSobject(ctx context.Context, d *schema.ResourceData, m i
 			// This is when purge_deleted_key is enabled along with soft_deletion.
 			// When a user has a bunch of azure keys and enables both soft_deletion and purge_deleted_key at a time,
 			// then there is a high possibility of getting the error 'key is being deleted' from AKV.
-			// As it takes sometime to delete the key at AKV, sleep is added for 3 seconds.
+			// As it takes sometime to delete the key at AKV, sleep has been added.
 			time.Sleep(3 * time.Second)
 		}
 	}
