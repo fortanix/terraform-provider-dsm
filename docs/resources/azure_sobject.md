@@ -8,7 +8,7 @@ description: |-
   Note: Once soft deletion is enabled, Azure sobject can't be modified.
   Deletion of a dsm_azure_sobject: Unlike dsm_sobject, deletion of a dsm_azure_sobject is not normal.
   Steps to delete a dsm_azure_sobject:
-  Enable soft_deletion as shown in the examples of guides/dsm_azure_sobject.Enable purge_deleted_key after soft_deletion as shown in the examples of guides/dsm_azure_sobject.A dsm_azure_sobject can be deleted completely only when its state is destroyed.A dsm_azure_sobject comes to destroyed state when the key is deleted from Azure key vault.To know whether it is in a destroyed state or not, sync keys operation should be performed.Use dsm_azure_group data_source to sync the keys. Please refer Data Sources/dsm_azure_group.
+  Enable soft_deletion as shown in the examples of Guides/dsm_azure_sobject.Enable purge_deleted_key after soft_deletion as shown in the examples of Guides/dsm_azure_sobject.A dsm_azure_sobject can be deleted completely only when its state is destroyed.A dsm_azure_sobject comes to destroyed state when the key is deleted from Azure key vault.To know whether it is in a destroyed state or not, sync keys operation should be performed.Use dsm_azure_group data_source to sync the keys. Please refer Data Sources/dsm_azure_group.
 ---
 
 # dsm_azure_sobject (Resource)
@@ -23,12 +23,12 @@ Azure sobject can also rotate, enable soft deletion and purge the key. For examp
 
 **Steps to delete a dsm_azure_sobject**:
 
-   * Enable soft_deletion as shown in the examples of guides/dsm_azure_sobject.
-   * Enable purge_deleted_key after soft_deletion as shown in the examples of guides/dsm_azure_sobject.
+   * Enable soft_deletion as shown in the examples of `Guides/dsm_azure_sobject`.
+   * Enable purge_deleted_key after soft_deletion as shown in the examples of `Guides/dsm_azure_sobject`.
    * A dsm_azure_sobject can be deleted completely only when its state is `destroyed`.
    * A dsm_azure_sobject comes to destroyed state when the key is deleted from Azure key vault.
    * To know whether it is in a destroyed state or not, sync keys operation should be performed.
-   * Use dsm_azure_group data_source to sync the keys. Please refer Data Sources/dsm_azure_group.
+   * Use `dsm_azure_group` data_source to sync the keys. Please refer Data `Sources/dsm_azure_group`.
 
 ## Example Usage
 

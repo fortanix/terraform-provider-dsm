@@ -39,12 +39,12 @@ func resourceAzureSobject() *schema.Resource {
 		"**Note**: Once soft deletion is enabled, Azure sobject can't be modified.\n\n" +
 		"**Deletion of a dsm_azure_sobject:** Unlike dsm_sobject, deletion of a dsm_azure_sobject is not normal.\n\n" +
 		"**Steps to delete a dsm_azure_sobject**:\n\n" +
-		"   * Enable soft_deletion as shown in the examples of guides/dsm_azure_sobject.\n" +
-		"   * Enable purge_deleted_key after soft_deletion as shown in the examples of guides/dsm_azure_sobject.\n" +
+		"   * Enable soft_deletion as shown in the examples of `Guides/dsm_azure_sobject`.\n" +
+		"   * Enable purge_deleted_key after soft_deletion as shown in the examples of `Guides/dsm_azure_sobject`.\n" +
 		"   * A dsm_azure_sobject can be deleted completely only when its state is `destroyed`.\n" +
 		"   * A dsm_azure_sobject comes to destroyed state when the key is deleted from Azure key vault.\n" +
 		"   * To know whether it is in a destroyed state or not, sync keys operation should be performed.\n" +
-		"   * Use dsm_azure_group data_source to sync the keys. Please refer Data Sources/dsm_azure_group.",
+		"   * Use `dsm_azure_group` data_source to sync the keys. Please refer Data `Sources/dsm_azure_group`.",
 		Schema: map[string]*schema.Schema{
 			"name": {
 			    Description: "The security object name.",
@@ -415,7 +415,7 @@ func resourceUpdateAzureSobject(ctx context.Context, d *schema.ResourceData, m i
 			// This is when purge_deleted_key is enabled along with soft_deletion.
 			// When a user has a bunch of azure keys and enables both soft_deletion and purge_deleted_key at a time,
 			// then there is a high possibility of getting the error 'key is being deleted' from AKV.
-			// As it takes sometime to delete the key at AKV, sleep is added for 5 seconds.
+			// As it takes sometime to delete the key at AKV, sleep is added for 3 seconds.
 			time.Sleep(3 * time.Second)
 		}
 	}

@@ -61,7 +61,7 @@ resource "dsm_azure_sobject" "rsa_key_azure_rotate1" {
     kid = dsm_sobject.rsa_key_dsm.id
   }
   custom_metadata = {
-    azure-key-name  = "rsa-key-azure" # Should be the same azure-key-name as above
+    azure-key-name  = "rsa-key-azure" # Should be the same azure-key-name as the key copied to the Azure group
   }
   key_ops     = ["SIGN", "VERIFY", "ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "EXPORT", "APPMANAGEABLE", "HIGHVOLUME"]
   rotate      = "DSM"
@@ -79,7 +79,7 @@ resource "dsm_azure_sobject" "rsa_key_azure_rotate2" {
     kid = dsm_sobject.rsa_key_dsm.id
   }
   custom_metadata = {
-    azure-key-name  = "rsa-key-azure" # Should be the same azure-key-name as above 
+    azure-key-name  = "rsa-key-azure" # Should be the same azure-key-name as the key copied to the Azure group 
   }
   key_ops     = ["SIGN", "VERIFY", "ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "EXPORT", "APPMANAGEABLE", "HIGHVOLUME"]
   rotate      = "DSM"
@@ -149,7 +149,7 @@ resource "dsm_azure_sobject" "rsa_key_azure_rotate1" {
     kid = dsm_sobject.rsa_key_dsm.id
   }
   custom_metadata = {
-    azure-key-name  = "rsa-key-azure" # Should be the same azure-key-name as above
+    azure-key-name  = "rsa-key-azure" # Should be the same azure-key-name as the key copied to the Azure group
   }
   key_ops     = ["SIGN", "VERIFY", "ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "EXPORT", "APPMANAGEABLE", "HIGHVOLUME"]
   rotate      = "AZURE"
@@ -166,7 +166,7 @@ resource "dsm_azure_sobject" "rsa_key_azure_rotate2" {
     kid = dsm_sobject.rsa_key_dsm.id
   }
   custom_metadata = {
-    azure-key-name  = "rsa-key-azure" # Should be the same azure-key-name as above
+    azure-key-name  = "rsa-key-azure" # Should be the same azure-key-name as the key copied to the Azure group
   }
   key_ops     = ["SIGN", "VERIFY", "ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "EXPORT", "APPMANAGEABLE", "HIGHVOLUME"]
   rotate      = "AZURE"
@@ -197,7 +197,7 @@ resource "dsm_azure_sobject" "rsa_key_azure" {
 ## Purging a dsm_azure_sobject.
 
 # Enable purge_deleted_key as true.
-# This can be enabled only during update and can be done only after soft_deletion.
+# This can be enabled only after soft_deletion can this be enabled during an update
 resource "dsm_azure_sobject" "rsa_key_azure" {
   name     = "rsa_key_azure"
   group_id = dsm_group.azure_group.id
