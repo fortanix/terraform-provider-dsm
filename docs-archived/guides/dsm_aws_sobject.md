@@ -38,7 +38,7 @@ resource "dsm_sobject" "aes_sobject" {
   key_ops  = ["EXPORT", "ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "DERIVEKEY", "MACGENERATE", "MACVERIFY", "APPMANAGEABLE"]
 }
 
-# AWS sobject creation(Copies the key from DSM)
+# Create the AWS key by copying the dsm_object as a virtual key in the AWS group
 resource "dsm_aws_sobject" "aws_sobject" {
   name        = "aws_sobject"
   group_id    = dsm_group.aws_group.id
@@ -52,108 +52,84 @@ resource "dsm_aws_sobject" "aws_sobject" {
   }
 }
 
-# 1st Rotation of dsm_sobject
-resource "dsm_sobject" "aes_sobject_rotate1" {
-  name        = "aes_sobject"
-  obj_type    = "AES"
-  group_id    = dsm_group.normal_group.id
-  key_size    = 256
-  key_ops     = ["EXPORT", "ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "DERIVEKEY", "MACGENERATE", "MACVERIFY", "APPMANAGEABLE"]
-  rotate      = "DSM"
-  rotate_from = dsm_sobject.aes_sobject.name # Name of the old dsm_sobject
-}
-
 # 1st Rotation of dsm_aws_sobject
 resource "dsm_aws_sobject" "aws_sobject_rotate1" {
-  name        = "aws_sobject"
+  name        = dsm_aws_sobject.aws_sobject.name # Name should be the same as the key name to be rotated.
   group_id    = dsm_group.aws_group.id
   description = "AWS sobject"
   key_ops     = ["EXPORT", "ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "DERIVEKEY", "MACGENERATE", "MACVERIFY", "APPMANAGEABLE"]
   key = {
-    kid = dsm_sobject.aes_sobject_rotate1.id # 1st Rotated dsm_sbject
+    kid = dsm_sobject.aes_sobject.id
   }
   rotate      = "DSM"
-  rotate_from = dsm_aws_sobject.aws_sobject.name # Name of the old dsm_aws_sobject
-}
-
-
-# 2nd Rotation of dsm_sobject
-resource "dsm_sobject" "aes_sobject_rotate2" {
-  name        = "aes_sobject"
-  obj_type    = "AES"
-  group_id    = dsm_group.normal_group.id
-  key_size    = 256
-  key_ops     = ["EXPORT", "ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "DERIVEKEY", "MACGENERATE", "MACVERIFY", "APPMANAGEABLE"]
-  rotate      = "DSM"
-  rotate_from = dsm_sobject.aes_sobject1.name # Name of the old dsm_sobject
+  rotate_from = dsm_aws_sobject.aws_sobject.name # Name of the key from where it is being rotated.
 }
 
 # 2nd Rotation of dsm_aws_sobject
 resource "dsm_aws_sobject" "aws_sobject_rotate2" {
-  name        = "aws_sobject"
+  name        = dsm_aws_sobject.aws_sobject_rotate1.name # Name should be the same as the key name to be rotated.
   group_id    = dsm_group.aws_group.id
   description = "AWS sobject"
   key_ops     = ["EXPORT", "ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "DERIVEKEY", "MACGENERATE", "MACVERIFY", "APPMANAGEABLE"]
   key = {
-    kid = dsm_sobject.aes_sobject_rotate2.id # 2nd Rotated dsm_sbject
+    kid = dsm_sobject.aes_sobject.id
   }
   rotate      = "DSM"
-  rotate_from = dsm_aws_sobject.aws_sobject_rotate1.name # Name of the old dsm_aws_sobject
+  rotate_from = dsm_aws_sobject.aws_sobject_rotate1.name # Name of the key from where it is being rotated.
 }
 ```
 
 ## Rotate with AWS Option
 
 ```terraform
-# 1st Rotation of dsm_sobject
-resource "dsm_sobject" "aes_sobject_rotate1" {
-  name        = "aes_sobject"
-  obj_type    = "AES"
-  group_id    = dsm_group.normal_group.id
-  key_size    = 256
+# Create a dsm_sobject of type AES key inside DSM
+resource "dsm_sobject" "aes_sobject" {
+  name     = "aes_sobject"
+  obj_type = "AES"
+  group_id = dsm_group.normal_group.id
+  key_size = 256
+  key_ops  = ["EXPORT", "ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "DERIVEKEY", "MACGENERATE", "MACVERIFY", "APPMANAGEABLE"]
+}
+
+# Create the AWS key by copying the dsm_object as a virtual key in the AWS group
+resource "dsm_aws_sobject" "aws_sobject" {
+  name        = "aws_sobject"
+  group_id    = dsm_group.aws_group.id
+  description = "AWS sobject"
   key_ops     = ["EXPORT", "ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "DERIVEKEY", "MACGENERATE", "MACVERIFY", "APPMANAGEABLE"]
-  rotate      = "DSM"
-  rotate_from = dsm_sobject.aes_sobject.name # Name of the old dsm_sobject
+  key = {
+    kid = dsm_sobject.aes_sobject.id
+  }
+  custom_metadata = {
+    aws-aliases = "dsm_aws_sobject"
+  }
 }
 
 # 1st Rotation of dsm_aws_sobject
 resource "dsm_aws_sobject" "aws_sobject_rotate1" {
-  name        = "aws_sobject"
+  name        = dsm_aws_sobject.aws_sobject.name # Name should be the same as the key name to be rotated.
   group_id    = dsm_group.aws_group.id
   description = "AWS sobject"
   key_ops     = ["EXPORT", "ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "DERIVEKEY", "MACGENERATE", "MACVERIFY", "APPMANAGEABLE"]
   key = {
-    kid = dsm_sobject.aes_sobject_rotate1.id # 1st Rotated dsm_sbject
+    kid = dsm_sobject.aes_sobject.id # 1st Rotated dsm_sbject
   }
   rotate      = "AWS"
-  rotate_from = dsm_aws_sobject.aws_sobject.name # Name of the old dsm_aws_sobject
-}
-
-
-# 2nd Rotation of dsm_sobject
-resource "dsm_sobject" "aes_sobject_rotate2" {
-  name        = "aes_sobject"
-  obj_type    = "AES"
-  group_id    = dsm_group.normal_group.id
-  key_size    = 256
-  key_ops     = ["EXPORT", "ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "DERIVEKEY", "MACGENERATE", "MACVERIFY", "APPMANAGEABLE"]
-  rotate      = "DSM"
-  rotate_from = dsm_sobject.aes_sobject1.name # Name of the old dsm_sobject
+  rotate_from = dsm_aws_sobject.aws_sobject.name # Name of the key from where it is being rotated.
 }
 
 # 2nd Rotation of dsm_aws_sobject
 resource "dsm_aws_sobject" "aws_sobject_rotate2" {
-  name        = "aws_sobject"
+  name        = dsm_aws_sobject.aws_sobject_rotate1.name # Name should be the same as the key name to be rotated.
   group_id    = dsm_group.aws_group.id
   description = "AWS sobject"
   key_ops     = ["EXPORT", "ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "DERIVEKEY", "MACGENERATE", "MACVERIFY", "APPMANAGEABLE"]
   key = {
-    kid = dsm_sobject.aes_sobject_rotate2.id # 2nd Rotated dsm_sbject
+    kid = dsm_sobject.aes_sobject.id
   }
   rotate      = "AWS"
-  rotate_from = dsm_aws_sobject.aws_sobject_rotate1.name # Name of the old dsm_aws_sobject
+  rotate_from = dsm_aws_sobject.aws_sobject_rotate1.name # Name of the key from where it is being rotated.
 }
-
 ```
 
 
@@ -210,7 +186,7 @@ resource "dsm_aws_sobject" "dsm_aws_sobject" {
 ## Both schedule_deletion and delete_key_material can be enabled in a single terraform request
 
 ```terraform
-# Enable delete_key_material as true.
+# Enable delete_key_material as true and specify schedule deletion as an Integer. Value should be minimum 7.
 # This can be enabled only during update.
 resource "dsm_aws_sobject" "dsm_aws_sobject" {
   name     = "dsm_aws_sobject"
@@ -223,7 +199,31 @@ resource "dsm_aws_sobject" "dsm_aws_sobject" {
   }
   key_ops = ["ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "DERIVEKEY", "MACGENERATE", "MACVERIFY", "EXPORT", "APPMANAGEABLE"]
   # schedule_deletion and delete key material
-  schedule_deletion   = 7
   delete_key_material = true
+  schedule_deletion   = 7
 }
+```
+
+## Example of adding a rotation_policy
+
+```terraform
+# Add interval_months or interval_days. It should be an integer.
+# Add effective_at as a date format.
+resource "dsm_aws_sobject" "dsm_aws_sobject" {
+  name     = "dsm_aws_sobject"
+  group_id = dsm_group.dsm_aws_group.id
+  key = {
+    kid = dsm_sobject.dsm_sobject.id
+  }
+  custom_metadata = {
+    aws-aliases = "dsm_aws_sobject"
+  }
+  key_ops = ["ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "DERIVEKEY", "MACGENERATE", "MACVERIFY", "EXPORT", "APPMANAGEABLE"]
+  rotation_policy = {
+    interval_months        = 7
+    effective_at           = "20260730T230000Z"
+  }
+}
+```
+
 ```

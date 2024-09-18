@@ -41,12 +41,13 @@ func resourceAWSSobject() *schema.Resource {
 		"**Note**: Once scheduled deletion is enabled, AWS security object can't be modified.\n\n" +
 		"**Deletion of a dsm_aws_sobject**: Unlike dsm_sobject, deletion of a dsm_aws_sobject is not normal.\n\n" +
 		"**Steps to delete a dsm_azure_sobject:**\n" +
-		"   * Enable schedule_deletion as shown in the examples of guides/dsm_azure_sobject.\n" +
-		"   * Enable delete_key_material as shown in the examples of guides/dsm_azure_sobject.\n" +
+		"   * Enable `delete_key_material` as shown in the examples of `Guides/dsm_aws_sobject`.\n" +
+		"   * Enable `schedule_deletion` as shown in the examples of `Guides/dsm_aws_sobject`.\n" +
 		"   * A dsm_aws_sobject can be deleted completely only when its state is `destroyed`.\n" +
-		"   * A dsm_aws_sobject is destroyed when the key is deleted from Azure key vault.\n" +
+		"   * A dsm_aws_sobject's state is destroyed when the key is deleted from AWS KMS.\n" +
 		"   * To know whether it is in a destroyed state or not, sync keys operation should be performed.\n" +
-		"   * Currently, sync keys is not supported by terraform. This can be done in UI by going to the group and HSM/KMS. Then click on `SYNC KEYS`.",
+		"   * Use `dsm_aws_group` data_source to sync the keys. Please refer `Data Sources/dsm_aws_group`.\n\n" +
+		"**Note**: `delete_key_material` can be skipped if `schedule_deletion` is enabled as it deletes the key material as well.",
 		Schema: map[string]*schema.Schema{
 			"name": {
 			    Description: "The security object name.",
@@ -107,7 +108,7 @@ func resourceAWSSobject() *schema.Resource {
 			"creator": {
 				Description: "The creator of the group from Fortanix DSM.\n" +
 				"   * `user`: If the group was created by a user, the computed value will be the matching user id.\n" +
-				"   * `app`: If the group was created by a app, the computed value will be the matching app id.",
+				"   * `app`: If the group was created by an app, the computed value will be the matching app id.",
 				Type:     schema.TypeMap,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -119,7 +120,8 @@ func resourceAWSSobject() *schema.Resource {
 				"   * `interval_days`: Rotate the key for every given number of days.\n" +
 				"   * `interval_months`: Rotate the key for every given number of months.\n" +
 				"   * `effective_at`: Start of the rotation policy time.\n" +
-				"   * **Note:** Either interval_days or interval_months should be given, but not both.",
+				"   * **Note:** Either interval_days or interval_months should be given, but not both.\n" +
+				"   * **Note:** Please refer Guides/dsm_aws_sobject for an example.",
 				Type:     schema.TypeMap,
 				Optional: true,
 				Elem: &schema.Schema{
@@ -230,11 +232,10 @@ func resourceAWSSobject() *schema.Resource {
 			},
 			"delete_key_material": {
 				Description: "Delete key material in AWS KMS. Deleting key material makes all data encrypted under the customer master key (CMK) unrecoverable unless you later import the same key material from DSM into the CMK." +
-				"The DSM source key is not affected by this operation. The supported values are true/false." +
+				"The DSM source key is not affected by this operation. The supported values are true/false.\n\n" +
 				"**Note:** This can enabled only after creation.",
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
 			},
 		},
 		Importer: &schema.ResourceImporter{
@@ -452,6 +453,9 @@ func resourceReadAWSSobject(ctx context.Context, d *schema.ResourceData, m inter
 		}
 		if _, ok := req["rotation_policy"]; ok {
 			rotation_policy := sobj_rotation_policy_read(req["rotation_policy"].(map[string]interface{}))
+			if _, ok := rotation_policy["deactivate_rotated_key"]; ok {
+				delete(rotation_policy, "deactivate_rotated_key")
+			}
 			if err := d.Set("rotation_policy", rotation_policy); err != nil {
 				return diag.FromErr(err)
 			}
@@ -470,6 +474,27 @@ func resourceUpdateAWSSobject(ctx context.Context, d *schema.ResourceData, m int
     if d.HasChange("key") {
         return undoTFstate("key", d)
     }
+	if d.HasChange("delete_key_material") && d.Get("delete_key_material").(bool){
+		current_key_state := d.Get("external").(map[string]interface{})["Key_state"]
+		if current_key_state != "PendingDeletion" && current_key_state != "PendingImport"{
+			err := deleteKeyMateialBYOKSobject(d, m)
+			if err != nil {
+				d.Set("delete_key_material", nil)
+				// When delete_key_material fails and schedule_deletion is enabled, then schedule_deletion needs to revert
+				// as it will not be invoked.
+				if d.HasChange("schedule_deletion") {
+					d.Set("schedule_deletion", nil)
+				}
+				return err
+			}
+			if !d.HasChange("schedule_deletion") {
+				return resourceReadAWSSobject(ctx, d, m)
+			}
+		} else {
+			// If the state is already in PendingDeletion or PendingImport, then no need to invoke delete_key_material API and show a warning.
+			return showWarning(fmt.Sprintf("The security object is in the state of %s. delete_key_material cannot be applied.", current_key_state))
+		}
+	}
 	if d.HasChange("schedule_deletion") {
 		if pending_window_in_days := d.Get("schedule_deletion").(int); pending_window_in_days > 6 {
 			schedule_deletion := map[string]interface{}{
@@ -481,21 +506,12 @@ func resourceUpdateAWSSobject(ctx context.Context, d *schema.ResourceData, m int
 					d.Set("schedule_deletion", nil)
 					return invokeErrorDiagsWithSummary(error_summary, fmt.Sprintf("[E]: API: POST crypto/v1/keys/%s/schedule_deletion, %v", d.Id(), err))
 				}
+				return resourceReadAWSSobject(ctx, d, m)
 			} else {
+			    // If the state is already in PendingDeletion, then no need to invoke schedule_deletion API and show a warning.
 				return showWarning("The security object is already scheduled for the deletion.")
 			}
-			if !(d.HasChange("delete_key_material") && d.Get("delete_key_material").(bool)){
-				return resourceReadAWSSobject(ctx, d, m)
-			}
 		}
-	}
-	if d.HasChange("delete_key_material") && d.Get("delete_key_material").(bool){
-		err := deleteKeyMateialBYOKSobject(d, m)
-		if err != nil {
-			d.Set("delete_key_material", false)
-			return err
-		}
-		return resourceReadAWSSobject(ctx, d, m)
 	}
 	// already has been replaced so "rotate" and "rotate_from" does not apply
 	_, replacement := d.GetOk("replacement")

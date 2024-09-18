@@ -9,7 +9,8 @@ description: |-
   Note: Once scheduled deletion is enabled, AWS security object can't be modified.
   Deletion of a dsm_aws_sobject: Unlike dsm_sobject, deletion of a dsm_aws_sobject is not normal.
   Steps to delete a dsm_azure_sobject:
-  Enable schedule_deletion as shown in the examples of guides/dsm_azure_sobject.Enable delete_key_material as shown in the examples of guides/dsm_azure_sobject.A dsm_aws_sobject can be deleted completely only when its state is destroyed.A dsm_aws_sobject is destroyed when the key is deleted from Azure key vault.To know whether it is in a destroyed state or not, sync keys operation should be performed.Currently, sync keys is not supported by terraform. This can be done in UI by going to the group and HSM/KMS. Then click on SYNC KEYS.
+  Enable delete_key_material as shown in the examples of Guides/dsm_aws_sobject.Enable schedule_deletion as shown in the examples of Guides/dsm_aws_sobject.A dsm_aws_sobject can be deleted completely only when its state is destroyed.A dsm_aws_sobject's state is destroyed when the key is deleted from AWS KMS.To know whether it is in a destroyed state or not, sync keys operation should be performed.Use dsm_aws_group data_source to sync the keys. Please refer Data Sources/dsm_aws_group.
+  Note: delete_key_material can be skipped if schedule_deletion is enabled as it deletes the key material as well.
 ---
 
 # dsm_aws_sobject (Resource)
@@ -24,12 +25,14 @@ AWS security object can also rotate and enable scheduled deletion. For more exam
 **Deletion of a dsm_aws_sobject**: Unlike dsm_sobject, deletion of a dsm_aws_sobject is not normal.
 
 **Steps to delete a dsm_azure_sobject:**
-   * Enable schedule_deletion as shown in the examples of guides/dsm_azure_sobject.
-   * Enable delete_key_material as shown in the examples of guides/dsm_azure_sobject.
+   * Enable `delete_key_material` as shown in the examples of `Guides/dsm_aws_sobject`.
+   * Enable `schedule_deletion` as shown in the examples of `Guides/dsm_aws_sobject`.
    * A dsm_aws_sobject can be deleted completely only when its state is `destroyed`.
-   * A dsm_aws_sobject is destroyed when the key is deleted from Azure key vault.
+   * A dsm_aws_sobject's state is destroyed when the key is deleted from AWS KMS.
    * To know whether it is in a destroyed state or not, sync keys operation should be performed.
-   * Currently, sync keys is not supported by terraform. This can be done in UI by going to the group and HSM/KMS. Then click on `SYNC KEYS`.
+   * Use `dsm_aws_group` data_source to sync the keys. Please refer `Data Sources/dsm_aws_group`.
+
+**Note**: `delete_key_material` can be skipped if `schedule_deletion` is enabled as it deletes the key material as well.
 
 ## Example Usage
 
@@ -169,7 +172,9 @@ resource "dsm_aws_sobject" "aws_sobject_temp_creds" {
    * `aws-aliases`: Key name within AWS KMS.
    * `aws-policy`: JSON format of AWS policy that should be enforced for the key.
    * **Note:** Any other DSM custom metadata can be configured.
-- `delete_key_material` (Boolean) Delete key material in AWS KMS. Deleting key material makes all data encrypted under the customer master key (CMK) unrecoverable unless you later import the same key material from DSM into the CMK.The DSM source key is not affected by this operation. The supported values are true/false.**Note:** This can enabled only after creation.
+- `delete_key_material` (Boolean) Delete key material in AWS KMS. Deleting key material makes all data encrypted under the customer master key (CMK) unrecoverable unless you later import the same key material from DSM into the CMK.The DSM source key is not affected by this operation. The supported values are true/false.
+
+**Note:** This can enabled only after creation.
 - `description` (String) The security object description.
 - `enabled` (Boolean) Whether the security object will be enabled or disabled. The supported values are true/false.
 - `expiry_date` (String) The security object expiry date in RFC format.
@@ -189,6 +194,7 @@ resource "dsm_aws_sobject" "aws_sobject_temp_creds" {
    * `interval_months`: Rotate the key for every given number of months.
    * `effective_at`: Start of the rotation policy time.
    * **Note:** Either interval_days or interval_months should be given, but not both.
+   * **Note:** Please refer Guides/dsm_aws_sobject for an example.
 - `schedule_deletion` (Number) Schedule key deletion in AWS KMS. Key is not usable for Sign/Verify, Wrap/Unwrap or Encrypt/Decrypt operations once it is deleted. Minimum value is 7 days.
 **Note:** This can enabled only after creation.
 - `state` (String) The key states of the AWS key. The supported values are PendingDeletion, Enabled, Disabled and PendingImport.
@@ -200,7 +206,7 @@ resource "dsm_aws_sobject" "aws_sobject_temp_creds" {
 - `copied_to` (List of String) List of security objects copied by the current security object.
 - `creator` (Map of String) The creator of the group from Fortanix DSM.
    * `user`: If the group was created by a user, the computed value will be the matching user id.
-   * `app`: If the group was created by a app, the computed value will be the matching app id.
+   * `app`: If the group was created by an app, the computed value will be the matching app id.
 - `dsm_name` (String) The security object name from Fortanix DSM (matches the name provided during creation).
 - `external` (Map of String) AWS CMK level metadata:
    * `Key_arn`
