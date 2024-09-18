@@ -53,60 +53,39 @@ resource "dsm_azure_sobject" "rsa_key_azure" {
 
 ## 1st Rotation of azure security object with DSM option
 
-# Rotate RSA security object
-resource "dsm_sobject" "rsa_key_dsm_rotate1" {
-  name        = dsm_sobject.rsa_key_dsm.name
-  group_id    = dsm_group.normal_group.id
-  key_size    = 2048
-  key_ops     = ["ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "SIGN", "VERIFY", "EXPORT"]
-  obj_type    = "RSA"
-  rotate      = "DSM"
-  rotate_from = dsm_sobject.rsa_key_dsm.name
-}
-
-# Copy above RSA key to azure key vault
+# Just copy the above dsm_azure_sobject.rsa_key_azure, add rotate and rotate_from attributes and change the resource name
 resource "dsm_azure_sobject" "rsa_key_azure_rotate1" {
-  name     = dsm_azure_sobject.rsa_key_azure.name
+  name     = dsm_azure_sobject.rsa_key_azure.name # Name should be the same as the key to be rotated.
   group_id = dsm_group.azure_group.id
   key = {
-    kid = dsm_sobject.rsa_key_dsm_rotate1.id
+    kid = dsm_sobject.rsa_key_dsm.id
   }
   custom_metadata = {
-    azure-key-name  = "rsa-key-azure"
+    azure-key-name  = "rsa-key-azure" # Should be the same azure-key-name as the key copied to the Azure group
   }
   key_ops     = ["SIGN", "VERIFY", "ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "EXPORT", "APPMANAGEABLE", "HIGHVOLUME"]
   rotate      = "DSM"
-  rotate_from = dsm_azure_sobject.rsa_key_azure.name
+  rotate_from = dsm_azure_sobject.rsa_key_azure.name # Name of the key from where it is being rotated.
 }
 
 
 ## 2nd Rotation of azure security object with DSM option
 
-# Rotate RSA security object
-resource "dsm_sobject" "rsa_key_dsm_rotate2" {
-  name        = es.rsa_key_dsm.name
-  group_id    = dsm_group.normal_group.id
-  key_size    = 2048
-  key_ops     = ["ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "SIGN", "VERIFY", "EXPORT"]
-  obj_type    = "RSA"
-  rotate      = "DSM"
-  rotate_from = dsm_sobject.rsa_key_dsm.name
-}
-
-# Copy above RSA key to azure key vault
+# Just copy the above dsm_azure_sobject.rsa_key_azure_rotate1, add rotate and rotate_from attributes and change the resource name
 resource "dsm_azure_sobject" "rsa_key_azure_rotate2" {
-  name     = dsm_azure_sobject.rsa_key_azure.name
+  name     = dsm_azure_sobject.rsa_key_azure_rotate1.name # Name should be the same as the key name to be rotated.
   group_id = dsm_group.azure_group.id
   key = {
-    kid = dsm_sobject.rsa_key_dsm_rotate2.id
+    kid = dsm_sobject.rsa_key_dsm.id
   }
   custom_metadata = {
-    azure-key-name  = "rsa-key-azure"
+    azure-key-name  = "rsa-key-azure" # Should be the same azure-key-name as the key copied to the Azure group 
   }
   key_ops     = ["SIGN", "VERIFY", "ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "EXPORT", "APPMANAGEABLE", "HIGHVOLUME"]
   rotate      = "DSM"
-  rotate_from = dsm_azure_sobject.rsa_key_azure.name
+  rotate_from = dsm_azure_sobject.rsa_key_azure_rotate1.name # Name of the key from where it is being rotated.
 }
+
 ```
 
 ## Rotate with AZURE Option
@@ -162,58 +141,36 @@ resource "dsm_azure_sobject" "rsa_key_azure" {
 
 ## 1st Rotation of azure security object with AZURE option
 
-# Rotate RSA security object
-resource "dsm_sobject" "rsa_key_dsm_rotate1" {
-  name        = dsm_sobject.rsa_key_dsm.name
-  group_id    = dsm_group.normal_group.id
-  key_size    = 2048
-  key_ops     = ["ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "SIGN", "VERIFY", "EXPORT"]
-  obj_type    = "RSA"
-  rotate      = "AZURE"
-  rotate_from = dsm_sobject.rsa_key_dsm.name
-}
-
-# Copy above RSA key to azure key vault
+# Just copy the above dsm_azure_sobject.rsa_key_azure, add rotate and rotate_from attributes and change the resource name
 resource "dsm_azure_sobject" "rsa_key_azure_rotate1" {
-  name     = dsm_azure_sobject.rsa_key_azure.name
+  name     = dsm_azure_sobject.rsa_key_azure.name # Name should be the same as the key name to be rotated.
   group_id = dsm_group.azure_group.id
   key = {
-    kid = dsm_sobject.rsa_key_dsm_rotate1.id
+    kid = dsm_sobject.rsa_key_dsm.id
   }
   custom_metadata = {
-    azure-key-name  = "rsa-key-azure"
+    azure-key-name  = "rsa-key-azure" # Should be the same azure-key-name as the key copied to the Azure group
   }
   key_ops     = ["SIGN", "VERIFY", "ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "EXPORT", "APPMANAGEABLE", "HIGHVOLUME"]
   rotate      = "AZURE"
-  rotate_from = dsm_azure_sobject.rsa_key_azure.name
+  rotate_from = dsm_azure_sobject.rsa_key_azure.name # Name of the key from where it is being rotated.
 }
 
 ## 2nd Rotation of azure security object with AZURE option
 
-# Rotate RSA security object
-resource "dsm_sobject" "rsa_key_dsm_rotate2" {
-  name        = dsm_sobject.rsa_key_dsm.name
-  group_id    = dsm_group.normal_group.id
-  key_size    = 2048
-  key_ops     = ["ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "SIGN", "VERIFY", "EXPORT"]
-  obj_type    = "RSA"
-  rotate      = "AZURE"
-  rotate_from = dsm_sobject.rsa_key_dsm.name
-}
-
-# Copy above RSA key to azure key vault
+# Just copy the above dsm_azure_sobject.rsa_key_azure_rotate1, add rotate and rotate_from attributes and change the resource name
 resource "dsm_azure_sobject" "rsa_key_azure_rotate2" {
-  name     = dsm_azure_sobject.rsa_key_azure.name
+  name     = dsm_azure_sobject.rsa_key_azure_rotate1.name # Name should be the same as the key name to be rotated.
   group_id = dsm_group.azure_group.id
   key = {
-    kid = dsm_sobject.rsa_key_dsm_rotate2.id
+    kid = dsm_sobject.rsa_key_dsm.id
   }
   custom_metadata = {
-    azure-key-name  = "rsa-key-azure"
+    azure-key-name  = "rsa-key-azure" # Should be the same azure-key-name as the key copied to the Azure group
   }
   key_ops     = ["SIGN", "VERIFY", "ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "EXPORT", "APPMANAGEABLE", "HIGHVOLUME"]
   rotate      = "AZURE"
-  rotate_from = dsm_azure_sobject.rsa_key_azure.name
+  rotate_from = dsm_azure_sobject.rsa_key_azure_rotate1.name # Name of the key from where it is being rotated.
 }
 ```
 
@@ -237,11 +194,10 @@ resource "dsm_azure_sobject" "rsa_key_azure" {
   soft_deletion = true
 }
 
-
 ## Purging a dsm_azure_sobject.
 
 # Enable purge_deleted_key as true.
-# This can be enabled only during update.
+# Only after soft_deletion can this be enabled during an update
 resource "dsm_azure_sobject" "rsa_key_azure" {
   name     = "rsa_key_azure"
   group_id = dsm_group.azure_group.id
@@ -258,6 +214,7 @@ resource "dsm_azure_sobject" "rsa_key_azure" {
 ## Soft deletion and Purging a key in a single request.
 
 # First it does the soft deletion and then purging the key.
+# These can be enabled only during update.
 resource "dsm_azure_sobject" "rsa_key_azure" {
   name     = "rsa_key_azure"
   group_id = dsm_group.azure_group.id
