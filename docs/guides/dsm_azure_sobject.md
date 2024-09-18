@@ -197,7 +197,7 @@ resource "dsm_azure_sobject" "rsa_key_azure" {
 ## Purging a dsm_azure_sobject.
 
 # Enable purge_deleted_key as true.
-# This can be enabled only after soft_deletion can this be enabled during an update
+# Only after soft_deletion can this be enabled during an update
 resource "dsm_azure_sobject" "rsa_key_azure" {
   name     = "rsa_key_azure"
   group_id = dsm_group.azure_group.id
