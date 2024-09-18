@@ -209,9 +209,6 @@ resource "dsm_aws_sobject" "dsm_aws_sobject" {
 ```terraform
 # Add interval_months or interval_days. It should be an integer.
 # Add effective_at as a date format.
-# Disable deactivate_rotated_key as it is not supported.
-# deactivate_rotated_key is an optional attribute. Please specify this to to avoid the changes detected during terraform plan.
-
 resource "dsm_aws_sobject" "dsm_aws_sobject" {
   name     = "dsm_aws_sobject"
   group_id = dsm_group.dsm_aws_group.id
@@ -225,7 +222,6 @@ resource "dsm_aws_sobject" "dsm_aws_sobject" {
   rotation_policy = {
     interval_months        = 7
     effective_at           = "20260730T230000Z"
-    deactivate_rotated_key = false
   }
 }
 ```

@@ -44,7 +44,7 @@ func resourceAWSSobject() *schema.Resource {
 		"   * Enable `delete_key_material` as shown in the examples of `Guides/dsm_aws_sobject`.\n" +
 		"   * Enable `schedule_deletion` as shown in the examples of `Guides/dsm_aws_sobject`.\n" +
 		"   * A dsm_aws_sobject can be deleted completely only when its state is `destroyed`.\n" +
-		"   * A dsm_aws_sobject comes to destroyed state when the key is deleted from AWS KMS.\n" +
+		"   * A dsm_aws_sobject's state is destroyed when the key is deleted from AWS KMS.\n" +
 		"   * To know whether it is in a destroyed state or not, sync keys operation should be performed.\n" +
 		"   * Use `dsm_aws_group` data_source to sync the keys. Please refer `Data Sources/dsm_aws_group`.\n\n" +
 		"**Note**: `delete_key_material` can be skipped if `schedule_deletion` is enabled as it deletes the key material as well.",
@@ -120,7 +120,6 @@ func resourceAWSSobject() *schema.Resource {
 				"   * `interval_days`: Rotate the key for every given number of days.\n" +
 				"   * `interval_months`: Rotate the key for every given number of months.\n" +
 				"   * `effective_at`: Start of the rotation policy time.\n" +
-				"   * `deactivate_rotated_key`: This is not supported. Please provide `false` to avoid the changes detected during terraform plan.\n" +
 				"   * **Note:** Either interval_days or interval_months should be given, but not both.\n" +
 				"   * **Note:** Please refer Guides/dsm_aws_sobject for an example.",
 				Type:     schema.TypeMap,
@@ -454,6 +453,9 @@ func resourceReadAWSSobject(ctx context.Context, d *schema.ResourceData, m inter
 		}
 		if _, ok := req["rotation_policy"]; ok {
 			rotation_policy := sobj_rotation_policy_read(req["rotation_policy"].(map[string]interface{}))
+			if _, ok := rotation_policy["deactivate_rotated_key"]; ok {
+				delete(rotation_policy, "deactivate_rotated_key")
+			}
 			if err := d.Set("rotation_policy", rotation_policy); err != nil {
 				return diag.FromErr(err)
 			}
