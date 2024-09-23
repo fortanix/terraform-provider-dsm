@@ -241,7 +241,7 @@ Refer to the fpeOptions schema in https://www.fortanix.com/fortanix-restful-api-
 | `LMS` | APPMANAGEABLE, SIGN, VERIFY |
 - `obj_type` (String) The security object type.
    * `Supported security objects`: AES, DES, DES3, RSA, DSA, KCDSA, EC, ECKCDSA, ARIA, SEED and Tokenization(fpe).
-- `rotate` (String) specify method to use for key rotation.
+- `rotate` (String) Specify method to use for key rotation. Value is `DSM`.
 - `rotate_from` (String) Name of the security object to be rotated from.
 - `rotation_policy` (Map of String) Policy to rotate a Security Object, configure the below parameters. This is not supported while importing the security object.
    * `interval_days`: Rotate the key for every given number of days.
@@ -262,6 +262,23 @@ Refer to the fpeOptions schema in https://www.fortanix.com/fortanix-restful-api-
 | `DSA` | 224, 256| 224: When DSA key_size is 2048. 256: When DSA key_size is 2048 and 3072.
 | `KCDSA` | 224, 256| 224, 256: When KCDSA key_size is 2048.
 - `value` (String) Sobject content when importing content.
+
+| obj_type | Curve/Key_size/Variants | key_ops |
+| -------- | -------- |-------- |
+| `CERTIFICATE` | EC/RSA curves/key_sizes | APPMANAGEABLE, ENCRYPT, VERIFY, WRAPKEY, EXPORT |
+| `EC` | SecP192K1, SecP224K1, SecP256K1  NistP192, NistP224, NistP256, NistP384, NistP521, X25519, Ed25519 | APPMANAGEABLE, SIGN, VERIFY, AGREEKEY, EXPORT |
+| `ECKCDSA` | SecP192K1, SecP224K1, SecP256K1  NistP192, NistP224, NistP256, NistP384, NistP521 | APPMANAGEABLE, SIGN, VERIFY, EXPORT |
+| `RSA` | 1024, 2048, 4096, 8192 | APPMANAGEABLE, SIGN, VERIFY, ENCRYPT, DECRYPT, WRAPKEY, UNWRAPKEY, EXPORT |
+| `DSA` | 2048, 3072 | APPMANAGEABLE, SIGN, VERIFY, EXPORT |
+| `KCDSA` | 2048 | APPMANAGEABLE, SIGN, VERIFY, EXPORT |
+| `AES` | 128, 192, 256 | ENCRYPT, DECRYPT, WRAPKEY, UNWRAPKEY, DERIVEKEY, MACGENERATE, MACVERIFY, APPMANAGEABLE, EXPORT |
+| `DES` | 56 | ENCRYPT, DECRYPT, WRAPKEY, UNWRAPKEY, DERIVEKEY, APPMANAGEABLE, EXPORT |
+| `DES3` | 112, 168 | ENCRYPT, DECRYPT, WRAPKEY, UNWRAPKEY, DERIVEKEY, MACGENERATE, MACVERIFY, APPMANAGEABLE, EXPORT |
+| `ARIA` | 128, 192, 256 | ENCRYPT, DECRYPT, WRAPKEY, UNWRAPKEY, DERIVEKEY, MACGENERATE, MACVERIFY, APPMANAGEABLE, EXPORT |
+| `SEED` | 128 | ENCRYPT, DECRYPT, WRAPKEY, UNWRAPKEY, DERIVEKEY, EXPORT |
+| `HMAC` | 112 to 8192 | DERIVEKEY, MACGENERATE, MACVERIFY, APPMANAGEABLE, EXPORT |
+| `BLS` | small_signatures/small_public_keys | APPMANAGEABLE, SIGN, VERIFY, EXPORT |
+| `Opaque` | - | APPMANAGEABLE, EXPORT |
 
 ### Read-Only
 

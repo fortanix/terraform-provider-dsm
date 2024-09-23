@@ -17,7 +17,7 @@ func resourceGroupUserRole() *schema.Resource {
 		ReadContext:   resourceReadGroupUserRole,
 		UpdateContext: resourceUpdateGroupUserRole,
 		DeleteContext: resourceDeleteGroupUserRole,
-		Description: "Associates a user with a group and a role.",
+		Description: "Creates an assignment of a DSM group role to a user. This assignment is linked to a specific group.",
 		Schema: map[string]*schema.Schema{
 			"name": {
 			    Description: "Group object name from Fortanix DSM (matches the group_name provided during creation).",

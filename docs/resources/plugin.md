@@ -13,33 +13,33 @@ Creates a Fortanix DSM plugin. The returned resource object contains the UUID of
 ## Example Usage
 
 ```terraform
-// Creation of a groups
-resource "dsm_group" "group1"{
+# Creation of a groups
+resource "dsm_group" "group1" {
   name = "group1"
 }
 
-resource "dsm_group" "group2"{
+resource "dsm_group" "group2" {
   name = "group2"
 }
 
-resource "dsm_group" "group3"{
+resource "dsm_group" "group3" {
   name = "group3"
 }
 
-// Read the lua plugin from a file
+# Read the lua plugin from a file
 data "local_file" "plugin_code" {
-  filename ="path/of/a/lua_plugin"
+  filename = "path/of/a/lua_plugin"
 }
 
-// Create a plugin by reading a file
+# Create a plugin by reading a file
 resource "dsm_plugin" "dsm_plugin" {
-  name = "dsm_plugin"
-  description = "DSM Plugin"
+  name          = "dsm_plugin"
+  description   = "DSM Plugin"
   default_group = dsm_group.group1.id
-  groups = [dsm_group.group2.id, dsm_group.group3.id]
-  plugin_type = "STANDARD"
-  language = "LUA"
-  code = data.local_file.plugin_code.content
+  groups        = [dsm_group.group1.id, dsm_group.group2.id, dsm_group.group3.id]
+  plugin_type   = "STANDARD"
+  language      = "LUA"
+  code          = data.local_file.plugin_code.content
 }
 ```
 
@@ -50,15 +50,15 @@ resource "dsm_plugin" "dsm_plugin" {
 
 - `code` (String) Plugin code that will be executed in DSM. Code should be in specified programming language.
 - `default_group` (String) The Fortanix DSM group object id to be mapped to the plugin by default.
+- `groups` (List of String) List of Fortanix DSM group object ids to be mapped to the plugin that includes default_group as well.
 - `name` (String) The Fortanix DSM plugin object name.
 
 ### Optional
 
 - `description` (String) The Fortanix DSM plugin object description.
 - `enabled` (Boolean) Whether the security object is enabled or disabled. The values are true/false.
-- `groups` (List of String) List of other Fortanix DSM group object ids to be mapped to the plugin.
-- `language` (String) Programming language for plugin code (Default value is `LUA`).
-- `plugin_type` (String) Type of the plugin.
+- `language` (String) Programming language for plugin code (Default value is `LUA`). `LUA` is the only supported language at the moment.
+- `plugin_type` (String) Type of the plugin. The supported values are standard, impersonating and customalgorithm. Default value is `standard`.
 
 ### Read-Only
 

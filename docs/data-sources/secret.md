@@ -14,8 +14,8 @@ Returns the Fortanix DSM secret object from the cluster as a Data Source.
 
 ```terraform
 data "dsm_secret" "sample_secret" {
-    name = "test_secret_terraform"
-    export = false
+  name   = "test_secret_terraform"
+  export = false
 }
 ```
 

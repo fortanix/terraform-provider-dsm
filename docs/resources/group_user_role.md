@@ -3,21 +3,21 @@
 page_title: "dsm_group_user_role Resource - terraform-provider-dsm"
 subcategory: ""
 description: |-
-  Associates a user with a group and a role.
+  Creates an assignment of a DSM group role to a user. This assignment is linked to a specific group.
 ---
 
 # dsm_group_user_role (Resource)
 
-Associates a user with a group and a role.
+Creates an assignment of a DSM group role to a user. This assignment is linked to a specific group.
 
 ## Example Usage
 
 ```terraform
-// Adding a group role to a user
+# Adding a group role to a user
 resource "dsm_group_user_role" "group_user_role" {
-    group_name = "crypto_group"
-    user_email = "test123@fortanix.com"
-    role_name = "GROUPAUDITOR"
+  group_name = "crypto_group"
+  user_email = "test123@fortanix.com"
+  role_name  = "GROUPAUDITOR"
 }
 ```
 

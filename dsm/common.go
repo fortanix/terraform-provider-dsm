@@ -224,9 +224,18 @@ func compTwoArrays(x interface{}, y interface{}) bool{
 	for _, yElem := range y_array_set {
 		yMap[yElem.(string)]++
 	}
-	for xMapKey, xMapVal := range xMap {
-		if yMap[xMapKey] != xMapVal {
-			return false
+	// It should always compare with the greater size of a map.
+	if len(xMap) > len(yMap) {
+		for xMapKey, xMapVal := range xMap {
+			if yMap[xMapKey] != xMapVal {
+				return false
+			}
+		}
+	} else {
+		for yMapKey, yMapVal := range yMap {
+			if xMap[yMapKey] != yMapVal {
+				return false
+			}
 		}
 	}
 	return true

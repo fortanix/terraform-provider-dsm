@@ -1,10 +1,10 @@
-// Create a group
+# Create a group
 resource "dsm_group" "group" {
-  name = "group"
+  name        = "group"
   description = "group description"
 }
 
-// Import a secret
+# Import a secret
 resource "dsm_secret" "secret" {
   name        = "secret"
   group_id    = dsm_group.group.id
@@ -15,7 +15,7 @@ resource "dsm_secret" "secret" {
   expiry_date = "2025-02-02T17:04:05Z"
 }
 
-// Rotate a secret
+# Rotate a secret
 resource "dsm_secret" "secret_rotate" {
   name        = "secret_rotate"
   group_id    = dsm_group.group.id
@@ -25,6 +25,6 @@ resource "dsm_secret" "secret_rotate" {
   value       = "cm90YXRlZm9ydGFuaXg="
   expiry_date = "2025-02-02T17:04:05Z"
   rotate      = true
-  // Provide the secret security object name that needs to be rotated
+  # Provide the secret security object name that needs to be rotated
   rotate_from = dsm_secret.secret.name
 }

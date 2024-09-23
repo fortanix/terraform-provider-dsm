@@ -79,7 +79,7 @@ func resourceSobject() *schema.Resource {
 			//	Computed: true,
 			//},
 			"rotate": {
-			    Description: "specify method to use for key rotation.",
+			    Description: "Specify method to use for key rotation. Value is `DSM`.",
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice([]string{"DSM", "ALL"}, true),
@@ -279,7 +279,23 @@ func resourceSobject() *schema.Resource {
 				Computed: true,
 			},
 			"value": {
-			    Description: "Sobject content when importing content.",
+			    Description: "Sobject content when importing content.\n\n" +
+				"| obj_type | Curve/Key_size/Variants | key_ops |\n" +
+				"| -------- | -------- |-------- |\n" +
+				"| `CERTIFICATE` | EC/RSA curves/key_sizes | APPMANAGEABLE, ENCRYPT, VERIFY, WRAPKEY, EXPORT |\n" +
+				"| `EC` | SecP192K1, SecP224K1, SecP256K1  NistP192, NistP224, NistP256, NistP384, NistP521, X25519, Ed25519 | APPMANAGEABLE, SIGN, VERIFY, AGREEKEY, EXPORT |\n" +
+				"| `ECKCDSA` | SecP192K1, SecP224K1, SecP256K1  NistP192, NistP224, NistP256, NistP384, NistP521 | APPMANAGEABLE, SIGN, VERIFY, EXPORT |\n" +
+				"| `RSA` | 1024, 2048, 4096, 8192 | APPMANAGEABLE, SIGN, VERIFY, ENCRYPT, DECRYPT, WRAPKEY, UNWRAPKEY, EXPORT |\n" +
+				"| `DSA` | 2048, 3072 | APPMANAGEABLE, SIGN, VERIFY, EXPORT |\n" +
+				"| `KCDSA` | 2048 | APPMANAGEABLE, SIGN, VERIFY, EXPORT |\n" +
+				"| `AES` | 128, 192, 256 | ENCRYPT, DECRYPT, WRAPKEY, UNWRAPKEY, DERIVEKEY, MACGENERATE, MACVERIFY, APPMANAGEABLE, EXPORT |\n" +
+				"| `DES` | 56 | ENCRYPT, DECRYPT, WRAPKEY, UNWRAPKEY, DERIVEKEY, APPMANAGEABLE, EXPORT |\n" +
+				"| `DES3` | 112, 168 | ENCRYPT, DECRYPT, WRAPKEY, UNWRAPKEY, DERIVEKEY, MACGENERATE, MACVERIFY, APPMANAGEABLE, EXPORT |\n" +
+				"| `ARIA` | 128, 192, 256 | ENCRYPT, DECRYPT, WRAPKEY, UNWRAPKEY, DERIVEKEY, MACGENERATE, MACVERIFY, APPMANAGEABLE, EXPORT |\n" +
+				"| `SEED` | 128 | ENCRYPT, DECRYPT, WRAPKEY, UNWRAPKEY, DERIVEKEY, EXPORT |\n" +
+				"| `HMAC` | 112 to 8192 | DERIVEKEY, MACGENERATE, MACVERIFY, APPMANAGEABLE, EXPORT |\n" +
+				"| `BLS` | small_signatures/small_public_keys | APPMANAGEABLE, SIGN, VERIFY, EXPORT |\n" +
+				"| `Opaque` | - | APPMANAGEABLE, EXPORT |\n",
 				Type:     schema.TypeString,
 				Optional: true,
 			},

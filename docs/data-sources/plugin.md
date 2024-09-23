@@ -14,7 +14,7 @@ Returns the Fortanix DSM plugin object from the cluster as a Resource.
 
 ```terraform
 data "dsm_plugin" "sample_plugin" {
-    name = "my_plugin"
+  name = "my_plugin"
 }
 ```
 

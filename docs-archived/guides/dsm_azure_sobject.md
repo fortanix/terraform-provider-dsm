@@ -64,7 +64,7 @@ resource "dsm_sobject" "rsa_key_dsm_rotate1" {
   rotate_from = dsm_sobject.rsa_key_dsm.name
 }
 
-# Copy above RSA key to azure key vault
+# Rotate to DSM security object
 resource "dsm_azure_sobject" "rsa_key_azure_rotate1" {
   name     = dsm_azure_sobject.rsa_key_azure.name
   group_id = dsm_group.azure_group.id
@@ -93,7 +93,7 @@ resource "dsm_sobject" "rsa_key_dsm_rotate2" {
   rotate_from = dsm_sobject.rsa_key_dsm.name
 }
 
-# Copy above RSA key to azure key vault
+# Rotate to DSM security object
 resource "dsm_azure_sobject" "rsa_key_azure_rotate2" {
   name     = dsm_azure_sobject.rsa_key_azure.name
   group_id = dsm_group.azure_group.id
@@ -173,7 +173,7 @@ resource "dsm_sobject" "rsa_key_dsm_rotate1" {
   rotate_from = dsm_sobject.rsa_key_dsm.name
 }
 
-# Copy above RSA key to azure key vault
+# Rotate Azure security object
 resource "dsm_azure_sobject" "rsa_key_azure_rotate1" {
   name     = dsm_azure_sobject.rsa_key_azure.name
   group_id = dsm_group.azure_group.id
@@ -201,7 +201,7 @@ resource "dsm_sobject" "rsa_key_dsm_rotate2" {
   rotate_from = dsm_sobject.rsa_key_dsm.name
 }
 
-# Copy above RSA key to azure key vault
+# Rotate Azure security object
 resource "dsm_azure_sobject" "rsa_key_azure_rotate2" {
   name     = dsm_azure_sobject.rsa_key_azure.name
   group_id = dsm_group.azure_group.id
