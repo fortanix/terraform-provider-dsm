@@ -3,7 +3,7 @@ resource "dsm_group" "group" {
   name = "group"
 }
 
-## Adding cryptographic policy to the group
+# Adding cryptographic policy to the group
 
 # This resource is an example of a crypto policy with all the permissions allowed.
 resource "dsm_group_crypto_policy" "group_crypto_policy" {
@@ -51,7 +51,7 @@ resource "dsm_group_crypto_policy" "group_crypto_policy" {
 }
 
 # This resource is an example of a crypto policy with some restrictions.
-# rsa, ec and dsa are defined beas null, hence they are not allowed to do any operations for rsa, ec and dsa.
+# rsa, ec and dsa are defined as null, hence they are not allowed to do any operations for rsa, ec and dsa.
 # Similarly, if others are not required in the use case, those values can be defined as null.
 resource "dsm_group_crypto_policy" "group_crypto_policy" {
   name = dsm_group.group.name

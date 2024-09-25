@@ -1,5 +1,5 @@
 # To use this resource, it is required to create a custom plugin in DSM first.
-# Copy the plugin from https:#github.com/fortanix/terraform-provider-dsm/blob/main/plugins/Terraform-Plugin-CSR.lua
+# Copy the plugin from https://github.com/fortanix/terraform-provider-dsm/blob/main/plugins/Terraform-Plugin-CSR.lua
 # Create the custom plugin in DSM 
 # Plugin title: "Terraform Plugin - CSR"
 

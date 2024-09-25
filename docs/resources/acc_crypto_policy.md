@@ -23,7 +23,7 @@ variable "acct_id" {
 resource "dsm_acc_crypto_policy" "name" {
   acct_id = var.acct_id
   cryptographic_policy = jsonencode({
-    legacy_policy = "allowed" # other values: prohibited and unprotect_only
+    legacy_policy = "allowed" # other accepted values: prohibited and unprotect_only
     key_ops = [
       "SIGN", "VERIFY", "ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "DERIVEKEY", "TRANSFORM", "MACGENERATE",
       "MACVERIFY", "EXPORT", "APPMANAGEABLE", "AGREEKEY", "ENCAPSULATE", "DECAPSULATE"
@@ -101,7 +101,7 @@ resource "dsm_acc_crypto_policy" "name" {
 resource "dsm_acc_crypto_policy" "name" {
   acct_id = var.acct_id
   cryptographic_policy = jsonencode({
-    legacy_policy = "prohibited" # other values: allowed and unprotect_only
+    legacy_policy = "prohibited" # other accepted values: allowed and unprotect_only
     key_ops = [
       "SIGN", "VERIFY", "ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "DERIVEKEY", "TRANSFORM", "MACGENERATE",
       "MACVERIFY", "EXPORT", "APPMANAGEABLE", "AGREEKEY", "ENCAPSULATE", "DECAPSULATE"

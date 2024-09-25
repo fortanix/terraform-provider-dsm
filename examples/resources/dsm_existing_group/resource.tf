@@ -44,7 +44,7 @@ resource "dsm_existing_group" "dsm_group" {
   name        = "dsm_group"
   description = "Update existing group"
   hmg = jsonencode({
-    url = "https:#sampleakv.vault.azure.net/"
+    url = "https://sampleakv.vault.azure.net/"
     tls = {
       mode = "required"
       validate_hostname : false
