@@ -12,6 +12,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -78,7 +79,6 @@ func resourceGCPSobject() *schema.Resource {
 				"   * `interval_days`: Rotate the key every given number of days.\n" +
 				"   * `interval_months`: Rotate the key every given number of months.\n" +
 				"   * `effective_at`: Start time of the rotation policy.\n" +
-				"   * `rotate_copied_keys`: Enable key rotation for copied keys.\n" +
 				"   * **Note:** Either `interval_days` or `interval_months` should be given, but not both.",
 				Type:     schema.TypeMap,
 				Optional: true,
@@ -120,6 +120,7 @@ func resourceGCPSobject() *schema.Resource {
 				"| `AES` | 256 | ENCRYPT, DECRYPT, WRAPKEY, UNWRAPKEY, DERIVEKEY, MACGENERATE, MACVERIFY, APPMANAGEABLE, EXPORT",
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
@@ -241,6 +242,27 @@ func resourceReadGCPSobject(ctx context.Context, d *schema.ResourceData, m inter
 		if err := d.Set("links", req["links"]); err != nil {
 			return diag.FromErr(err)
 		}
+		external_data := make(map[string]interface{})
+		response_external, ok := req["external"].(map[string]interface{})
+		if ok {
+			for key, value := range(response_external) {
+				if key == "id" {
+					id := value.(map[string]interface{})
+					for id_key, id_value := range(id){
+						if id_key == "version" {
+							external_data[id_key] = strconv.FormatFloat(id_value.(float64), 'f', -1, 64)
+						} else {
+							external_data[id_key] = id_value
+						}
+					}
+				} else if key == "hsm_group_id" {
+					external_data[key] = value
+				}
+			}
+		}
+		if err := d.Set("external", external_data); err != nil {
+			return diag.FromErr(err)
+		}		
 		if err := d.Set("kid", req["kid"].(string)); err != nil {
 			return diag.FromErr(err)
 		}

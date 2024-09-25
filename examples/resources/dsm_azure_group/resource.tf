@@ -1,4 +1,4 @@
-// Creation of azure group
+# Creation of azure group
 resource "dsm_azure_group" "dsm_azure_group" {
   name            = "dsm_azure_group"
   description     = "Azure group"

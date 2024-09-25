@@ -82,20 +82,37 @@ type AzureGroupHmg struct {
 
 // [-] Structs to define DSM Azure Security Object
 type AzureSobject struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	Key_size    int
-	Acct_id     string
-	Group_id    string
-	Creator     DSMCreator
-	Kid         string
-	Obj_type    string
-	//	Custom_metadata AWSSobjectCustomMetadata
-	Enabled bool
-	State   string
-	//	External        AWSSobjectExternal
-	Links DSMSobjectLinks
+	Name            string `json:"name"`
+	Description     string `json:"description"`
+	Key_size        int
+	Acct_id         string
+	Group_id        string
+	Creator         DSMCreator
+	Kid             string
+	Obj_type        string
+	Custom_metadata AzureSobjectCustomMetadata
+	Enabled         bool
+	State           string
+	External        AzureSobjectExternal
+	Links           DSMSobjectLinks
 }
+
+type AzureSobjectCustomMetadata struct {
+	Azure_key_state     string `json:"azure-key-state"`
+	Azure_key_name      string `json:"azure-key-name"`
+	Azure_backup        string `json:"azure-backup"`
+}
+
+type AzureSobjectExternal struct {
+	Id              AzureSobjectExternalId
+	Hsm_group_id    string
+}
+
+type AzureSobjectExternalId struct {
+	Version     string
+	Label       string
+}
+
 
 // [-] Structs to define DSM GCP Security Object
 type GCPSobject struct {

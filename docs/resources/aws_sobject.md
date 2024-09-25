@@ -4,64 +4,90 @@ page_title: "dsm_aws_sobject Resource - terraform-provider-dsm"
 subcategory: ""
 description: |-
   Creates a new security object in AWS KMS. This is a Bring-Your-Own-Key (BYOK) method and copies an existing DSM local security object to AWS KMS as a Customer Managed Key (CMK).The returned resource object contains the UUID of the security object for further references.
+  AWS security object can also rotate and enable scheduled deletion. For more examples, refer Guides/dsm_aws_sobject, Guides/rotate_with_AWS_option and rotate_with_DSM_option.
+  Temporary Credentials: AWS security object can also be created using AWS temporary credentials. Please refer the below example for temporary credentials.
+  Note: Once scheduled deletion is enabled, AWS security object can't be modified.
+  Deletion of a dsm_aws_sobject: Unlike dsm_sobject, deletion of a dsm_aws_sobject is not normal.
+  Steps to delete a dsm_azure_sobject:
+  Enable delete_key_material as shown in the examples of Guides/dsm_aws_sobject.Enable schedule_deletion as shown in the examples of Guides/dsm_aws_sobject.A dsm_aws_sobject can be deleted completely only when its state is destroyed.A dsm_aws_sobject's state is destroyed when the key is deleted from AWS KMS.To know whether it is in a destroyed state or not, sync keys operation should be performed.Use dsm_aws_group data_source to sync the keys. Please refer Data Sources/dsm_aws_group.
+  Note: delete_key_material can be skipped if schedule_deletion is enabled as it deletes the key material as well.
 ---
 
 # dsm_aws_sobject (Resource)
 
 Creates a new security object in AWS KMS. This is a Bring-Your-Own-Key (BYOK) method and copies an existing DSM local security object to AWS KMS as a Customer Managed Key (CMK).The returned resource object contains the UUID of the security object for further references.
+AWS security object can also rotate and enable scheduled deletion. For more examples, refer Guides/dsm_aws_sobject, Guides/rotate_with_AWS_option and rotate_with_DSM_option.
+
+**Temporary Credentials**: AWS security object can also be created using AWS temporary credentials. Please refer the below example for temporary credentials.
+
+**Note**: Once scheduled deletion is enabled, AWS security object can't be modified.
+
+**Deletion of a dsm_aws_sobject**: Unlike dsm_sobject, deletion of a dsm_aws_sobject is not normal.
+
+**Steps to delete a dsm_azure_sobject:**
+   * Enable `delete_key_material` as shown in the examples of `Guides/dsm_aws_sobject`.
+   * Enable `schedule_deletion` as shown in the examples of `Guides/dsm_aws_sobject`.
+   * A dsm_aws_sobject can be deleted completely only when its state is `destroyed`.
+   * A dsm_aws_sobject's state is destroyed when the key is deleted from AWS KMS.
+   * To know whether it is in a destroyed state or not, sync keys operation should be performed.
+   * Use `dsm_aws_group` data_source to sync the keys. Please refer `Data Sources/dsm_aws_group`.
+
+**Note**: `delete_key_material` can be skipped if `schedule_deletion` is enabled as it deletes the key material as well.
 
 ## Example Usage
 
 ```terraform
-// Create a normal group
+# How to create an AWS KMS key with static credentials
+
+# Create a normal group
 resource "dsm_group" "normal_group" {
   name = "normal_group"
 }
 
-// Create AWS group
+# Create AWS group
 resource "dsm_group" "aws_group" {
-  name = "aws_group"
+  name        = "aws_group"
   description = "AWS group"
   hmg = jsonencode(
     {
       url = "kms.us-east-1.amazonaws.com"
       tls = {
-        mode = "required"
-        validate_hostname: false,
+        mode              = "required"
+        validate_hostname = false,
         ca = {
           ca_set = "global_roots"
         }
       }
-      kind = "AWSKMS"
+      kind       = "AWSKMS"
       access_key = "XXXXXXXXXXXXXXXXXXXX"
       secret_key = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-      region = "us-east-1"
-      service = "kms"
-    })
+      region     = "us-east-1"
+      service    = "kms"
+  })
 }
 
-// Create an AES key inside DSM
+# Create an AES key inside DSM
 resource "dsm_sobject" "aes_sobject" {
-  name            = "aes_sobject"
-  obj_type        = "AES"
-  group_id        = dsm_group.normal_group.id
-  key_size        = 256
-  key_ops         = ["EXPORT", "ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "DERIVEKEY", "MACGENERATE", "MACVERIFY", "APPMANAGEABLE"]
+  name     = "aes_sobject"
+  obj_type = "AES"
+  group_id = dsm_group.normal_group.id
+  key_size = 256
+  key_ops  = ["EXPORT", "ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "DERIVEKEY", "MACGENERATE", "MACVERIFY", "APPMANAGEABLE"]
 }
 
-// AWS sobject creation(Copies the key from DSM)
+# Create the AWS key by copying the dsm_object as a virtual key in the AWS group
 resource "dsm_aws_sobject" "aws_sobject" {
-  name = "aws_sobject"
-  group_id = dsm_group.aws_group.id
+  name        = "aws_sobject"
+  group_id    = dsm_group.aws_group.id
   description = "AWS sobject"
-  enabled = true
-  expiry_date     = "2025-02-02T17:04:05Z"
-  key_ops         = ["EXPORT", "ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "DERIVEKEY", "MACGENERATE", "MACVERIFY", "APPMANAGEABLE"]
+  expiry_date = "2025-02-02T17:04:05Z"
+  key_ops     = ["EXPORT", "ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "DERIVEKEY", "MACGENERATE", "MACVERIFY", "APPMANAGEABLE"]
   key = {
     kid = dsm_sobject.aes_sobject.id
   }
   custom_metadata = {
     aws-aliases = "dsm_aws_sobject"
+    # This is an example of a default policy.
     aws-policy = "{\"Version\":\"2012-10-17\",\"Id\":\"key-default-1\",\"Statement\":[{\"Sid\":\"EnableIAMUserPermissions\",\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"arn:aws:iam::XXXXXXXXXXXX:root\"},\"Action\":\"kms:*\",\"Resource\":\"*\"}]}"
   }
   aws_tags = {
@@ -69,64 +95,63 @@ resource "dsm_aws_sobject" "aws_sobject" {
   }
 }
 
-/*
-How to create an AWS KMS key with temporary credentials ?
-*/
 
-// Step1: export AWS_ACCESS_KEY_ID, AWS_ACCESS_SECRET_KEY and AWS_SESSION_TOKEN
-// or add AWS_ACCESS_KEY_ID, AWS_ACCESS_SECRET_KEY and AWS_SESSION_TOKEN to aws_profile like below.
+# How to create an AWS KMS key with temporary credentials
 
-/*
-[default]
-aws_access_key_id = XXXXXXXXXXXXXXXXXXXX
-aws_secret_access_key = XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-aws_session_token = XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-*/
+# Step 1: export AWS_ACCESS_KEY_ID, AWS_ACCESS_SECRET_KEY and AWS_SESSION_TOKEN
+# or add AWS_ACCESS_KEY_ID, AWS_ACCESS_SECRET_KEY and AWS_SESSION_TOKEN to aws_profile like below.
 
-// Step2: add aws_profile name and aws_region to the dsm provider. By default aws_region is "us-east-1"
+############################################################################################
+# [default]
+# aws_access_key_id = XXXXXXXXXXXXXXXXXXXX
+# aws_secret_access_key = XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+# aws_session_token = XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+############################################################################################
+
+# Step 2: add aws_profile name and aws_region to the dsm provider. By default aws_region is "us-east-1"
 provider "dsm" {
   aws_profile = "default"
 }
-// Step3: Create a group
+
+# Step 3: Create a group
 resource "dsm_group" "aws_group_no_credentials" {
-  name = "aws_group_no_credentials"
+  name        = "aws_group_no_credentials"
   description = "AWS group"
   hmg = jsonencode(
     {
       url = "kms.us-east-1.amazonaws.com"
       tls = {
-        mode = "required"
-        validate_hostname: false,
+        mode              = "required"
+        validate_hostname = false,
         ca = {
           ca_set = "global_roots"
         }
       }
-      kind = "AWSKMS"
-      region = "us-east-1"
+      kind    = "AWSKMS"
+      region  = "us-east-1"
       service = "kms"
-    })
+  })
 }
 
-
-// Step4: AWS sobject creation(Copies the key from DSM)
+# Step 4: AWS sobject creation(Copies the key from DSM)
 resource "dsm_aws_sobject" "aws_sobject_temp_creds" {
-  name = "aws_sobject_temp_creds"
-  group_id = dsm_group.aws_group_no_credentials.id
+  name        = "aws_sobject_temp_creds"
+  group_id    = dsm_group.aws_group_no_credentials.id
   description = "AWS sobject"
-  enabled = true
-  expiry_date     = "2025-02-02T17:04:05Z"
-  key_ops         = ["EXPORT", "ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "DERIVEKEY", "MACGENERATE", "MACVERIFY", "APPMANAGEABLE"]
+  expiry_date = "2025-02-02T17:04:05Z"
+  key_ops     = ["EXPORT", "ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "DERIVEKEY", "MACGENERATE", "MACVERIFY", "APPMANAGEABLE"]
   key = {
     kid = dsm_sobject.aes_sobject.id
   }
   custom_metadata = {
     aws-aliases = "dsm_aws_sobject_temp_creds"
-    aws-policy = "{\"Version\":\"2012-10-17\",\"Id\":\"key-default-1\",\"Statement\":[{\"Sid\":\"EnableIAMUserPermissions\",\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"arn:aws:iam::XXXXXXXXXXXX:root\"},\"Action\":\"kms:*\",\"Resource\":\"*\"}]}"
+    aws-policy  = "{\"Version\":\"2012-10-17\",\"Id\":\"key-default-1\",\"Statement\":[{\"Sid\":\"EnableIAMUserPermissions\",\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"arn:aws:iam::XXXXXXXXXXXX:root\"},\"Action\":\"kms:*\",\"Resource\":\"*\"}]}"
   }
 }
 
 
-// Note: For rotation of a key please refer Guides/rotate_with_AWS_option.
+# Note: For rotation of a key, please refer Guides/rotate_with_AWS_option, Guides/rotate_with_DSM_option.
+# Note: For schedule deletion of a key, please refer Guides/dsm_aws_sobject
 ```
 
 <!-- schema generated by tfplugindocs -->
@@ -144,10 +169,14 @@ resource "dsm_aws_sobject" "aws_sobject_temp_creds" {
    * e.g. test-key = test-value 
    * The above key value pair will be added as `aws-tag-test-key = test-value`
 - `custom_metadata` (Map of String) AWS KMS key level metadata information.
-   *`aws-aliases`: Key name within AWS KMS.
-   *`aws-policy`: JSON format of AWS policy that should be enforced for the key.
+   * `aws-aliases`: Key name within AWS KMS.
+   * `aws-policy`: JSON format of AWS policy that should be enforced for the key.
+   * **Note:** Any other DSM custom metadata can be configured.
+- `delete_key_material` (Boolean) Delete key material in AWS KMS. Deleting key material makes all data encrypted under the customer master key (CMK) unrecoverable unless you later import the same key material from DSM into the CMK.The DSM source key is not affected by this operation. The supported values are true/false.
+
+**Note:** This can enabled only after creation.
 - `description` (String) The security object description.
-- `enabled` (Boolean) Whether the security object will be enabled or disabled. The values are true/false.
+- `enabled` (Boolean) Whether the security object will be enabled or disabled. The supported values are true/false.
 - `expiry_date` (String) The security object expiry date in RFC format.
 - `key_ops` (List of String) The security object operations permitted.
 
@@ -156,11 +185,6 @@ resource "dsm_aws_sobject" "aws_sobject_temp_creds" {
 | `AES` | 256 | ENCRYPT, DECRYPT, WRAPKEY, UNWRAPKEY, DERIVEKEY, MACGENERATE, MACVERIFY, APPMANAGEABLE, EXPORT |
 | `RSA` | 2048, 3072, 4096 | APPMANAGEABLE, SIGN, VERIFY, ENCRYPT, DECRYPT, WRAPKEY, UNWRAPKEY, EXPORT  |
 | `EC` | NistP256, NistP384, NistP521,SecP256K1 | APPMANAGEABLE, SIGN, VERIFY, AGREEKEY, EXPORT
-- `key_size` (Number) The size of the security object.
-- `obj_type` (String) The type of security object.
-- `pending_window_in_days` (Number) input the value for “days” after which the AWS key will be deleted.
-   * The default value is 7 days.
-   * The minimum value is 7 days.
 - `rotate` (String) The security object rotation. Specify the method to use for key rotation:
    * `DSM`: To rotate from a DSM local key. The key material of new key will be stored in DSM.
    * `AWS`: To rotate from a AWS key. The key material of new key will be stored in AWS.
@@ -170,7 +194,10 @@ resource "dsm_aws_sobject" "aws_sobject_temp_creds" {
    * `interval_months`: Rotate the key for every given number of months.
    * `effective_at`: Start of the rotation policy time.
    * **Note:** Either interval_days or interval_months should be given, but not both.
-- `state` (String) The key states of the AWS key. The values are PendingDeletion, Enabled, Disabled and PendingImport.
+   * **Note:** Please refer Guides/dsm_aws_sobject for an example.
+- `schedule_deletion` (Number) Schedule key deletion in AWS KMS. Key is not usable for Sign/Verify, Wrap/Unwrap or Encrypt/Decrypt operations once it is deleted. Minimum value is 7 days.
+**Note:** This can enabled only after creation.
+- `state` (String) The key states of the AWS key. The supported values are PendingDeletion, Enabled, Disabled and PendingImport.
 
 ### Read-Only
 
@@ -179,7 +206,7 @@ resource "dsm_aws_sobject" "aws_sobject_temp_creds" {
 - `copied_to` (List of String) List of security objects copied by the current security object.
 - `creator` (Map of String) The creator of the group from Fortanix DSM.
    * `user`: If the group was created by a user, the computed value will be the matching user id.
-   * `app`: If the group was created by a app, the computed value will be the matching app id.
+   * `app`: If the group was created by an app, the computed value will be the matching app id.
 - `dsm_name` (String) The security object name from Fortanix DSM (matches the name provided during creation).
 - `external` (Map of String) AWS CMK level metadata:
    * `Key_arn`
@@ -188,6 +215,8 @@ resource "dsm_aws_sobject" "aws_sobject_temp_creds" {
    * `Key_aliases`
    * `Key_deletion_date`
 - `id` (String) The ID of this resource.
+- `key_size` (Number) The size of the security object.
 - `kid` (String) The security object ID from Fortanix DSM.
+- `obj_type` (String) The type of security object.
 - `replaced` (String) Replaced by a security object.
 - `replacement` (String) Replacement of a security object that was rotated.

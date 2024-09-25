@@ -14,7 +14,7 @@ Returns the Fortanix DSM group object from the cluster as a Data Source.
 
 ```terraform
 data "dsm_group" "sample_group" {
-    name = "my_group"
+  name = "my_group"
 }
 ```
 

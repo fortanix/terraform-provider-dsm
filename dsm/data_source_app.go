@@ -33,11 +33,6 @@ func dataSourceApp() *schema.Resource {
 				Computed:  true,
 				Sensitive: true,
 			},
-			"new_credential": {
-				Description: "Set this if you want to rotate/regenerate the API key. The values can be set as true/false.",
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
 		},
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -64,8 +59,5 @@ func dataSourceAppRead(ctx context.Context, d *schema.ResourceData, m interface{
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("new_credential", false); err != nil {
-		return diag.FromErr(err)
-	}
 	return nil
 }

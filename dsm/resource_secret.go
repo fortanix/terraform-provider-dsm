@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -91,7 +92,7 @@ func resourceSecret() *schema.Resource {
 				Optional: true,
 			},
 			"value": {
-			    Description: "The secret value",
+			    Description: "The value of the secret security object Base64 encoded.",
 				Type:      schema.TypeString,
 				Required:  true,
 				Sensitive: true,
@@ -101,8 +102,7 @@ func resourceSecret() *schema.Resource {
 				"   * Allowed states are: None, PreActive, Active, Deactivated, Compromised, Destroyed, Deleted.",
 				Type:     schema.TypeString,
 				Optional: true,
-				Sensitive: false,
-				Computed: false,
+				Computed: true,
 			},
 			"expiry_date": {
 			    Description: " The security object expiry date in RFC format.",
@@ -142,6 +142,30 @@ func resourceSecret() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"allowed_key_justifications_policy": {
+			    Description: "The security object key justification policies for GCP External Key Manager. The allowed permissions are:\n" +
+			    "   * CUSTOMER_INITIATED_SUPPORT\n" +
+			    "   * CUSTOMER_INITIATED_ACCESS\n" +
+			    "   * GOOGLE_INITIATED_SERVICE\n" +
+			    "   * GOOGLE_INITIATED_REVIEW\n" +
+			    "   * GOOGLE_INITIATED_SYSTEM_OPERATION\n" +
+			    "   * THIRD_PARTY_DATA_REQUEST\n" +
+			    "   * REASON_NOT_EXPECTED\n" +
+			    "   * REASON_UNSPECIFIED\n" +
+			    "   * MODIFIED_CUSTOMER_INITIATED_ACCESS\n" +
+			    "   * MODIFIED_GOOGLE_INITIATED_SYSTEM_OPERATION\n" +
+			    "   * GOOGLE_RESPONSE_TO_PRODUCTION_ALERT\n",
+				Type: schema.TypeList,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+				Optional: true,
+			},
+			"allowed_missing_justifications": {
+			    Description: "Boolean value which allows missing justifications even if not provided to the secret. The values are True / False.",
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 		},
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -151,7 +175,6 @@ func resourceSecret() *schema.Resource {
 
 // [C]: Create Security Object
 func resourceCreateSecret(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
 	endpoint := "crypto/v1/keys"
 	operation := "PUT"
 
@@ -162,14 +185,12 @@ func resourceCreateSecret(ctx context.Context, d *schema.ResourceData, m interfa
 		"description": d.Get("description").(string),
 	}
 
-	if rfcdate := d.Get("expiry_date").(string); len(rfcdate) > 0 {
-		layoutRFC := "2006-01-02T15:04:05Z"
-		layoutDSM := "20060102T150405Z"
-		ddate, newerr := time.Parse(layoutRFC, rfcdate)
-		if newerr != nil {
-			return diag.FromErr(newerr)
+	if err := d.Get("expiry_date").(string); len(err) > 0 {
+		sobj_deactivation_date, date_error := parseTimeToDSM(err)
+		if date_error != nil {
+			return date_error
 		}
-		plugin_object["deactivation_date"] = ddate.Format(layoutDSM)
+		plugin_object["deactivation_date"] = sobj_deactivation_date
 	}
 
 	if d.Get("rotate").(bool) {
@@ -185,25 +206,32 @@ func resourceCreateSecret(ctx context.Context, d *schema.ResourceData, m interfa
 	} else {
 		reqfpi, err := m.(*api_client).FindPluginId("Terraform Plugin")
 		if err != nil {
-			diags = append(diags, diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  "[DSM SDK] Unable to call DSM provider API client",
-				Detail:   fmt.Sprintf("[E]: API: GET sys/v1/plugins: %v", err),
-			})
-			return diags
+			return invokeErrorDiagsWithSummary("[DSM SDK] Unable to call DSM provider API client", fmt.Sprintf("[E]: API: GET sys/v1/plugins: %v", err))
 		}
 		endpoint = fmt.Sprintf("sys/v1/plugins/%s", string(reqfpi))
 		operation = "POST"
 	}
+	allowed_key_justifications_policy, allow_exists := d.GetOk("allowed_key_justifications_policy")
+	allowed_missing_justifications, allow_missing_justifications_exists := d.GetOk("allowed_missing_justifications")
+	
+	policy_data := map[string]interface{}{}
+	
+	if allow_exists && allowed_key_justifications_policy != nil {
+		policy_data["allow"] = allowed_key_justifications_policy
+	}
+	
+	if allow_missing_justifications_exists && allowed_missing_justifications != nil {
+		policy_data["allow_missing_reason"] = allowed_missing_justifications
+	}
+	
+	// Only update if there are entries
+	if len(policy_data) > 0 {
+		plugin_object["google_access_reason_policy" ] = policy_data
+	}
 
 	req, err := m.(*api_client).APICallBody(operation, endpoint, plugin_object)
 	if err != nil {
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "[DSM SDK] Unable to call DSM provider API client",
-			Detail:   fmt.Sprintf("[E]: API: POST sys/v1/plugins: %v", err),
-		})
-		return diags
+		return invokeErrorDiagsWithSummary("[DSM SDK] Unable to call DSM provider API client", fmt.Sprintf("[E]: API: POST sys/v1/plugins: %v", err))
 	}
 
 	d.SetId(req["kid"].(string))
@@ -219,12 +247,7 @@ func resourceReadSecret(ctx context.Context, d *schema.ResourceData, m interface
 		d.SetId("")
 	} else {
 		if err != nil {
-			diags = append(diags, diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  "[DSM SDK] Unable to call DSM provider API client",
-				Detail:   fmt.Sprintf("[E]: API: GET crypto/v1/keys: %v", err),
-			})
-			return diags
+			return invokeErrorDiagsWithSummary("[DSM SDK] Unable to call DSM provider API client", fmt.Sprintf("[E]: API: GET crypto/v1/keys: %v", err))
 		}
 
 		if err := d.Set("name", res["name"].(string)); err != nil {
@@ -256,6 +279,35 @@ func resourceReadSecret(ctx context.Context, d *schema.ResourceData, m interface
 				return diag.FromErr(err)
 			}
 		}
+		if _, ok := res["google_access_reason_policy"]; ok {
+			google_access_reason_policy := res["google_access_reason_policy"].(map[string]interface{})
+			tf_state_garp, is_tf_state_garp  := d.GetOk("allowed_key_justifications_policy")
+			var is_same_garp bool
+			if is_tf_state_garp {
+				is_same_garp = compTwoArrays(tf_state_garp, google_access_reason_policy["allow"])
+			}
+			if is_same_garp {
+				if err := d.Set("allowed_key_justifications_policy", tf_state_garp); err != nil {
+					return diag.FromErr(err)
+				}
+			} else if err := d.Set("allowed_key_justifications_policy", google_access_reason_policy["allow"]); err != nil {
+				return diag.FromErr(err)
+			}
+			if err := d.Set("allowed_missing_justifications", google_access_reason_policy["allow_missing_reason"]); err != nil {
+				return diag.FromErr(err)
+			}
+		} else{
+		    /*
+		        allowed_key_justifications_policy is either Optional or Computed.
+		        It is being made as Computed, because when a key is copied, KAJ will also get copied.
+		        In this case, it will become a computed value.
+
+		        If allowed_key_justifications_policy is not set, while updating it shows a difference as it will set to null value.
+		        Hence, it needs to be set as an empty value.
+		    */
+		    empty_array := []string{}
+		    d.Set("allowed_key_justifications_policy", empty_array)
+		}
 		if err := d.Set("enabled", res["enabled"].(bool)); err != nil {
 			return diag.FromErr(err)
 		}
@@ -273,6 +325,9 @@ func resourceReadSecret(ctx context.Context, d *schema.ResourceData, m interface
 			if newerr = d.Set("expiry_date", ddate.Format(layoutRFC)); newerr != nil {
 				return diag.FromErr(newerr)
 			}
+		}
+		if err := d.Set("copied_to", res["copied_to"]); err != nil {
+			return diag.FromErr(err)
 		}
 		if _, ok := res["links"]; ok {
 			if links := res["links"].(map[string]interface{}); len(links) > 0 {
@@ -304,7 +359,78 @@ func resourceReadSecret(ctx context.Context, d *schema.ResourceData, m interface
 
 // [U]: Update Security Object
 func resourceUpdateSecret(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	return nil
+	var has_changed = false
+	var diags diag.Diagnostics
+
+	var plugin_object = map[string]interface{}{
+		"kid": d.Get("kid").(string),
+	}
+
+	if d.HasChange("name") {
+		plugin_object["name"] = d.Get("name").(string)
+		has_changed = true
+	}
+
+	if d.HasChange("description") {
+		plugin_object["description"] = d.Get("description").(string)
+		has_changed = true
+	}
+
+	if d.HasChange("custom_metadata") {
+		plugin_object["custom_metadata"] = d.Get("custom_metadata").(map[string]interface{})
+		has_changed = true
+	}
+
+	if d.HasChange("enabled") {
+		plugin_object["enabled"] = d.Get("enabled").(bool)
+		has_changed = true
+	}
+
+	if d.HasChanges("allowed_key_justifications_policy", "allowed_missing_justifications") {
+		google_access_reason_policy := make(map[string]interface{})
+
+		if allowed_justifications := d.Get("allowed_key_justifications_policy"); allowed_justifications != nil {
+			google_access_reason_policy["allow"] = allowed_justifications
+		}
+		if allow_missing := d.Get("allowed_missing_justifications"); allow_missing != nil {
+			google_access_reason_policy["allow_missing_reason"] = allow_missing
+		}
+
+		plugin_object["google_access_reason_policy"] = google_access_reason_policy
+		has_changed = true
+	}
+
+	// Expiry date cannot be modified if it is already set.
+	if d.HasChange("expiry_date") {
+		old_expiry_date, new_expiry_date := d.GetChange("expiry_date")
+		if old_expiry_date == nil || len(old_expiry_date.(string)) == 0 {
+			sobj_deactivation_date, date_error := parseTimeToDSM(d.Get("expiry_date").(string))
+			if date_error != nil {
+				return date_error
+			}
+			plugin_object["deactivation_date"] = sobj_deactivation_date
+		} else {
+			d.Set("expiry_date", old_expiry_date)
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Detail:   fmt.Sprintf("[E]: API: PATCH crypto/v1/keys: expiry_date cannot be changed once it is set. Please retain it to old value: %s -> %s", new_expiry_date, old_expiry_date),
+			})
+			return diags
+		}
+		has_changed = true
+	}
+
+	if has_changed {
+		if debug_output {
+			tflog.Warn(ctx, "Secret has changed, calling API.")
+		}
+		_, err := m.(*api_client).APICallBody("PATCH", fmt.Sprintf("crypto/v1/keys/%s", d.Id()), plugin_object)
+		if err != nil {
+			return invokeErrorDiagsWithSummary("[DSM SDK] Unable to call DSM provider API client", fmt.Sprintf("[E]: API: PATCH crypto/v1/keys: %v", err))
+		}
+	}
+
+	return resourceReadSecret(ctx, d, m)
 }
 
 // [D]: Delete Security Object

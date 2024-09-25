@@ -15,13 +15,13 @@ A secret value format should be in a base64 format. Secret can also be rotated.
 ## Example Usage
 
 ```terraform
-// Create a group
+# Create a group
 resource "dsm_group" "group" {
-  name = "group"
+  name        = "group"
   description = "group description"
 }
 
-// Import a secret
+# Import a secret
 resource "dsm_secret" "secret" {
   name        = "secret"
   group_id    = dsm_group.group.id
@@ -32,7 +32,7 @@ resource "dsm_secret" "secret" {
   expiry_date = "2025-02-02T17:04:05Z"
 }
 
-// Rotate a secret
+# Rotate a secret
 resource "dsm_secret" "secret_rotate" {
   name        = "secret_rotate"
   group_id    = dsm_group.group.id
@@ -42,7 +42,7 @@ resource "dsm_secret" "secret_rotate" {
   value       = "cm90YXRlZm9ydGFuaXg="
   expiry_date = "2025-02-02T17:04:05Z"
   rotate      = true
-  // Provide the secret security object name that needs to be rotated
+  # Provide the secret security object name that needs to be rotated
   rotate_from = dsm_secret.secret.name
 }
 ```
@@ -54,10 +54,23 @@ resource "dsm_secret" "secret_rotate" {
 
 - `group_id` (String) The Fortanix DSM security object group assignment.
 - `name` (String) The Fortanix DSM secret security object name
-- `value` (String, Sensitive) The secret value
+- `value` (String, Sensitive) The value of the secret security object Base64 encoded.
 
 ### Optional
 
+- `allowed_key_justifications_policy` (List of String) The security object key justification policies for GCP External Key Manager. The allowed permissions are:
+   * CUSTOMER_INITIATED_SUPPORT
+   * CUSTOMER_INITIATED_ACCESS
+   * GOOGLE_INITIATED_SERVICE
+   * GOOGLE_INITIATED_REVIEW
+   * GOOGLE_INITIATED_SYSTEM_OPERATION
+   * THIRD_PARTY_DATA_REQUEST
+   * REASON_NOT_EXPECTED
+   * REASON_UNSPECIFIED
+   * MODIFIED_CUSTOMER_INITIATED_ACCESS
+   * MODIFIED_GOOGLE_INITIATED_SYSTEM_OPERATION
+   * GOOGLE_RESPONSE_TO_PRODUCTION_ALERT
+- `allowed_missing_justifications` (Boolean) Boolean value which allows missing justifications even if not provided to the secret. The values are True / False.
 - `custom_metadata` (Map of String) The user defined security object attributes added to the key’s metadata.
 - `description` (String) The Fortanix DSM security object description.
 - `enabled` (Boolean) Whether the security object is Enabled or Disabled. The values are true/false.

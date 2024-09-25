@@ -4,18 +4,38 @@ page_title: "dsm_azure_sobject Resource - terraform-provider-dsm"
 subcategory: ""
 description: |-
   Creates a new security object in Azure key vault. This is a Bring-Your-Own-Key (BYOK) method and copies an existing DSM local security object to Azure KV as a Customer Managed Key (CMK).
+  Azure sobject can also rotate, enable soft deletion and purge the key. For examples of rotate and soft deletion, refer Guides/dsm_azure_sobject.
+  Note: Once soft deletion is enabled, Azure sobject can't be modified.
+  Deletion of a dsm_azure_sobject: Unlike dsm_sobject, deletion of a dsm_azure_sobject is not normal.
+  Steps to delete a dsm_azure_sobject:
+  Enable soft_deletion as shown in the examples of Guides/dsm_azure_sobject.Enable purge_deleted_key after soft_deletion as shown in the examples of Guides/dsm_azure_sobject.A dsm_azure_sobject can be deleted completely only when its state is destroyed.A dsm_azure_sobject comes to destroyed state when the key is deleted from Azure key vault.To know whether it is in a destroyed state or not, sync keys operation should be performed.Use dsm_azure_group data_source to sync the keys. Please refer Data Sources/dsm_azure_group.
 ---
 
 # dsm_azure_sobject (Resource)
 
 Creates a new security object in Azure key vault. This is a Bring-Your-Own-Key (BYOK) method and copies an existing DSM local security object to Azure KV as a Customer Managed Key (CMK).
 
+Azure sobject can also rotate, enable soft deletion and purge the key. For examples of rotate and soft deletion, refer Guides/dsm_azure_sobject.
+
+**Note**: Once soft deletion is enabled, Azure sobject can't be modified.
+
+**Deletion of a dsm_azure_sobject:** Unlike dsm_sobject, deletion of a dsm_azure_sobject is not normal.
+
+**Steps to delete a dsm_azure_sobject**:
+
+   * Enable soft_deletion as shown in the examples of `Guides/dsm_azure_sobject`.
+   * Enable purge_deleted_key after soft_deletion as shown in the examples of `Guides/dsm_azure_sobject`.
+   * A dsm_azure_sobject can be deleted completely only when its state is `destroyed`.
+   * A dsm_azure_sobject comes to destroyed state when the key is deleted from Azure key vault.
+   * To know whether it is in a destroyed state or not, sync keys operation should be performed.
+   * Use `dsm_azure_group` data_source to sync the keys. Please refer Data `Sources/dsm_azure_group`.
+
 ## Example Usage
 
 ```terraform
-// Create Azure group
+# Create Azure group
 resource "dsm_group" "azure_group" {
-  name = "azure_group"
+  name        = "azure_group"
   description = "azure_group"
   hmg = jsonencode({
     url = "https://sampleakv.vault.azure.net/"
@@ -26,63 +46,59 @@ resource "dsm_group" "azure_group" {
         ca_set = "global_roots"
       }
     }
-    kind = "AZUREKEYVAULT"
-    secret_key = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-    tenant_id = "0XXXXXXX-YYYY-HHHH-GGGG-123456789123"
-    client_id = "0XXXXXXX-YYYY-HHHH-GGGG-123456789123"
+    kind            = "AZUREKEYVAULT"
+    secret_key      = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+    tenant_id       = "0XXXXXXX-YYYY-HHHH-GGGG-123456789123"
+    client_id       = "0XXXXXXX-YYYY-HHHH-GGGG-123456789123"
     subscription_id = "0XXXXXXX-YYYY-HHHH-GGGG-123456789123"
-    key_vault_type = "STANDARD"
+    key_vault_type  = "STANDARD"
   })
 }
 
-// Create a normal group
+# Create a normal group
 resource "dsm_group" "normal_group" {
   name = "normal_group"
 }
 
-// Create a RSA key in normal group
+# Create a RSA key in normal group
 resource "dsm_sobject" "dsm_sobject" {
   name     = "dsm_sobject"
   group_id = dsm_group.normal_group.id
   key_size = 2048
-  key_ops = ["ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "SIGN", "VERIFY", "EXPORT", "APPMANAGEABLE"]
+  key_ops  = ["ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "SIGN", "VERIFY", "EXPORT", "APPMANAGEABLE"]
   obj_type = "RSA"
 }
 
-/* Copy a key to azure key vault using the above DSM security object.
-By default it creates a key as a software protected key.
-*/
+# Create the Azure key by copying the dsm_object as a virtual key in the Azure group
+# By default it creates a key as a software protected key.
 resource "dsm_azure_sobject" "azure_sobject" {
-  name            = "azure_sobject"
-  group_id        = dsm_group.azure_group.id
-  description     = "key creation in akv"
-  key_ops         = ["ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "SIGN", "VERIFY", "EXPORT", "APPMANAGEABLE"]
-  enabled         = true
-  expiry_date     = "2025-02-02T17:04:05Z"
-  key             = {
+  name        = "azure_sobject"
+  group_id    = dsm_group.azure_group.id
+  description = "key creation in akv"
+  key_ops     = ["ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "SIGN", "VERIFY", "EXPORT", "APPMANAGEABLE"]
+  expiry_date = "2025-02-02T17:04:05Z"
+  key = {
     kid = dsm_sobject.dsm_sobject.id
   }
   custom_metadata = {
     azure-key-name = "key_inside_akv"
   }
   rotation_policy = {
-    interval_days = 10
-    effective_at = "20231130T183000Z"
+    interval_days          = 10
+    effective_at           = "20231130T183000Z"
     deactivate_rotated_key = true
   }
 }
 
-/* Copy a key to azure key vault using the above DSM security object.
-It is an example of hardware protected key in PREMIUM key vault.
-*/
+# Create the Azure key by copying the dsm_object as a virtual key in the Azure group
+# It is an example of hardware protected key in PREMIUM key vault.
 resource "dsm_azure_sobject" "sobject" {
-  name            = "azure_sobject"
-  group_id        = dsm_group.azure_group.id
-  description     = "key creation in akv"
-  key_ops         = ["ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "SIGN", "VERIFY", "EXPORT", "APPMANAGEABLE"]
-  enabled         = true
-  expiry_date     = "2025-02-02T17:04:05Z"
-  key             = {
+  name        = "azure_sobject"
+  group_id    = dsm_group.azure_group.id
+  description = "key creation in akv"
+  key_ops     = ["ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "SIGN", "VERIFY", "EXPORT", "APPMANAGEABLE"]
+  expiry_date = "2025-02-02T17:04:05Z"
+  key = {
     kid = dsm_sobject.dsm_sobject.id
   }
   custom_metadata = {
@@ -90,8 +106,8 @@ resource "dsm_azure_sobject" "sobject" {
     azure-key-type = "hardware"
   }
   rotation_policy = {
-    interval_days = 10
-    effective_at = "20231130T183000Z"
+    interval_days          = 10
+    effective_at           = "20231130T183000Z"
     deactivate_rotated_key = true
   }
 }
@@ -121,14 +137,20 @@ resource "dsm_azure_sobject" "sobject" {
 | -------- | -------- |-------- |
 | `RSA` | 2048, 3072, 4096 | APPMANAGEABLE, SIGN, VERIFY, ENCRYPT, DECRYPT, WRAPKEY, UNWRAPKEY, EXPORT |
 | `EC` | NistP256, NistP384, NistP521,SecP256K1 | APPMANAGEABLE, SIGN, VERIFY, AGREEKEY, EXPORT
-- `key_size` (Number) The size of the security object.
-- `obj_type` (String) The type of security object.
+- `purge_deleted_key` (Boolean) Purge deleted key in Azure key vault. Purging the key makes all data encrypted with it unrecoverable unless you later import the same key material from Fortanix DSM into the Azure key vault.The DSM source key is not affected by this operation. The supported values are true/false.
+ **Note:**  This should be enabled only after the creation.
+- `rotate` (String) The security object rotation. Specify the method to use for key rotation:
+   * `DSM`: To use the same key material.
+   * `AZURE`: To rotate from a AZURE key. The key material of new key will be stored in AZURE.
+- `rotate_from` (String) Name of the security object to be rotated.
 - `rotation_policy` (Map of String) Policy to rotate a Security Object, configure the below parameters.
    * `interval_days`: Rotate the key for every given number of days.
    * `interval_months`: Rotate the key for every given number of months.
    * `effective_at`: Start of the rotation policy time.
    * `deactivate_rotated_key`: Deactivate original key after rotation true/false.
    * **Note:** Either interval_days or interval_months should be given, but not both.
+- `soft_deletion` (Boolean) Enable soft key deletion in Azure key vault. Key is not usable for Sign/Verify, Wrap/Unwrap or Encrypt/Decrypt operations once it is deleted. The supported values are true/false.
+ **Note:**  This should be enabled only after the creation.
 - `state` (String) The key states of the Azure KV key. The values are Created, Deleted, Purged.
 
 ### Read-Only
@@ -137,6 +159,14 @@ resource "dsm_azure_sobject" "sobject" {
 - `creator` (Map of String) The creator of the security object from Fortanix DSM.
    * `user`: If the security object was created by a user, the computed value will be the matching user id.
    * `app`: If the security object was created by a app, the computed value will be the matching app id.
+- `dsm_name` (String) The security object name from Fortanix DSM (matches the name provided during creation).
+- `external` (Map of String) AWS CMK level metadata:
+   * `Version`
+   * `Azure_key_name`
+   * `Azure_key_state`
+   * `Azure_backup`
 - `id` (String) The ID of this resource.
+- `key_size` (Number) The size of the security object.
 - `kid` (String) The security object ID from Fortanix DSM.
 - `links` (Map of String) Link between local security object and Azure KV security object.
+- `obj_type` (String) The type of security object.

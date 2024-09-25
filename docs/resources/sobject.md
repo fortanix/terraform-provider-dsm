@@ -5,28 +5,30 @@ subcategory: ""
 description: |-
   Creates a new security object. The returned resource object contains the UUID of the security object for further references.
   A key value can be imported as a security object. This resource also can rotate or copy a security object.
+  For more examples, please refer Guides/dsm_security_object
 ---
 
 # dsm_sobject (Resource)
 
 Creates a new security object. The returned resource object contains the UUID of the security object for further references.
 A key value can be imported as a security object. This resource also can rotate or copy a security object.
+For more examples, please refer Guides/dsm_security_object
 
 ## Example Usage
 
 ```terraform
-// Create a group
+# Create a group
 resource "dsm_group" "group" {
-  name = "group"
+  name        = "group"
   description = "group description"
 }
-// Create a security object in the above group
+# Create a security object in the above group
 resource "dsm_sobject" "sobject" {
-  name            = "sobject"
-  obj_type        = "AES"
-  group_id        = dsm_group.group.id
-  key_size        = 256
-  key_ops         = [
+  name     = "sobject"
+  obj_type = "AES"
+  group_id = dsm_group.group.id
+  key_size = 256
+  key_ops = [
     "ENCRYPT",
     "DECRYPT",
     "WRAPKEY",
@@ -37,9 +39,9 @@ resource "dsm_sobject" "sobject" {
     "APPMANAGEABLE",
     "EXPORT"
   ]
-  enabled         = true
-  expiry_date     = "2025-02-02T17:04:05Z"
-  description     = "sobject description"
+  enabled     = true
+  expiry_date = "2025-02-02T17:04:05Z"
+  description = "sobject description"
   custom_metadata = {
     key1 = "value1"
   }
@@ -49,11 +51,87 @@ resource "dsm_sobject" "sobject" {
   ]
   allowed_missing_justifications = true
   rotation_policy = {
-    interval_days = 20
-    effective_at = "20231130T183000Z"
+    interval_days          = 20
+    effective_at           = "20231130T183000Z"
     deactivate_rotated_key = true
-    rotate_copied_keys = "all_external"
+    rotate_copied_keys     = "all_external"
+  }
 }
+
+## copy a security object
+
+# Copy above security object.
+# When copying a security object obj_type, key_size, allowed_key_justifications_policy, allowed_missing_justifications,
+# lms or bls should not be configured.
+
+resource "dsm_sobject" "sobject_copy" {
+  name     = "sobject_copy"
+  group_id = dsm_group.group.id
+  key = {
+    kid = dsm_sobject.sobject.id
+  }
+  key_ops = [
+    "ENCRYPT",
+    "DECRYPT",
+    "WRAPKEY",
+    "UNWRAPKEY",
+    "DERIVEKEY",
+    "MACGENERATE",
+    "MACVERIFY",
+    "APPMANAGEABLE",
+    "EXPORT"
+  ]
+  enabled     = true
+  expiry_date = "2026-02-02T17:04:05Z"
+  description = "sobject description copy"
+  custom_metadata = {
+    key1 = "value1"
+  }
+  rotation_policy = {
+    interval_days          = 20
+    effective_at           = "20231130T183000Z"
+    deactivate_rotated_key = true
+    rotate_copied_keys     = "all_external"
+  }
+}
+
+# rotate a security object
+resource "dsm_sobject" "sobject_rotate" {
+  name     = "sobject_rotate"
+  obj_type = "AES"
+  group_id = dsm_group.group.id
+  key_size = 256
+  key_ops  = ["EXPORT", "ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "DERIVEKEY", "MACGENERATE", "MACVERIFY", "APPMANAGEABLE"]
+  rotate   = "DSM"
+  # Name of the above security object
+  rotate_from = "sobject"
+}
+
+## import a security object
+
+# This is an example of importing a certificate
+resource "dsm_sobject" "certificate" {
+  name        = "certificate"
+  obj_type    = "CERTIFICATE"
+  group_id    = dsm_group.group.id
+  value       = "XXXXXXXXXXXX<CERTIFICATE_value_in_a_string_format>XXXXXXXXXXXXXX"
+  expiry_date = "2025-02-02T17:04:05Z"
+  enabled     = true
+  key_ops = [
+    "ENCRYPT",
+    "VERIFY",
+    "WRAPKEY",
+    "APPMANAGEABLE",
+    "EXPORT"
+  ]
+  allowed_key_justifications_policy = [
+    "CUSTOMER_INITIATED_SUPPORT",
+    "CUSTOMER_INITIATED_ACCESS"
+  ]
+  allowed_missing_justifications = true
+  custom_metadata = {
+    key1 = "value1"
+  }
 }
 ```
 
@@ -64,8 +142,6 @@ resource "dsm_sobject" "sobject" {
 
 - `group_id` (String) The security object group assignment.
 - `name` (String) The security object name.
-- `obj_type` (String) The security object type.
-   * `Supported security objects`: AES, DES, DES3, RSA, DSA, KCDSA, EC, ECKCDSA, ARIA, SEED and Tokenization(fpe).
 
 ### Optional
 
@@ -82,15 +158,24 @@ resource "dsm_sobject" "sobject" {
    * MODIFIED_GOOGLE_INITIATED_SYSTEM_OPERATION
    * GOOGLE_RESPONSE_TO_PRODUCTION_ALERT
 - `allowed_missing_justifications` (Boolean) Boolean value which allows missing justifications even if not provided to the security object. The values are True / False.
+- `bls` (Map of String) BLS key configuration. This should be used when obj_type is `BLS`
+   * `variant`: Allowed values are small_signatures/small_public_keys.
+
+| obj_type | key_ops |
+| -------- |-------- |
+| `BLS` | APPMANAGEABLE, SIGN, VERIFY, EXPORT |
 - `custom_metadata` (Map of String) The user defined security object attributes added to the key’s metadata from Fortanix DSM.
 - `description` (String) The security object description.
+- `destruct` (String) Key destruction. Key can be destroyed or deactivated or compromised.
+
+   * Allowed values are compromise/deactivate/destroy.
 - `elliptic_curve` (String) Standardized elliptic curve. It should be given only when the obj_type is EC or ECKCDSA.
 
 | obj_type | Curve | key_ops |
 | -------- | -------- |-------- |
 | `EC` | SecP192K1, SecP224K1, SecP256K1  NistP192, NistP224, NistP256, NistP384, NistP521, X25519, Ed25519 | APPMANAGEABLE, SIGN, VERIFY, AGREEKEY, EXPORT |
 | `ECKCDSA` | SecP192K1, SecP224K1, SecP256K1  NistP192, NistP224, NistP256, NistP384, NistP521 | APPMANAGEABLE, SIGN, VERIFY, EXPORT |
-- `enabled` (Boolean) Whether the security object is enabled or disabled.
+- `enabled` (Boolean) Enable or disable the Security object.
    * The values are true/false.
 - `expiry_date` (String) The security object expiry date in RFC format.
 - `fpe` (String) FPE specific options. obj_type should be AES. It should be given in string format like below:
@@ -100,7 +185,7 @@ resource "dsm_sobject" "sobject" {
       description = "The policy document. This is a JSON formatted string."
       default = <<-EOF 
               {
-               "description":"Credit card"
+               "description":"Credit card",
                "format": {
                "char_set": [
                     [
@@ -130,6 +215,7 @@ Refer to the fpeOptions schema in https://www.fortanix.com/fortanix-restful-api-
 | -------- | -------- |
 | `ECKCDSA` | SHA1,SHA224, SHA256, SHA384, SHA521|
 | `KCDSA` | SHA224, SHA256 |
+- `key` (Map of String) Copy a local security object.
 - `key_ops` (List of String) The security object key permission from Fortanix DSM.
    * Default is to allow all permissions except EXPORT
 - `key_size` (Number) The security object size. It should not be given only when the obj_type is EC and ECKCDSA.
@@ -144,9 +230,20 @@ Refer to the fpeOptions schema in https://www.fortanix.com/fortanix-restful-api-
 | `DES3` | 112, 168 | ENCRYPT, DECRYPT, WRAPKEY, UNWRAPKEY, DERIVEKEY, MACGENERATE, MACVERIFY, APPMANAGEABLE, EXPORT |
 | `ARIA` | 128, 192, 256 | ENCRYPT, DECRYPT, WRAPKEY, UNWRAPKEY, DERIVEKEY, MACGENERATE, MACVERIFY, APPMANAGEABLE, EXPORT |
 | `SEED` | 128 | ENCRYPT, DECRYPT, WRAPKEY, UNWRAPKEY, DERIVEKEY, EXPORT |
-- `rotate` (String) specify method to use for key rotation.
+| `HMAC` | 112 to 8192 | DERIVEKEY, MACGENERATE, MACVERIFY, APPMANAGEABLE, EXPORT |
+- `lms` (Map of String) LMS key configuration. This should be used when obj_type is `LMS`
+   * `l1_height`: Allowed values are 5/10/15/20/25
+   * `l2_height`(Optional): Allowed values are 5/10/15/20/25
+   * `node_size`: Allowed values are 24/32
+
+| obj_type | key_ops |
+| -------- |-------- |
+| `LMS` | APPMANAGEABLE, SIGN, VERIFY |
+- `obj_type` (String) The security object type.
+   * `Supported security objects`: AES, DES, DES3, RSA, DSA, KCDSA, EC, ECKCDSA, ARIA, SEED and Tokenization(fpe).
+- `rotate` (String) Specify method to use for key rotation. Value is `DSM`.
 - `rotate_from` (String) Name of the security object to be rotated from.
-- `rotation_policy` (Map of String) Policy to rotate a Security Object, configure the below parameters.
+- `rotation_policy` (Map of String) Policy to rotate a Security Object, configure the below parameters. This is not supported while importing the security object.
    * `interval_days`: Rotate the key for every given number of days.
    * `interval_months`: Rotate the key for every given number of months.
    * `effective_at`: Start of the rotation policy time.
@@ -165,6 +262,23 @@ Refer to the fpeOptions schema in https://www.fortanix.com/fortanix-restful-api-
 | `DSA` | 224, 256| 224: When DSA key_size is 2048. 256: When DSA key_size is 2048 and 3072.
 | `KCDSA` | 224, 256| 224, 256: When KCDSA key_size is 2048.
 - `value` (String) Sobject content when importing content.
+
+| obj_type | Curve/Key_size/Variants | key_ops |
+| -------- | -------- |-------- |
+| `CERTIFICATE` | EC/RSA curves/key_sizes | APPMANAGEABLE, ENCRYPT, VERIFY, WRAPKEY, EXPORT |
+| `EC` | SecP192K1, SecP224K1, SecP256K1  NistP192, NistP224, NistP256, NistP384, NistP521, X25519, Ed25519 | APPMANAGEABLE, SIGN, VERIFY, AGREEKEY, EXPORT |
+| `ECKCDSA` | SecP192K1, SecP224K1, SecP256K1  NistP192, NistP224, NistP256, NistP384, NistP521 | APPMANAGEABLE, SIGN, VERIFY, EXPORT |
+| `RSA` | 1024, 2048, 4096, 8192 | APPMANAGEABLE, SIGN, VERIFY, ENCRYPT, DECRYPT, WRAPKEY, UNWRAPKEY, EXPORT |
+| `DSA` | 2048, 3072 | APPMANAGEABLE, SIGN, VERIFY, EXPORT |
+| `KCDSA` | 2048 | APPMANAGEABLE, SIGN, VERIFY, EXPORT |
+| `AES` | 128, 192, 256 | ENCRYPT, DECRYPT, WRAPKEY, UNWRAPKEY, DERIVEKEY, MACGENERATE, MACVERIFY, APPMANAGEABLE, EXPORT |
+| `DES` | 56 | ENCRYPT, DECRYPT, WRAPKEY, UNWRAPKEY, DERIVEKEY, APPMANAGEABLE, EXPORT |
+| `DES3` | 112, 168 | ENCRYPT, DECRYPT, WRAPKEY, UNWRAPKEY, DERIVEKEY, MACGENERATE, MACVERIFY, APPMANAGEABLE, EXPORT |
+| `ARIA` | 128, 192, 256 | ENCRYPT, DECRYPT, WRAPKEY, UNWRAPKEY, DERIVEKEY, MACGENERATE, MACVERIFY, APPMANAGEABLE, EXPORT |
+| `SEED` | 128 | ENCRYPT, DECRYPT, WRAPKEY, UNWRAPKEY, DERIVEKEY, EXPORT |
+| `HMAC` | 112 to 8192 | DERIVEKEY, MACGENERATE, MACVERIFY, APPMANAGEABLE, EXPORT |
+| `BLS` | small_signatures/small_public_keys | APPMANAGEABLE, SIGN, VERIFY, EXPORT |
+| `Opaque` | - | APPMANAGEABLE, EXPORT |
 
 ### Read-Only
 
