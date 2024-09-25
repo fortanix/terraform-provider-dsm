@@ -92,7 +92,7 @@ func resourceSecret() *schema.Resource {
 				Optional: true,
 			},
 			"value": {
-			    Description: "The secret value",
+			    Description: "The value of the secret security object Base64 encoded.",
 				Type:      schema.TypeString,
 				Required:  true,
 				Sensitive: true,

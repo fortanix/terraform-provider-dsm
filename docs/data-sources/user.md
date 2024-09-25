@@ -14,7 +14,7 @@ Returns the DSM user ID from the cluster as a Data Source.
 
 ```terraform
 data "dsm_user" "sample_users" {
-    user_email = "user@test.com"
+  user_email = "user@test.com"
 }
 ```
 

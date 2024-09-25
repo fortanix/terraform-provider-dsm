@@ -13,7 +13,7 @@ Creates a Fortanix DSM group mapped to Azure Key Vault in the cluster as a resou
 ## Example Usage
 
 ```terraform
-// Creation of azure group
+# Creation of azure group
 resource "dsm_azure_group" "dsm_azure_group" {
   name            = "dsm_azure_group"
   description     = "Azure group"

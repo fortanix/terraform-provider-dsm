@@ -154,6 +154,45 @@ resource "dsm_sobject" "rsa_sobject_example" {
 }
 ```
 
+## Create a RSA security object with `rsa` attribute
+
+```terraform
+resource "dsm_sobject" "rsa_sobject_example" {
+  name     = "rsa_sobject_example"
+  obj_type = "RSA"
+  group_id = dsm_group.group.id
+  key_size = 2048
+  key_ops = [
+    "ENCRYPT",
+    "DECRYPT",
+    "WRAPKEY",
+    "UNWRAPKEY",
+    "SIGN",
+    "VERIFY",
+    "APPMANAGEABLE",
+    "EXPORT"
+  ]
+  enabled     = true
+  expiry_date = "2025-02-02T17:04:05Z"
+  description = "rsa sobject description"
+  rsa         = "{\"encryption_policy\":[{\"padding\":{\"RAW_DECRYPT\":{}}},{\"padding\":{\"OAEP\":{\"mgf\":{\"mgf1\":{\"hash\":\"SHA1\"}}}}}],\"signature_policy\":[{\"padding\":{\"PKCS1_V15\":{}}},{\"padding\":{\"PSS\":{\"mgf\":{\"mgf1\":{\"hash\":\"SHA384\"}}}}}]}"
+  custom_metadata = {
+    key1 = "value1"
+  }
+  allowed_key_justifications_policy = [
+    "CUSTOMER_INITIATED_SUPPORT",
+    "CUSTOMER_INITIATED_ACCESS"
+  ]
+  allowed_missing_justifications = true
+  rotation_policy = {
+    interval_days          = 20
+    effective_at           = "20241130T183000Z"
+    deactivate_rotated_key = true
+    rotate_copied_keys     = "all_external"
+  }
+}
+```
+
 ## Create a DSA security object
 
 ```terraform

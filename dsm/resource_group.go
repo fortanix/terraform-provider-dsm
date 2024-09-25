@@ -54,7 +54,8 @@ func resourceGroup() *schema.Resource {
 				Optional: true,
 			},
 			"hmg": {
-			    Description: "The Fortanix DSM group object HMS/KMS definition as a JSON string.",
+			    Description: "The Fortanix DSM group object HMS/KMS definition as a JSON string. It is only required, " +
+			    "if group is pointing to an external KMS or HSM. For more examples refer Guides/create_BYOK_groups",
 				Type:     schema.TypeString,
 				Optional: true,
 				Sensitive: true,
@@ -65,7 +66,8 @@ func resourceGroup() *schema.Resource {
 				Computed: true,
 			},
 			"key_undo_policy_window_time": {
-			    Description: "The Fortanix DSM group object key undo policy window time as an Integer(Number of seconds).",
+			    Description: "The Fortanix DSM group object key undo policy window time as an Integer(Number of seconds)." +
+			    "Key undo policy is not applicable for External KMS groups.",
 				Type:     schema.TypeInt,
 				Optional: true,
 			},

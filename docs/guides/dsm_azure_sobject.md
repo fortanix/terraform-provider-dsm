@@ -229,5 +229,3 @@ resource "dsm_azure_sobject" "rsa_key_azure" {
   purge_deleted_key = true
 }
 ```
-
-

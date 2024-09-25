@@ -11,6 +11,7 @@ package dsm
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -72,7 +73,8 @@ func resourcePlugin() *schema.Resource {
 				Default:  "",
 			},
 			"plugin_type": {
-			    Description: "Type of the plugin.",
+			    Description: "Type of the plugin. The supported values are standard, impersonating and customalgorithm. " +
+			    "Default value is `standard`.",
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "standard",
@@ -83,15 +85,15 @@ func resourcePlugin() *schema.Resource {
 				Required: true,
 			},
 			"groups": {
-			    Description: "List of other Fortanix DSM group object ids to be mapped to the plugin.",
+			    Description: "List of Fortanix DSM group object ids to be mapped to the plugin that includes default_group as well.",
 				Type:     schema.TypeList,
-				Optional: true,
+				Required: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
 			},
 			"language": {
-			    Description: "Programming language for plugin code (Default value is `LUA`).",
+			    Description: "Programming language for plugin code (Default value is `LUA`). `LUA` is the only supported language at the moment.",
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "LUA",
@@ -273,15 +275,33 @@ func resourceReadPlugin(ctx context.Context, d *schema.ResourceData, m interface
 	if err := d.Set("acct_id", req["acct_id"].(string)); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("groups", req["groups"].([]interface{})); err != nil {
-		return diag.FromErr(err)
+	if _, ok := req["groups"]; ok {
+		resp_groups := req["groups"].([]interface{})
+		tf_state_groups, is_tf_state_groups  := d.GetOk("groups")
+		var is_same_groups bool
+		if is_tf_state_groups {
+			is_same_groups = compTwoArrays(tf_state_groups, resp_groups)
+		}
+		if is_same_groups {
+			if err := d.Set("groups", tf_state_groups); err != nil {
+				return diag.FromErr(err)
+			}
+		} else if err := d.Set("groups", resp_groups); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 	if err := d.Set("creator", req["creator"]); err != nil {
 		return diag.FromErr(err)
 	}
 	if _, ok := req["source"]; ok {
 		if source := req["source"].(map[string]interface{}); len(source) > 0 {
-			if err := d.Set("language", source["language"].(string)); err != nil {
+			language := ""
+			if strings.EqualFold(source["language"].(string), d.Get("language").(string)) {
+				language = d.Get("language").(string)
+			} else {
+				language = source["language"].(string)
+			}
+			if err := d.Set("language", language); err != nil {
 				return diag.FromErr(err)
 			}
 			if err := d.Set("code", source["code"].(string)); err != nil {

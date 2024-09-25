@@ -36,15 +36,15 @@ resource "dsm_app_non_api_key" "aws-xks-terraform" {
   name          = "aws-xks-terraform"
   default_group = dsm_group.group1.id
   other_group   = [dsm_group.group2.id, dsm_group.group3.id]
-  // other_group_permissions - to change the default permissions
+  # other_group_permissions - to change the default permissions
   other_group_permissions = local.other_groups
   authentication_method = {
     type = "awsxks"
   }
 }
 
-## To modify the default group permissions, other_group_permissions can be used in a zipmap.
-
+######################################################################################################################
+# To modify the default group permissions, other_group_permissions can be used in a zipmap.
 # In the above app the following permissions are assigned for each group:
 # group1: SIGN,VERIFY,ENCRYPT,WRAPKEY,UNWRAPKEY,DERIVEKEY,MACGENERATE,MACVERIFY,EXPORT,MANAGE,AGREEKEY,AUDIT
 # group2: SIGN,VERIFY,DECRYPT,WRAPKEY,UNWRAPKEY,DERIVEKEY,MACGENERATE,MACVERIFY,EXPORT,MANAGE,AGREEKEY,AUDIT
@@ -52,6 +52,7 @@ resource "dsm_app_non_api_key" "aws-xks-terraform" {
 
 # For group3, default permissions are assigned as it was not specified in the other_group_permissions.
 # group should be specified only if default permissions need to be changed.
+######################################################################################################################
 
 
 locals {
@@ -69,7 +70,7 @@ locals {
 
 # Create an app of type AWS IAM
 resource "dsm_app_non_api_key" "aws-iam-terraform" {
-  // The app name must match the AWS ARN associated with the calling entity.
+  # The app name must match the AWS ARN associated with the calling entity.
   name          = "arn:aws:sts::XXXXXXXXXXXX:assumed-role/XXXXXXX>/XXXXXXX"
   default_group = dsm_group.group2.id
   authentication_method = {
@@ -78,6 +79,7 @@ resource "dsm_app_non_api_key" "aws-iam-terraform" {
 }
 
 # Create app of type certificate
+# To update the certificate, change the value of the certificate with the new certificate.
 resource "dsm_app_non_api_key" "app-certificate-terraform" {
   name          = "app-certificate-terraform"
   default_group = dsm_group.group1.id
@@ -88,6 +90,7 @@ resource "dsm_app_non_api_key" "app-certificate-terraform" {
 }
 
 # Create an app of type Trusted CA using an ip address
+# To update the certificate, change the value of the certificate with the new certificate.
 resource "dsm_app_non_api_key" "app-trustedca-ip-terraform" {
   name          = "app-trustedca-ip-terraform"
   default_group = dsm_group.group2.id
@@ -99,6 +102,7 @@ resource "dsm_app_non_api_key" "app-trustedca-ip-terraform" {
 }
 
 # Create an app of type Trusted CA using dns_name
+# To update the certificate, change the value of the certificate with the new certificate.
 resource "dsm_app_non_api_key" "app-trustedca-dnsname-terraform" {
   name          = "app-trustedca-dnsname-terraform"
   default_group = dsm_group.group2.id
@@ -114,9 +118,9 @@ resource "dsm_app_non_api_key" "aws-xks-terraform" {
   name          = "aws-xks-terraform"
   default_group = dsm_group.group1.id
   other_group   = [dsm_group.group2.id, dsm_group.group3.id]
-  // other_group_permissions - to change the default permissions
+  # other_group_permissions - to change the default permissions
   other_group_permissions = local.other_groups
-  // mod_group_permissions should be given while updating an app
+  # mod_group_permissions should be given while updating an app
   mod_group_permissions = local.mod_groups
   authentication_method = {
     type = "awsxks"

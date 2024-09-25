@@ -79,7 +79,6 @@ func resourceGCPSobject() *schema.Resource {
 				"   * `interval_days`: Rotate the key every given number of days.\n" +
 				"   * `interval_months`: Rotate the key every given number of months.\n" +
 				"   * `effective_at`: Start time of the rotation policy.\n" +
-				"   * `rotate_copied_keys`: Enable key rotation for copied keys.\n" +
 				"   * **Note:** Either `interval_days` or `interval_months` should be given, but not both.",
 				Type:     schema.TypeMap,
 				Optional: true,
