@@ -183,8 +183,8 @@ resource "dsm_aws_sobject" "aws_sobject_temp_creds" {
 | obj_type | key_size/curve | key_ops |
 | -------- | -------- |-------- |
 | `AES` | 256 | ENCRYPT, DECRYPT, WRAPKEY, UNWRAPKEY, DERIVEKEY, MACGENERATE, MACVERIFY, APPMANAGEABLE, EXPORT |
-| `RSA` | 2048, 3072, 4096 | APPMANAGEABLE, SIGN, VERIFY, ENCRYPT, DECRYPT, WRAPKEY, UNWRAPKEY, EXPORT  |
-| `EC` | NistP256, NistP384, NistP521,SecP256K1 | APPMANAGEABLE, SIGN, VERIFY, AGREEKEY, EXPORT
+| `RSA` | 2048, 3072, 4096 | APPMANAGEABLE, SIGN, VERIFY, ENCRYPT, DECRYPT |
+| `EC` | NistP256, NistP384, NistP521,SecP256K1 | APPMANAGEABLE, SIGN, VERIFY
 - `rotate` (String) The security object rotation. Specify the method to use for key rotation:
    * `DSM`: To rotate from a DSM local key. The key material of new key will be stored in DSM.
    * `AWS`: To rotate from a AWS key. The key material of new key will be stored in AWS.
