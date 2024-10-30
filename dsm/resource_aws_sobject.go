@@ -184,7 +184,7 @@ func resourceAWSSobject() *schema.Resource {
 				"| -------- | -------- |-------- |\n" +
 				"| `AES` | 256 | ENCRYPT, DECRYPT, WRAPKEY, UNWRAPKEY, DERIVEKEY, MACGENERATE, MACVERIFY, APPMANAGEABLE, EXPORT |\n" +
 				"| `RSA` | 2048, 3072, 4096 | APPMANAGEABLE, SIGN, VERIFY, ENCRYPT, DECRYPT |\n" +
-				"| `EC` | NistP256, NistP384, NistP521,SecP256K1 | APPMANAGEABLE, SIGN, VERIFY",
+				"| `EC` | NistP256, NistP384, NistP521,SecP256K1 | APPMANAGEABLE, SIGN, VERIFY |",
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
@@ -309,8 +309,6 @@ func resourceCreateAWSSobject(ctx context.Context, d *schema.ResourceData, m int
 	}
 
 	req, err := invokeAWSCreateAPI(m, security_object, endpoint)
-	// Irrespective of the creation status, lock will be released.
-	aws_sobject_lock.Unlock()
 	if err != nil {
 	    return err
 	}
@@ -635,6 +633,8 @@ func resourceDeleteAWSSobject(ctx context.Context, d *schema.ResourceData, m int
 func invokeAWSCreateAPI(m interface{}, aws_sobject map[string]interface{}, endpoint string) (map[string]interface{}, diag.Diagnostics) {
 	aws_sobject_lock.Lock()
 	req, err := m.(*api_client).APICallBody("POST", endpoint, aws_sobject)
+	// Irrespective of the creation status, lock will be released.
+	aws_sobject_lock.Unlock()
 	if err != nil {
 		return nil, invokeErrorDiagsWithSummary(error_summary, fmt.Sprintf("[E]: API: POST %s: %v", endpoint, err))
 	}
