@@ -13,6 +13,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"sync"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -26,7 +27,11 @@ type TFAWSSobjectExternal struct {
 	Key_state         string
 	Key_aliases       string
 	Key_deletion_date string
+	Key_policy        string
 }
+
+// Mutex lock to API request to make sure it executes only one request at a time.
+var aws_sobject_lock sync.Mutex
 
 // [-] Define AWS Security Object in Terraform
 func resourceAWSSobject() *schema.Resource {
@@ -178,8 +183,8 @@ func resourceAWSSobject() *schema.Resource {
 				"| obj_type | key_size/curve | key_ops |\n" +
 				"| -------- | -------- |-------- |\n" +
 				"| `AES` | 256 | ENCRYPT, DECRYPT, WRAPKEY, UNWRAPKEY, DERIVEKEY, MACGENERATE, MACVERIFY, APPMANAGEABLE, EXPORT |\n" +
-				"| `RSA` | 2048, 3072, 4096 | APPMANAGEABLE, SIGN, VERIFY, ENCRYPT, DECRYPT, WRAPKEY, UNWRAPKEY, EXPORT  |\n" +
-				"| `EC` | NistP256, NistP384, NistP521,SecP256K1 | APPMANAGEABLE, SIGN, VERIFY, AGREEKEY, EXPORT",
+				"| `RSA` | 2048, 3072, 4096 | APPMANAGEABLE, SIGN, VERIFY, ENCRYPT, DECRYPT |\n" +
+				"| `EC` | NistP256, NistP384, NistP521,SecP256K1 | APPMANAGEABLE, SIGN, VERIFY |",
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
@@ -303,14 +308,9 @@ func resourceCreateAWSSobject(ctx context.Context, d *schema.ResourceData, m int
 		}
 	}
 
-	req, err := m.(*api_client).APICallBody("POST", endpoint, security_object)
+	req, err := invokeAWSCreateAPI(m, security_object, endpoint)
 	if err != nil {
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "[DSM SDK] Unable to call DSM provider API client",
-			Detail:   fmt.Sprintf("[E]: API: POST %s: %v", endpoint, err),
-		})
-		return diags
+	    return err
 	}
 
 	d.SetId(req["kid"].(string))
@@ -415,6 +415,7 @@ func resourceReadAWSSobject(ctx context.Context, d *schema.ResourceData, m inter
 			Key_state:         awssobject.Custom_metadata.Aws_key_state,
 			Key_aliases:       awssobject.Custom_metadata.Aws_aliases,
 			Key_deletion_date: awssobject.Custom_metadata.Aws_deletion_date,
+			Key_policy:        awssobject.Custom_metadata.Aws_key_policy,
 		}
 		var externalInt map[string]interface{}
 		externalRec, _ := json.Marshal(external)
@@ -426,9 +427,6 @@ func resourceReadAWSSobject(ctx context.Context, d *schema.ResourceData, m inter
 		    if err := setKeyOpsTfState(d, key_ops_read); err != nil {
                 return err
             }
-		}
-		if err := d.Set("key_ops", req["key_ops"]); err != nil {
-			return diag.FromErr(err)
 		}
 		if _, ok := req["description"]; ok {
 			if err := d.Set("description", req["description"].(string)); err != nil {
@@ -543,7 +541,7 @@ func resourceUpdateAWSSobject(ctx context.Context, d *schema.ResourceData, m int
 			if newPolicy, ok := d.Get("custom_metadata").(map[string]interface{})["aws-policy"]; ok {
 				update_aws_sobject["custom_metadata"].(map[string]interface{})["aws-policy"] = newPolicy
 			} else {
-				update_aws_sobject["custom_metadata"].(map[string]interface{})["aws-policy"] = old_custom_metadata.(map[string]interface{})["aws-policy"]
+				update_aws_sobject["custom_metadata"].(map[string]interface{})["aws-policy"] = d.Get("external").(map[string]interface{})["Key_policy"]
 			}
 
 			for k := range d.Get("custom_metadata").(map[string]interface{}) {
@@ -627,4 +625,18 @@ func resourceUpdateAWSSobject(ctx context.Context, d *schema.ResourceData, m int
 func resourceDeleteAWSSobject(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	resourceReadAWSSobject(ctx, d, m)
 	return deleteBYOKDestroyedSobject(d, m)
+}
+
+
+// This function is to call an DSM AWS BYOK copy API and to acquire the lock.
+// Lock is needed as AWS made changes in AWS API limit.
+func invokeAWSCreateAPI(m interface{}, aws_sobject map[string]interface{}, endpoint string) (map[string]interface{}, diag.Diagnostics) {
+	aws_sobject_lock.Lock()
+	req, err := m.(*api_client).APICallBody("POST", endpoint, aws_sobject)
+	// Irrespective of the creation status, lock will be released.
+	aws_sobject_lock.Unlock()
+	if err != nil {
+		return nil, invokeErrorDiagsWithSummary(error_summary, fmt.Sprintf("[E]: API: POST %s: %v", endpoint, err))
+	}
+	return req, nil
 }

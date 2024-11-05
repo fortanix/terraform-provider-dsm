@@ -47,6 +47,7 @@ type AWSSobjectCustomMetadata struct {
 	Aws_key_state     string `json:"aws-key-state"`
 	Aws_aliases       string `json:"aws-aliases"`
 	Aws_deletion_date string `json:"aws-deletion-date"`
+	Aws_key_policy    string `json:"aws-policy"`
 }
 
 type AWSSobjectExternal struct {
