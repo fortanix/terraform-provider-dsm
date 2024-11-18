@@ -104,6 +104,7 @@ func Provider() *schema.Provider {
 			"dsm_app_non_api_key":     resourceAppNonAPIKey(),
 			"dsm_gcp_sobject":         resourceGCPSobject(),
 			"dsm_admin_app":           resourceAdminApp(),
+			"dsm_app_assign_groups":   resourceAppAssignGroups(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"dsm_aws_group":    dataSourceAWSGroup(),
