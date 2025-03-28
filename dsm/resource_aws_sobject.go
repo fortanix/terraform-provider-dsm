@@ -214,7 +214,6 @@ func resourceAWSSobject() *schema.Resource {
 			    Description: "The security object expiry date in RFC format.",
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
 			},
 			"rotate": {
 			    Description: "The security object rotation. Specify the method to use for key rotation:\n" +
@@ -442,7 +441,7 @@ func resourceReadAWSSobject(ctx context.Context, d *schema.ResourceData, m inter
 		}
 		if rfcdate, ok := req["deactivation_date"]; ok {
 			// FYOO: once it's set, you can't remove deactivation date
-			sobj_deactivation_date, date_error := parseTimeFromDSM(rfcdate.(string))
+			sobj_deactivation_date, date_error := parseTimeToDSM(rfcdate.(string))
 			if date_error != nil {
 				return date_error
 			}
