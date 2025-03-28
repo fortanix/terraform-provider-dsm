@@ -289,20 +289,6 @@ func parseTimeToDSM(expiry_date string) (string, diag.Diagnostics){
 	return ddate.Format(layoutDSM), nil
 }
 
-// expiry_date
-// This function is to parse the date retrieved from DSM.
-// eg: DSM expiry_date is 20250102T150405Z.
-// Then it parses to 2025-01-02T15:04:05Z.
-func parseTimeFromDSM(expiry_date string) (string, diag.Diagnostics){
-	layoutRFC := "2006-01-02T15:04:05Z"
-	layoutDSM := "20060102T150405Z"
-	ddate, newerr := time.Parse(layoutDSM, expiry_date)
-	if newerr != nil {
-		return "", diag.FromErr(newerr)
-	}
-   return ddate.Format(layoutRFC), nil
-}
-
 // Set the key_ops in tf state.
 // This function is required, request key_ops order and response key_ops order might differ.
 // Hence, during `terraform plan`, if there are no changes in key_ops, it should not show any changes.
