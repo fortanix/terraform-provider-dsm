@@ -1,6 +1,6 @@
 module terraform-provider-dsm
 
-go 1.24.3
+go 1.24.4
 
 require (
 	github.com/aws/aws-sdk-go v1.55.7
