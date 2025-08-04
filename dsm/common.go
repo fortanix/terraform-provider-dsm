@@ -18,6 +18,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
@@ -362,3 +363,17 @@ func deleteKeyMateialBYOKSobject(d *schema.ResourceData, m interface{}) diag.Dia
 	return nil
 }
 
+// Convert String to JSON generic
+func ConvertStringToJSONGeneric[T any](inputString string) (T, error) {
+	var result T
+	if err := json.Unmarshal([]byte(inputString), &result); err != nil {
+		var inputT T
+		return inputT, err
+	}
+	return result, nil
+}
+
+// Generate a UUID
+func generateRandomID() string {
+	return uuid.New().String()
+}
