@@ -129,11 +129,11 @@ func resourceCreateUser(ctx context.Context, d *schema.ResourceData, m interface
 		}
 		patch_user["add_groups"] = add_groups
 		patch_url := fmt.Sprintf("%s/%s", dsm_endpoints["user"], req["user_id"].(string))
-		_, err1 := m.(*api_client).APICallBody("PATCH", patch_url, patch_user)
-		if err1 != nil {
+		_, p_err := m.(*api_client).APICallBody("PATCH", patch_url, patch_user)
+		if p_err != nil {
 			d.Set("groups", "")
 			resourceDeleteUser(ctx, d, m)
-			return invokeErrorDiagsWithSummary(fmt.Sprintf("[E]: API: PATCH %s: %v", patch_url, err1), error_summary)
+			return invokeErrorDiagsWithSummary(fmt.Sprintf("[E]: API: PATCH %s: %v", patch_url, p_err), error_summary)
 
 		}
 	}
