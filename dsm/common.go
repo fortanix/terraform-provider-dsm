@@ -367,6 +367,7 @@ func deleteKeyMateialBYOKSobject(d *schema.ResourceData, m interface{}) diag.Dia
 func ConvertStringToJSONGeneric[T any](inputString string) (T, error) {
 	var result T
 	if err := json.Unmarshal([]byte(inputString), &result); err != nil {
+	    // As T is generic, nil is not allowed as a return value.
 		return result, err
 	}
 	return result, nil
