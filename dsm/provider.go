@@ -105,6 +105,8 @@ func Provider() *schema.Provider {
 			"dsm_gcp_sobject":         resourceGCPSobject(),
 			"dsm_admin_app":           resourceAdminApp(),
 			"dsm_app_assign_groups":   resourceAppAssignGroups(),
+			"dsm_user":                resourceUser(),
+			"dsm_api":                 resourceAPI(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"dsm_aws_group":    dataSourceAWSGroup(),
