@@ -126,7 +126,7 @@ func invokeAPI(ctx context.Context, d *schema.ResourceData, m interface{}) (map[
 	}
 	var err diag.Diagnostics
 	var req map[string]interface{}
-	if http_method == "GET" {
+	if http_method == "GET" || http_method == "DELETE" {
 		req, _, err = m.(*api_client).APICall(http_method, endpoint)
 	} else {
 		var payload = map[string]interface{}{}
