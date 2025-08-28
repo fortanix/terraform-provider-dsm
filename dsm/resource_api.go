@@ -15,6 +15,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 // [-] Define API
@@ -31,6 +32,7 @@ func resourceAPI() *schema.Resource {
 				"   * POST, GET, PATCH, DELETE",
 				Type:     schema.TypeString,
 				Required: true,
+				ValidateFunc: validation.StringInSlice([]string{"POST", "PATCH", "GET", "DELETE"}, true),
 			},
 			"resource_type": {
 				Description: "Dsm resource type. Configure one of the parameters below.\n" +
@@ -126,7 +128,7 @@ func invokeAPI(ctx context.Context, d *schema.ResourceData, m interface{}) (map[
 	}
 	var err diag.Diagnostics
 	var req map[string]interface{}
-	if http_method == "GET" {
+	if http_method == "GET" || http_method == "DELETE" {
 		req, _, err = m.(*api_client).APICall(http_method, endpoint)
 	} else {
 		var payload = map[string]interface{}{}
