@@ -25,7 +25,9 @@ func resourceAPI() *schema.Resource {
 		ReadContext:   resourceReadAPI,
 		UpdateContext: resourceUpdateAPI,
 		DeleteContext: resourceDeleteAPI,
-		Description: "Triggers the DSM API using the details provided in the request.",
+		Description: "Triggers the DSM API using the details provided in the request.\n\n" +
+		"## Note\n" +
+		"Never DELETE terraform-managed resources using dsm_api resource, this can corrupt state and cause drift.\n",
 		Schema: map[string]*schema.Schema{
 			"method": {
 				Description: "HTTP method. Configure one of the parameters below. \n" +
