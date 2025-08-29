@@ -4,11 +4,16 @@ page_title: "dsm_api Resource - terraform-provider-dsm"
 subcategory: ""
 description: |-
   Triggers the DSM API using the details provided in the request.
+  Note
+  Never DELETE terraform-managed resources using dsm_api resource, this can corrupt state and cause drift.
 ---
 
 # dsm_api (Resource)
 
 Triggers the DSM API using the details provided in the request.
+
+## Note
+Never DELETE terraform-managed resources using dsm_api resource, this can corrupt state and cause drift.
 
 ## Example Usage
 
