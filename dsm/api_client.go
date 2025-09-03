@@ -18,9 +18,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-
+	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
@@ -210,16 +208,12 @@ func NewAPIClient(endpoint string, port int, username string, password string, a
 	// Check if AWS profile is set and use it within API client
 	if len(aws_profile) > 0 {
 		// Specify profile to load for the session's config
-		sess, err := session.NewSessionWithOptions(session.Options{
-			Profile: aws_profile,
-			Config: aws.Config{
-				CredentialsChainVerboseErrors: aws.Bool(true),
-			},
-			// Force enable Shared Config support
-			SharedConfigState: session.SharedConfigEnable,
-		})
-		if sess != nil {
-			output, err := sess.Config.Credentials.Get()
+		cfg, err := config.LoadDefaultConfig(
+			context.TODO(),
+			config.WithSharedConfigProfile(aws_profile),
+		)
+		if err == nil {
+			output, err := cfg.Credentials.Retrieve(context.TODO())
 			if err != nil {
 				return nil, err
 			} else {
