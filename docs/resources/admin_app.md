@@ -113,7 +113,7 @@ resource "dsm_admin_app" "dsm_admin_app_awsiam" {
 - `creator` (Map of String) The creator of the app from Fortanix DSM.
    * `user`: If the app was created by a user, the computed value will be the matching user id.
    * `app`: If the app was created by a app, the computed value will be the matching app id.
-- `credential` (Map of String) The Fortanix DSM App credentials.
+- `credential` (Map of String, Sensitive) The Fortanix DSM App credentials.
 
    * When the authentication method is secret. An API key will be mapped here.
    * When the authentication method is awsxks. AWSXKS access and secret keys will be mapped here.

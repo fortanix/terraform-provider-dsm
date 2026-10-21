@@ -70,6 +70,7 @@ func resourceAdminApp() *schema.Resource {
 				"   * When the authentication method is certificate/trustedca. A certificate will be mapped here.\n",
 				Type:      schema.TypeMap,
 				Computed: true,
+				Sensitive: true,
 				Elem: &schema.Schema{
 					Type:     schema.TypeString,
 				},

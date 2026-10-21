@@ -107,6 +107,7 @@ func resourceAppNonAPIKey() *schema.Resource {
 			    "AWSXKS access and secret keys will be mapped here.",
 				Type:      schema.TypeMap,
 				Computed: true,
+				Sensitive: true,
 				Elem: &schema.Schema{
 					Type:     schema.TypeString,
 				},

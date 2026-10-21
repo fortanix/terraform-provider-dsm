@@ -61,6 +61,7 @@ func dataSourceAWSGroup() *schema.Resource {
 				Description: "The Access Key ID used to communicate with AWS KMS.",
 				Type:     schema.TypeString,
 				Computed: true,
+				Sensitive: true,
 			},
 			"scan": {
 				Description: "Syncs keys from AWS KMS to the AWS KMS group in DSM. Value is either true/false.",
