@@ -31,7 +31,7 @@ func TestProvider(t *testing.T) {
 }
 
 // Attributes whose names look like a secret must be marked Sensitive so Terraform redacts them in plan/apply output.
-// Note (Shashidhar Naraparaju): If a matching attribute is not actually a secret, an allowlist map can be added as and when required.
+// Note: If a matching attribute is not actually a secret, an allowlist map can be added as and when required.
 var secretAttributeName = regexp.MustCompile(`credential|secret|password|token|private_key|api_key|access_key`)
 
 func TestSensitiveAttributes(t *testing.T) {
