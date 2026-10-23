@@ -50,7 +50,6 @@ Thumbs.db
 
 # Golang related
 vendor
-go.sum
 
 # Terraform related
 .terraform
