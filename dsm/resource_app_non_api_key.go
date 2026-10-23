@@ -1,7 +1,6 @@
 // **********
 // Terraform Provider - DSM: resource: app
 // **********
-//       - Author:    ravigopal at fortanix dot com
 //       - Version:   0.5.28
 //       - Date:      27/12/2023
 // **********
@@ -10,8 +9,8 @@ package dsm
 
 import (
 	"context"
-	"fmt"
 	"encoding/base64"
+	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -26,7 +25,6 @@ import (
 
 // In future we can add other applications as well
 
-
 // [-] Define App
 func resourceAppNonAPIKey() *schema.Resource {
 	return &schema.Resource{
@@ -35,44 +33,44 @@ func resourceAppNonAPIKey() *schema.Resource {
 		UpdateContext: resourceUpdateAppNonAPIKey,
 		DeleteContext: resourceDeleteAppNonAPIKey,
 		Description: "Creates a non API key app. The returned resource object contains the UUID of the app for further references. Default permissions of any group can be modified. Using dsm_app_non_api_key following " +
-		"apps can be created:\n" +
-		"   * `awsxks`\n" +
-		"   * `awsiam`\n" +
-		"   * `certificate`\n" +
-		"   * `trustedca`\n",
+			"apps can be created:\n" +
+			"   * `awsxks`\n" +
+			"   * `awsiam`\n" +
+			"   * `certificate`\n" +
+			"   * `trustedca`\n",
 		Schema: map[string]*schema.Schema{
 			"name": {
-			    Description: "The Fortanix DSM App name.",
-				Type:     schema.TypeString,
-				Required: true,
+				Description: "The Fortanix DSM App name.",
+				Type:        schema.TypeString,
+				Required:    true,
 			},
 			"app_id": {
-			    Description: "The unique ID of the app.",
-				Type:     schema.TypeString,
-				Computed: true,
+				Description: "The unique ID of the app.",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 			"default_group": {
-			    Description: "The Fortanix DSM group object id to be mapped to the app by default.",
-				Type:     schema.TypeString,
-				Required: true,
+				Description: "The Fortanix DSM group object id to be mapped to the app by default.",
+				Type:        schema.TypeString,
+				Required:    true,
 			},
 			"other_group": {
-			    Description: "The Fortanix DSM group object id the app needs to be assigned to. If you want to delete the existing groups from an app, remove the ids during update.",
-				Type:     schema.TypeList,
-				Optional: true,
+				Description: "The Fortanix DSM group object id the app needs to be assigned to. If you want to delete the existing groups from an app, remove the ids during update.",
+				Type:        schema.TypeList,
+				Optional:    true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
 			},
 			"acct_id": {
-			    Description: "The account ID from Fortanix DSM.",
-				Type:     schema.TypeString,
-				Computed: true,
+				Description: "The account ID from Fortanix DSM.",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 			"creator": {
 				Description: "The creator of the app from Fortanix DSM.\n" +
-				"   * `user`: If the app was created by a user, the computed value will be the matching user id.\n" +
-				"   * `app`: If the app was created by a app, the computed value will be the matching app id.",
+					"   * `user`: If the app was created by a user, the computed value will be the matching user id.\n" +
+					"   * `app`: If the app was created by a app, the computed value will be the matching app id.",
 				Type:     schema.TypeMap,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -80,51 +78,51 @@ func resourceAppNonAPIKey() *schema.Resource {
 				},
 			},
 			"description": {
-			    Description: "The description of the app.",
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "",
+				Description: "The description of the app.",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
 			},
 			"authentication_method": {
-			    Description: "The Authentication type of an app.\n" +
-				"   * `type`:  Following authentication types are supported.\n" +
-				"       * awsxks, awsiam, certificate and trustedca.\n" +
-				"   * `certificate`: Certificate value, this should be configured when the type is certificate.\n" +
-				"   * `ca_certificate`: CA certificate value, this should be configured when the type is trustedca.\n" +
-				"   One of the following parameters should be given when the type is trustedca.\n" +
-				"   * `ip_address`:  IP address value for trusted ca.\n" +
-				"   * `dns_name`:  DNS name for trusted ca.\n" +
-				"   **Note**: For more details refer the above examples.",
-				Type:      schema.TypeMap,
-				Required:  true,
+				Description: "The Authentication type of an app.\n" +
+					"   * `type`:  Following authentication types are supported.\n" +
+					"       * awsxks, awsiam, certificate and trustedca.\n" +
+					"   * `certificate`: Certificate value, this should be configured when the type is certificate.\n" +
+					"   * `ca_certificate`: CA certificate value, this should be configured when the type is trustedca.\n" +
+					"   One of the following parameters should be given when the type is trustedca.\n" +
+					"   * `ip_address`:  IP address value for trusted ca.\n" +
+					"   * `dns_name`:  DNS name for trusted ca.\n" +
+					"   **Note**: For more details refer the above examples.",
+				Type:     schema.TypeMap,
+				Required: true,
 				Elem: &schema.Schema{
 					Type:     schema.TypeString,
 					Optional: true,
 				},
 			},
 			"credential": {
-			    Description: "The Fortanix DSM App credentials. When the authentication method is awsxks, " +
-			    "AWSXKS access and secret keys will be mapped here.",
+				Description: "The Fortanix DSM App credentials. When the authentication method is awsxks, " +
+					"AWSXKS access and secret keys will be mapped here.",
 				Type:      schema.TypeMap,
-				Computed: true,
+				Computed:  true,
 				Sensitive: true,
 				Elem: &schema.Schema{
-					Type:     schema.TypeString,
+					Type: schema.TypeString,
 				},
 			},
 			"other_group_permissions": {
-			    Description: "Incase if you want to change the default permissions of a new group that includes default group. Please refer the example.",
-				Type:     schema.TypeMap,
-				Optional: true,
+				Description: "Incase if you want to change the default permissions of a new group that includes default group. Please refer the example.",
+				Type:        schema.TypeMap,
+				Optional:    true,
 				Elem: &schema.Schema{
 					Type:     schema.TypeString,
 					Optional: true,
 				},
 			},
 			"mod_group_permissions": {
-			    Description: "To modify the permissions of any existing group that includes default group. Please refer the example.",
-				Type:     schema.TypeMap,
-				Optional: true,
+				Description: "To modify the permissions of any existing group that includes default group. Please refer the example.",
+				Type:        schema.TypeMap,
+				Optional:    true,
 				Elem: &schema.Schema{
 					Type:     schema.TypeString,
 					Optional: true,
@@ -144,8 +142,8 @@ func resourceCreateAppNonAPIKey(ctx context.Context, d *schema.ResourceData, m i
 	app_object := map[string]interface{}{
 		"name":          d.Get("name").(string),
 		"default_group": d.Get("default_group").(string),
-		"app_Type":    "default",
-		"description": d.Get("description").(string),
+		"app_Type":      "default",
+		"description":   d.Get("description").(string),
 	}
 	// add groups and it's permissions
 	formAddGroups(d, app_object)
@@ -211,14 +209,14 @@ func resourceReadAppNonAPIKey(ctx context.Context, d *schema.ResourceData, m int
 	credential := make(map[string]interface{})
 	req_credential := req["credential"].(map[string]interface{})
 	if val, ok := req_credential["awsxks"].(map[string]interface{}); ok {
-		credential["access_key_id"] =  base64.StdEncoding.EncodeToString([]byte(val["access_key_id"].(string)))
+		credential["access_key_id"] = base64.StdEncoding.EncodeToString([]byte(val["access_key_id"].(string)))
 		credential["secret_key"] = base64.StdEncoding.EncodeToString([]byte(val["secret_key"].(string)))
 		credential["path_prefix"] = "/crypto/v1/apps/" + d.Id() + "/aws"
 	} else if val, ok := req_credential["certificate"].(map[string]interface{}); ok {
 		credential["certificate"] = val["certificate"].(string)
 	}
 	if err := d.Set("credential", credential); err != nil {
-			return diag.FromErr(err)
+		return diag.FromErr(err)
 	}
 
 	return diags
@@ -292,7 +290,7 @@ func formCredential(d *schema.ResourceData, app_object map[string]interface{}, a
 	authentication_method := make(map[string]interface{})
 	credential := make(map[string]interface{})
 	credential_type := ""
-	for k, v := range  am{
+	for k, v := range am {
 		if k == "type" {
 			if v == "awsxks" {
 				credential_type = "awsxks"
@@ -303,7 +301,7 @@ func formCredential(d *schema.ResourceData, app_object map[string]interface{}, a
 			} else if v == "trustedca" {
 				credential_type = "trustedca"
 			} else if v == "secret" {
-			    credential_type = "secret"
+				credential_type = "secret"
 			}
 		} else if k == "certificate" {
 			authentication_method["certificate"] = v.(string)

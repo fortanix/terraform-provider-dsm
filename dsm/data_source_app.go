@@ -1,7 +1,6 @@
 // **********
 // Terraform Provider - DSM: data source: app
 // **********
-//       - Author:    aman.ahuja@fortanix.com
 //       - Version:   0.5.16
 //       - Date:      28/07/2022
 // **********
@@ -24,14 +23,14 @@ func dataSourceApp() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"app_id": {
 				Description: "App id value.",
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
 			},
 			"credential": {
 				Description: "The Fortanix DSM App API key.",
-				Type:      schema.TypeString,
-				Computed:  true,
-				Sensitive: true,
+				Type:        schema.TypeString,
+				Computed:    true,
+				Sensitive:   true,
 			},
 		},
 		Importer: &schema.ResourceImporter{

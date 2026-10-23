@@ -17,42 +17,42 @@ func resourceGroupUserRole() *schema.Resource {
 		ReadContext:   resourceReadGroupUserRole,
 		UpdateContext: resourceUpdateGroupUserRole,
 		DeleteContext: resourceDeleteGroupUserRole,
-		Description: "Creates an assignment of a DSM group role to a user. This assignment is linked to a specific group.",
+		Description:   "Creates an assignment of a DSM group role to a user. This assignment is linked to a specific group.",
 		Schema: map[string]*schema.Schema{
 			"name": {
-			    Description: "Group object name from Fortanix DSM (matches the group_name provided during creation).",
-				Type:     schema.TypeString,
-				Computed: true,
+				Description: "Group object name from Fortanix DSM (matches the group_name provided during creation).",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 			"group_id": {
-			    Description: "Group object ID from Fortanix DSM.",
-				Type:     schema.TypeString,
-				Computed: true,
+				Description: "Group object ID from Fortanix DSM.",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 			"role_id": {
-			    Description: "Role object ID from Fortanix DSM.",
-				Type:     schema.TypeString,
-				Computed: true,
+				Description: "Role object ID from Fortanix DSM.",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 			"user_id": {
-			    Description: "User object ID from Fortanix DSM.",
-				Type:     schema.TypeString,
-				Computed: true,
+				Description: "User object ID from Fortanix DSM.",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 			"group_name": {
-			    Description: "The Fortanix DSM group object name.",
-				Type:     schema.TypeString,
-				Required: true,
+				Description: "The Fortanix DSM group object name.",
+				Type:        schema.TypeString,
+				Required:    true,
 			},
 			"user_email": {
-			    Description: "The Fortanix DSM user object email.",
-				Type:     schema.TypeString,
-				Required: true,
+				Description: "The Fortanix DSM user object email.",
+				Type:        schema.TypeString,
+				Required:    true,
 			},
 			"role_name": {
 				Description: "The Fortanix DSM role object name.\n" +
-				"   * The legacy group user role values can be GROUPAUDITOR or GROUPADMINISTRATOR.\n" +
-				"   * For custom group roles, the value should be the role ID.",
+					"   * The legacy group user role values can be GROUPAUDITOR or GROUPADMINISTRATOR.\n" +
+					"   * For custom group roles, the value should be the role ID.",
 				Type:     schema.TypeString,
 				Required: true,
 			},
