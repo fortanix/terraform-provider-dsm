@@ -1,7 +1,6 @@
 // **********
 // Terraform Provider - DSM: common functions for group permissions in app
 // **********
-//       - Author:    Ravi at fortanix dot com
 //       - Version:   5.20
 //       - Date:      13/11/2022
 // **********
@@ -122,7 +121,7 @@ func formAddGroups(d *schema.ResourceData, app_object map[string]interface{}) {
 	app_object["add_groups"] = add_groups
 }
 
-// form the group permissions - Ravi Gopal
+// form the group permissions
 func form_group_permissions(permissions interface{}) map[string]interface{} {
 	add_group_perms := make(map[string]interface{})
 	if group_perms := permissions.(map[string]interface{}); len(group_perms) > 0 {

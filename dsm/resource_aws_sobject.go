@@ -1,7 +1,6 @@
 // **********
 // Terraform Provider - DSM: resource: aws security object
 // **********
-//       - Author:    fyoo at fortanix dot com
 //       - Version:   0.5.8
 //       - Date:      27/11/2020
 // **********
@@ -292,7 +291,7 @@ func resourceCreateAWSSobject(ctx context.Context, d *schema.ResourceData, m int
 		security_object["rotation_policy"] = sobj_rotation_policy_write(rotation_policy)
 	}
 
-	// FYOO: Get tags
+	// Get tags
 	if err := d.Get("aws_tags").(map[string]interface{}); len(err) > 0 {
 		if _, cmExists := security_object["custom_metadata"]; !cmExists {
 			security_object["custom_metadata"] = make(map[string]interface{})
@@ -441,7 +440,7 @@ func resourceReadAWSSobject(ctx context.Context, d *schema.ResourceData, m inter
 			return diag.FromErr(err)
 		}
 		if rfcdate, ok := req["deactivation_date"]; ok {
-			// FYOO: once it's set, you can't remove deactivation date
+			// once it's set, you can't remove deactivation date
 			sobj_deactivation_date, date_error := parseTimeFromDSM(rfcdate.(string))
 			if date_error != nil {
 				return date_error
@@ -459,7 +458,7 @@ func resourceReadAWSSobject(ctx context.Context, d *schema.ResourceData, m inter
 				return diag.FromErr(err)
 			}
 		}
-		// FYOO: clear values that are irrelevant
+		// clear values that are irrelevant
 		d.Set("rotate", "")
 		d.Set("rotate_from", "")
 	}
@@ -528,7 +527,7 @@ func resourceUpdateAWSSobject(ctx context.Context, d *schema.ResourceData, m int
 		if err := d.Get("custom_metadata").(map[string]interface{}); len(err) > 0 {
 
 			old_custom_metadata, _ := d.GetChange("custom_metadata")
-			// FYOO: Needs work
+			// Needs work
 			update_aws_sobject["custom_metadata"] = make(map[string]interface{})
 
 			if newAlias, ok := d.Get("custom_metadata").(map[string]interface{})["aws-aliases"]; ok {
@@ -551,7 +550,7 @@ func resourceUpdateAWSSobject(ctx context.Context, d *schema.ResourceData, m int
 				}
 			}
 
-			// FYOO: Get tags
+			// Get tags
 			if d.HasChange("aws_tags") {
 				if err := d.Get("aws_tags").(map[string]interface{}); len(err) > 0 {
 					if _, cmExists := update_aws_sobject["custom_metadata"]; !cmExists {

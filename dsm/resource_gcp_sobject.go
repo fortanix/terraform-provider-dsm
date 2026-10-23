@@ -1,7 +1,6 @@
 // **********
 // Terraform Provider - DSM: resource: gcp security object
 // **********
-//       - Author:    shashidhar naraparaju at fortanix dot com
 //       - Version:   0.5.29
 //       - Date:      05/04/2024
 // **********
@@ -290,7 +289,7 @@ func resourceReadGCPSobject(ctx context.Context, d *schema.ResourceData, m inter
 			return diag.FromErr(err)
 		}
 		if rfcdate, ok := req["deactivation_date"]; ok {
-			// FYOO: once it's set, you can't remove deactivation date
+			// once it's set, you can't remove deactivation date
 			layoutRFC := "2006-01-02T15:04:05Z"
 			layoutDSM := "20060102T150405Z"
 			ddate, newerr := time.Parse(layoutDSM, rfcdate.(string))

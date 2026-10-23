@@ -1,7 +1,6 @@
 // **********
 // Terraform Provider - SDKMS: resource: secret
 // **********
-//       - Author:    fyoo at fortanix dot com
 //       - Version:   0.3.7
 //       - Date:      27/11/2020
 // **********
@@ -315,7 +314,7 @@ func resourceReadSecret(ctx context.Context, d *schema.ResourceData, m interface
 			return diag.FromErr(err)
 		}
 		if rfcdate, ok := res["deactivation_date"].(string); ok {
-			// FYOO: once it's set, you can't remove deactivation date
+			// once it's set, you can't remove deactivation date
 			layoutRFC := "2006-01-02T15:04:05Z"
 			layoutDSM := "20060102T150405Z"
 			ddate, newerr := time.Parse(layoutDSM, rfcdate)

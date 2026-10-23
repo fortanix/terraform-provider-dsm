@@ -1,7 +1,6 @@
 // **********
 // Terraform Provider - DSM: common: structs
 // **********
-//       - Author:    fyoo at fortanix dot com
 //       - Version:   0.5.0
 //       - Date:      27/11/2020
 // **********

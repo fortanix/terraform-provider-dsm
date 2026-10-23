@@ -1,7 +1,6 @@
 // **********
 // Terraform Provider - DSM: resource: group
 // **********
-//       - Author:    fyoo at fortanix dot com
 //       - Version:   0.5.0
 //       - Date:      27/11/2020
 // **********
@@ -168,7 +167,7 @@ func resourceReadAWSGroup(ctx context.Context, d *schema.ResourceData, m interfa
 				})
 				return diags
 			}
-			// FYOO: AWSGroup must conform to this JSON struct - if this crashes, then we have DSM issues
+			// AWSGroup must conform to this JSON struct - if this crashes, then we have DSM issues
 			name := strings.Split(awsgroup.Name, fmt.Sprintf("-aws-%s", m.(*api_client).aws_region))
 			d.Set("name", name[0])
 			d.Set("group_id", awsgroup.Group_id)
@@ -178,13 +177,13 @@ func resourceReadAWSGroup(ctx context.Context, d *schema.ResourceData, m interfa
 			json.Unmarshal(creatorRec, &creatorInt)
 			d.Set("creator", creatorInt)
 			d.Set("region", m.(*api_client).aws_region)
-			// FYOO: there is only one HMG per AWSGroup
+			// there is only one HMG per AWSGroup
 			for _, value := range awsgroup.Hmg {
 				d.Set("access_key", value.Access_key)
 			}
-			// FYOO: remove sensitive information
+			// remove sensitive information
 			d.Set("secret_key", "")
-			// FYOO: if description is blank, DSM does not return
+			// if description is blank, DSM does not return
 			if _, ok := req["description"]; ok {
 				d.Set("description", req["description"].(string))
 			}

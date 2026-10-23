@@ -1,7 +1,6 @@
 // **********
 // Terraform Provider - DSM: resource: gcp_ekm_sa
 // **********
-//       - Author:    fyoo at fortanix dot com
 //       - Version:   0.3.7
 //       - Date:      27/07/2021
 //       - Changelog:

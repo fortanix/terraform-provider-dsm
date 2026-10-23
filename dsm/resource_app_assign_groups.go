@@ -1,7 +1,6 @@
 // **********
 // Terraform Provider - DSM: resource: app
 // **********
-//       - Author:    ravigopal at fortanix dot com
 //       - Version:   0.5.34
 //       - Date:      15/11/2024
 // **********

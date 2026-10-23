@@ -1,7 +1,6 @@
 // **********
 // Terraform Provider - DSM: data source: azure kms group
 // **********
-//       - Author:    fyoo at fortanix dot com
 //       - Version:   0.5.0
 //       - Date:      05/01/2021
 // **********
@@ -110,7 +109,7 @@ func dataSourceAzureGroupRead(ctx context.Context, d *schema.ResourceData, m int
 		return diags
 	}
 
-	// Shashi: First, check for the group name as provided.
+	// First, check for the group name as provided.
 	// If not found, fallback to checking the group name in the "name-azure-region" format used prior to v0.5.33.
 	for _, data := range req {
 		group_name := data.(map[string]interface{})["name"].(string)
@@ -152,7 +151,7 @@ func dataSourceAzureGroupRead(ctx context.Context, d *schema.ResourceData, m int
 		return diags
 	}
 
-	// FYOO: AzureGroup must conform to this JSON struct - if this crashes, then we have DSM issues
+	// AzureGroup must conform to this JSON struct - if this crashes, then we have DSM issues
 	name := strings.Split(azuregroup.Name, fmt.Sprintf("-azure-%s", m.(*api_client).azure_region))
 	d.Set("name", name[0])
 	d.Set("group_id", azuregroup.Group_id)
@@ -164,7 +163,7 @@ func dataSourceAzureGroupRead(ctx context.Context, d *schema.ResourceData, m int
 	d.Set("creator", creatorInt)
 	d.Set("region", m.(*api_client).azure_region)
 
-	// FYOO: there is only one HMG per AzureGroup
+	// there is only one HMG per AzureGroup
 	for _, value := range azuregroup.Hmg {
 		d.Set("subscription_id", value.Subscription_id)
 		d.Set("client_id", value.Client_id)
@@ -172,9 +171,9 @@ func dataSourceAzureGroupRead(ctx context.Context, d *schema.ResourceData, m int
 		d.Set("key_vault_type", value.Key_vault_type)
 		d.Set("url", value.Url)
 	}
-	// FYOO: remove sensitive information
+	// remove sensitive information
 	d.Set("secret_key", "")
-	// FYOO: if description is blank, DSM does not return
+	// if description is blank, DSM does not return
 	if _, ok := group_data["description"]; ok {
 		d.Set("description", group_data["description"].(string))
 	}

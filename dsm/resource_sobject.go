@@ -701,7 +701,7 @@ func resourceReadSobject(ctx context.Context, d *schema.ResourceData, m interfac
 		//if err := d.Set("links", req["links"]); err != nil {
 		//	return diag.FromErr(err)
 		//}
-		// FYOO: Fix this later - some wierd reaction to TypeList/TypeMap within TF
+		// Fix this later - some wierd reaction to TypeList/TypeMap within TF
 		if err := d.Set("copied_to", req["copied_to"]); err != nil {
 			return diag.FromErr(err)
 		}
@@ -744,7 +744,7 @@ func resourceReadSobject(ctx context.Context, d *schema.ResourceData, m interfac
 				}
 			}
 		}
-		// FYOO: Fix TypeList sorting error
+		// Fix TypeList sorting error
 		key_ops := make([]string, len(req["key_ops"].([]interface{})))
 		if err := d.Get("key_ops").([]interface{}); len(err) > 0 {
 			if len(d.Get("key_ops").([]interface{})) == len(req["key_ops"].([]interface{})) {
@@ -784,7 +784,7 @@ func resourceReadSobject(ctx context.Context, d *schema.ResourceData, m interfac
 			return diag.FromErr(err)
 		}
 		if rfcdate, ok := req["deactivation_date"]; ok {
-			// FYOO: once it's set, you can't remove deactivation date
+			// once it's set, you can't remove deactivation date
 			layoutRFC := "2006-01-02T15:04:05Z"
 			layoutDSM := "20060102T150405Z"
 			ddate, newerr := time.Parse(layoutDSM, rfcdate.(string))
@@ -863,7 +863,7 @@ func resourceReadSobject(ctx context.Context, d *schema.ResourceData, m interfac
 			}
 		}
 
-		// FYOO: clear values that are irrelevant
+		// clear values that are irrelevant
 		d.Set("rotate", "")
 		d.Set("rotate_from", "")
 		return diags

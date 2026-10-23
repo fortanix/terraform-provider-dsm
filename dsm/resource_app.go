@@ -1,7 +1,6 @@
 // **********
 // Terraform Provider - DSM: resource: app
 // **********
-//       - Author:    fyoo at fortanix dot com
 //       - Version:   0.5.3
 //       - Date:      27/11/2020
 // **********
@@ -212,7 +211,6 @@ func resourceUpdateApp(ctx context.Context, d *schema.ResourceData, m interface{
 			return diags
 		}
 	}
-	//Modified by Ravi Gopal
 	app_object := make(map[string]interface{})
 	app_object["description"] = d.Get("description")
 	app_object["name"] = d.Get("name")

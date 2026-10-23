@@ -1,7 +1,6 @@
 // **********
 // Terraform Provider - DSM: resource: azure security object
 // **********
-//       - Author:    fyoo at fortanix dot com
 //       - Version:   0.5.0
 //       - Date:      27/11/2020
 // **********
@@ -365,7 +364,7 @@ func resourceReadAzureSobject(ctx context.Context, d *schema.ResourceData, m int
 			return diag.FromErr(err)
 		}
 		if rfcdate, ok := req["deactivation_date"]; ok {
-			// FYOO: once it's set, you can't remove deactivation date
+			// once it's set, you can't remove deactivation date
 			layoutRFC := "2006-01-02T15:04:05Z"
 			layoutDSM := "20060102T150405Z"
 			ddate, newerr := time.Parse(layoutDSM, rfcdate.(string))

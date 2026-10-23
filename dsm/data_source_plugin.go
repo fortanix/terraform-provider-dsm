@@ -1,7 +1,6 @@
 // **********
 // Terraform Provider - SDKMS: resource: security object
 // **********
-//       - Author:    Ravi Gopal at fortanix dot com
 //       - Version:   0.5.1
 //       - Date:      21/10/2022
 // **********

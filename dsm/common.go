@@ -1,7 +1,6 @@
 // **********
 // Terraform Provider - DSM: common functions
 // **********
-//       - Author:    fyoo at fortanix dot com
 //       - Version:   0.3.7
 //       - Date:      05/01/2021
 // **********
@@ -96,7 +95,7 @@ func PublicPEMtoOpenSSH(pemBytes []byte) (*string, diag.Diagnostics) {
 	return &sshPubKey, diags
 }
 
-// computes the add and delete arrays - Ravi Gopal
+// computes the add and delete arrays
 func compute_add_and_del_arrays(old_array interface{}, new_array interface{}) ([]string, []string) {
 
 	/*

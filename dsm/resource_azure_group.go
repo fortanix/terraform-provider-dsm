@@ -1,7 +1,6 @@
 // **********
 // Terraform Provider - DSM: resource: azure kms group
 // **********
-//       - Author:    fyoo at fortanix dot com
 //       - Version:   0.5.0
 //       - Date:      27/11/2020
 // **********
@@ -179,7 +178,7 @@ func resourceReadAzureGroup(ctx context.Context, d *schema.ResourceData, m inter
 				})
 				return diags
 			}
-			// FYOO: AzureGroup must conform to this JSON struct - if this crashes, then we have DSM issues
+			// AzureGroup must conform to this JSON struct - if this crashes, then we have DSM issues
 			name := strings.Split(azuregroup.Name, fmt.Sprintf("-azure-%s", m.(*api_client).azure_region))
 			d.Set("name", name[0])
 			d.Set("group_id", azuregroup.Group_id)
@@ -189,7 +188,7 @@ func resourceReadAzureGroup(ctx context.Context, d *schema.ResourceData, m inter
 			json.Unmarshal(creatorRec, &creatorInt)
 			d.Set("creator", creatorInt)
 			d.Set("region", m.(*api_client).azure_region)
-			// FYOO: there is only one HMG per AzureGroup
+			// there is only one HMG per AzureGroup
 			for _, value := range azuregroup.Hmg {
 				d.Set("subscription_id", value.Subscription_id)
 				d.Set("client_id", value.Client_id)
@@ -197,9 +196,9 @@ func resourceReadAzureGroup(ctx context.Context, d *schema.ResourceData, m inter
 				d.Set("key_vault_type", value.Key_vault_type)
 				d.Set("url", value.Url)
 			}
-			// FYOO: remove sensitive information
+			// remove sensitive information
 			d.Set("secret_key", "")
-			// FYOO: if description is blank, DSM does not return
+			// if description is blank, DSM does not return
 			if _, ok := req["description"]; ok {
 				d.Set("description", req["description"].(string))
 			}

@@ -1,7 +1,6 @@
 // **********
 // Terraform Provider - DSM: provider
 // **********
-//       - Author:    fyoo at fortanix dot com
 //       - Version:   0.5.7
 //       - Date:      27/07/2021
 // **********
