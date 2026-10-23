@@ -16,11 +16,11 @@ import (
 )
 
 var default_permissions = []string{"SIGN", "VERIFY", "ENCRYPT", "DECRYPT", "WRAPKEY", "UNWRAPKEY", "DERIVEKEY", "MACGENERATE", "MACVERIFY", "EXPORT", "MANAGE", "AGREEKEY", "AUDIT",
-"TRANSFORM", "ENCAPSULATE", "DECAPSULATE"}
+	"TRANSFORM", "ENCAPSULATE", "DECAPSULATE"}
 
 // subjected to resource_app and resource_gcp_ekm_sa
 // It will add and delete the groups if applicable
-func getChangesInOtherGroups(d *schema.ResourceData, app_object map[string]interface{}) (){
+func getChangesInOtherGroups(d *schema.ResourceData, app_object map[string]interface{}) {
 	old_group, new_group := d.GetChange("other_group")
 	// compute_add_and_del_arrays function is in common.go
 	add_group_ids, del_group_ids := compute_add_and_del_arrays(old_group, new_group)
@@ -48,12 +48,12 @@ func getChangesInOtherGroups(d *schema.ResourceData, app_object map[string]inter
 
 // subjected to resource_app and resource_gcp_ekm_sa
 // It adds the changes in group permissions
-func getChangesInGroupPermissions(d *schema.ResourceData, app_object map[string]interface{}) (diag.Diagnostics) {
+func getChangesInGroupPermissions(d *schema.ResourceData, app_object map[string]interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	mod_groups := make(map[string]interface{})
 	for group_id, perms := range d.Get("mod_group_permissions").(map[string]interface{}) {
-	  mod_groups[group_id] = perms
+		mod_groups[group_id] = perms
 	}
 	if len(mod_groups) > 0 {
 		app_mod_groups := make(map[string]interface{})

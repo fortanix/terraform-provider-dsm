@@ -23,14 +23,14 @@ func dataSourceApp() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"app_id": {
 				Description: "App id value.",
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
 			},
 			"credential": {
 				Description: "The Fortanix DSM App API key.",
-				Type:      schema.TypeString,
-				Computed:  true,
-				Sensitive: true,
+				Type:        schema.TypeString,
+				Computed:    true,
+				Sensitive:   true,
 			},
 		},
 		Importer: &schema.ResourceImporter{

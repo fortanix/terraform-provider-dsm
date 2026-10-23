@@ -101,7 +101,7 @@ func compute_add_and_del_arrays(old_array interface{}, new_array interface{}) ([
 	/*
 	* Compares old state and new state
 	* segregates the arrays to be added and arrays to be deleted.
-	*/
+	 */
 	old_array_set := old_array.([]interface{})
 	new_array_set := new_array.([]interface{})
 
@@ -142,77 +142,76 @@ func compute_add_and_del_arrays(old_array interface{}, new_array interface{}) ([
 }
 
 func substr(input string, start int, length int) string {
-        asRunes := []rune(input)
+	asRunes := []rune(input)
 
-        if start >= len(asRunes) {
-                return ""
-        }
+	if start >= len(asRunes) {
+		return ""
+	}
 
-        if start+length > len(asRunes) {
-                length = len(asRunes) - start
-        }
+	if start+length > len(asRunes) {
+		length = len(asRunes) - start
+	}
 
-        return string(asRunes[start : start+length])
+	return string(asRunes[start : start+length])
 }
 
 // To write/update the security object rotation_policy
 func sobj_rotation_policy_write(rp map[string]interface{}) map[string]interface{} {
-        rotation_policy := make(map[string]interface{})
-        for k, v := range  rp{
-            /* while sending the request, interval_days should be assigned as an integer.
-               Hence it is converted to integer from the string.
-            */
-            if k == "interval_days" || k == "interval_months" {
-                val, _ := strconv.Atoi(v.(string))
-                rotation_policy[k] = val
-            } else if k == "deactivate_rotated_key" {
-                /* while sending the request, deactivate_rotated_key should be assigned as a boolean..
-                   Hence it is converted to boolean from the string.
-                */
-                val, _ := strconv.ParseBool(v.(string))
-                rotation_policy[k] = val
-            } else {
-                rotation_policy[k] = v
-            }
-        }
-        return rotation_policy
+	rotation_policy := make(map[string]interface{})
+	for k, v := range rp {
+		/* while sending the request, interval_days should be assigned as an integer.
+		   Hence it is converted to integer from the string.
+		*/
+		if k == "interval_days" || k == "interval_months" {
+			val, _ := strconv.Atoi(v.(string))
+			rotation_policy[k] = val
+		} else if k == "deactivate_rotated_key" {
+			/* while sending the request, deactivate_rotated_key should be assigned as a boolean..
+			   Hence it is converted to boolean from the string.
+			*/
+			val, _ := strconv.ParseBool(v.(string))
+			rotation_policy[k] = val
+		} else {
+			rotation_policy[k] = v
+		}
+	}
+	return rotation_policy
 }
 
 // To read the security object rotation_policy
-func sobj_rotation_policy_read(rp map[string]interface{}) map[string]interface{}  {
-        rotation_policy := make(map[string]interface{})
-        for k, v := range  rp{
-            /* while reading the rotation_policy from terraform the interval_days attribute is assigned as float64 datatype.
-               Hence it will be converted to string from float object.
-            */
-            if k == "interval_days" || k == "interval_months" {
-                rotation_policy[k] = strconv.FormatFloat(v.(float64), 'f', -1, 64)
-            } else if k == "deactivate_rotated_key" {
-                rotation_policy[k] = strconv.FormatBool(v.(bool))
-            } else {
-                rotation_policy[k] = v
-            }
-        }
-        return rotation_policy
+func sobj_rotation_policy_read(rp map[string]interface{}) map[string]interface{} {
+	rotation_policy := make(map[string]interface{})
+	for k, v := range rp {
+		/* while reading the rotation_policy from terraform the interval_days attribute is assigned as float64 datatype.
+		   Hence it will be converted to string from float object.
+		*/
+		if k == "interval_days" || k == "interval_months" {
+			rotation_policy[k] = strconv.FormatFloat(v.(float64), 'f', -1, 64)
+		} else if k == "deactivate_rotated_key" {
+			rotation_policy[k] = strconv.FormatBool(v.(bool))
+		} else {
+			rotation_policy[k] = v
+		}
+	}
+	return rotation_policy
 }
 
 // To read the security object rotation_policy
-func set_lms_read_sobject(lms map[string]interface{}) map[string]interface{}  {
-        lms_data := make(map[string]interface{})
-        for k, v := range  lms{
-            /* while reading the lms value from terraform the interval_days attribute is assigned as float64 datatype.
-               Hence it will be converted to string from float object.
-            */
-            if k == "node_size" || k == "l1_height" || k == "l2_height" {
-                lms_data[k] = strconv.FormatFloat(v.(float64), 'f', -1, 64)
-             }
-        }
-        return lms_data
+func set_lms_read_sobject(lms map[string]interface{}) map[string]interface{} {
+	lms_data := make(map[string]interface{})
+	for k, v := range lms {
+		/* while reading the lms value from terraform the interval_days attribute is assigned as float64 datatype.
+		   Hence it will be converted to string from float object.
+		*/
+		if k == "node_size" || k == "l1_height" || k == "l2_height" {
+			lms_data[k] = strconv.FormatFloat(v.(float64), 'f', -1, 64)
+		}
+	}
+	return lms_data
 }
-
 
 // Compare two array strings whether they are equal or not irrespective of the order.
-func compTwoArrays(x interface{}, y interface{}) bool{
+func compTwoArrays(x interface{}, y interface{}) bool {
 	x_array_set := x.([]interface{})
 	y_array_set := y.([]interface{})
 
@@ -256,7 +255,7 @@ func invokeErrorDiagsWithSummary(detail string, summary string) diag.Diagnostics
 	var diags diag.Diagnostics
 	diags = append(diags, diag.Diagnostic{
 		Severity: diag.Error,
-		Summary: summary,
+		Summary:  summary,
 		Detail:   detail,
 	})
 	return diags
@@ -268,9 +267,9 @@ func undoTFstate(param_type string, d *schema.ResourceData) diag.Diagnostics {
 	old_val, new_val := d.GetChange(param_type)
 	d.Set(param_type, old_val)
 	diags = append(diags, diag.Diagnostic{
-		  Severity: diag.Error,
-		  Summary:  param_type + " cannot modify on update",
-		  Detail:   fmt.Sprintf("[E]: API: PATCH crypto/v1/keys: %s cannot change on update. Please retain it to old value: %s -> %s", param_type, old_val, new_val),
+		Severity: diag.Error,
+		Summary:  param_type + " cannot modify on update",
+		Detail:   fmt.Sprintf("[E]: API: PATCH crypto/v1/keys: %s cannot change on update. Please retain it to old value: %s -> %s", param_type, old_val, new_val),
 	})
 	return diags
 }
@@ -279,7 +278,7 @@ func undoTFstate(param_type string, d *schema.ResourceData) diag.Diagnostics {
 // This function is to parse the date given by the end user.
 // eg: User gives the expiry_date as 2025-01-02T15:04:05Z.
 // Then it parses to 20250102T150405Z.
-func parseTimeToDSM(expiry_date string) (string, diag.Diagnostics){
+func parseTimeToDSM(expiry_date string) (string, diag.Diagnostics) {
 	layoutRFC := "2006-01-02T15:04:05Z"
 	layoutDSM := "20060102T150405Z"
 	ddate, newerr := time.Parse(layoutRFC, expiry_date)
@@ -293,20 +292,20 @@ func parseTimeToDSM(expiry_date string) (string, diag.Diagnostics){
 // This function is to parse the date retrieved from DSM.
 // eg: DSM expiry_date is 20250102T150405Z.
 // Then it parses to 2025-01-02T15:04:05Z.
-func parseTimeFromDSM(expiry_date string) (string, diag.Diagnostics){
+func parseTimeFromDSM(expiry_date string) (string, diag.Diagnostics) {
 	layoutRFC := "2006-01-02T15:04:05Z"
 	layoutDSM := "20060102T150405Z"
 	ddate, newerr := time.Parse(layoutDSM, expiry_date)
 	if newerr != nil {
 		return "", diag.FromErr(newerr)
 	}
-   return ddate.Format(layoutRFC), nil
+	return ddate.Format(layoutRFC), nil
 }
 
 // Set the key_ops in tf state.
 // This function is required, request key_ops order and response key_ops order might differ.
 // Hence, during `terraform plan`, if there are no changes in key_ops, it should not show any changes.
-func setKeyOpsTfState(d *schema.ResourceData, key_ops interface{}) diag.Diagnostics{
+func setKeyOpsTfState(d *schema.ResourceData, key_ops interface{}) diag.Diagnostics {
 	is_same_key_ops := compTwoArrays(key_ops, d.Get("key_ops"))
 	if is_same_key_ops {
 		if err := d.Set("key_ops", d.Get("key_ops")); err != nil {
@@ -320,17 +319,16 @@ func setKeyOpsTfState(d *schema.ResourceData, key_ops interface{}) diag.Diagnost
 	return nil
 }
 
-
 // A BYOK security object can be deleted only when it is in Destroyed state.
 func deleteBYOKDestroyedSobject(d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	/*
-	BYOK object can be deleted only after destruction.
+		BYOK object can be deleted only after destruction.
 	*/
 	error_summary := "[DSM SDK] Unable to call DSM provider API client"
 	if d.Get("state").(string) == "Destroyed" {
 		_, statuscode, err := m.(*api_client).APICall("DELETE", fmt.Sprintf("crypto/v1/keys/%s", d.Id()))
 		if (err != nil) && (statuscode != 204) {
-		    return invokeErrorDiagsWithSummary(error_summary, fmt.Sprintf("[E]: API: DELETE crypto/v1/keys: %v", err))
+			return invokeErrorDiagsWithSummary(error_summary, fmt.Sprintf("[E]: API: DELETE crypto/v1/keys: %v", err))
 		}
 		d.SetId("")
 	} else {
@@ -338,7 +336,6 @@ func deleteBYOKDestroyedSobject(d *schema.ResourceData, m interface{}) diag.Diag
 	}
 	return nil
 }
-
 
 // Throw a warning, if the key is already scheduled for deletion.
 func showWarning(msg string) diag.Diagnostics {
@@ -351,14 +348,13 @@ func showWarning(msg string) diag.Diagnostics {
 	return diags
 }
 
-
 // Delete key material. (AZURE and AWS)
 func deleteKeyMateialBYOKSobject(d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	error_summary := "[DSM SDK] Unable to call DSM provider API client"
-    _, statuscode, err := m.(*api_client).APICall("POST", fmt.Sprintf("crypto/v1/keys/%s/delete_key_material", d.Id()))
-    if (err != nil) && (statuscode != 200) {
-        return invokeErrorDiagsWithSummary(error_summary, fmt.Sprintf("[E]: API: POST crypto/v1/keys: %v", err))
-    }
+	_, statuscode, err := m.(*api_client).APICall("POST", fmt.Sprintf("crypto/v1/keys/%s/delete_key_material", d.Id()))
+	if (err != nil) && (statuscode != 200) {
+		return invokeErrorDiagsWithSummary(error_summary, fmt.Sprintf("[E]: API: POST crypto/v1/keys: %v", err))
+	}
 	return nil
 }
 
@@ -366,7 +362,7 @@ func deleteKeyMateialBYOKSobject(d *schema.ResourceData, m interface{}) diag.Dia
 func ConvertStringToJSONGeneric[T any](inputString string) (T, error) {
 	var result T
 	if err := json.Unmarshal([]byte(inputString), &result); err != nil {
-	    // As T is generic, nil is not allowed as a return value.
+		// As T is generic, nil is not allowed as a return value.
 		return result, err
 	}
 	return result, nil

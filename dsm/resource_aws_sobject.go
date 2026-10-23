@@ -40,79 +40,79 @@ func resourceAWSSobject() *schema.Resource {
 		UpdateContext: resourceUpdateAWSSobject,
 		DeleteContext: resourceDeleteAWSSobject,
 		Description: "Creates a new security object in AWS KMS. This is a Bring-Your-Own-Key (BYOK) method and copies an existing DSM local security object to AWS KMS as a Customer Managed Key (CMK).The returned resource object contains the UUID of the security object for further references.\n" +
-		"AWS security object can also rotate and enable scheduled deletion. For more examples, refer Guides/dsm_aws_sobject, Guides/rotate_with_AWS_option and rotate_with_DSM_option.\n\n" +
-		"**Temporary Credentials**: AWS security object can also be created using AWS temporary credentials. Please refer the below example for temporary credentials.\n\n" +
-		"**Note**: Once scheduled deletion is enabled, AWS security object can't be modified.\n\n" +
-		"**Deletion of a dsm_aws_sobject**: Unlike dsm_sobject, deletion of a dsm_aws_sobject is not normal.\n\n" +
-		"**Steps to delete a dsm_azure_sobject:**\n" +
-		"   * Enable `delete_key_material` as shown in the examples of `Guides/dsm_aws_sobject`.\n" +
-		"   * Enable `schedule_deletion` as shown in the examples of `Guides/dsm_aws_sobject`.\n" +
-		"   * A dsm_aws_sobject can be deleted completely only when its state is `destroyed`.\n" +
-		"   * A dsm_aws_sobject's state is destroyed when the key is deleted from AWS KMS.\n" +
-		"   * To know whether it is in a destroyed state or not, sync keys operation should be performed.\n" +
-		"   * Use `dsm_aws_group` data_source to sync the keys. Please refer `Data Sources/dsm_aws_group`.\n\n" +
-		"**Note**: `delete_key_material` can be skipped if `schedule_deletion` is enabled as it deletes the key material as well.",
+			"AWS security object can also rotate and enable scheduled deletion. For more examples, refer Guides/dsm_aws_sobject, Guides/rotate_with_AWS_option and rotate_with_DSM_option.\n\n" +
+			"**Temporary Credentials**: AWS security object can also be created using AWS temporary credentials. Please refer the below example for temporary credentials.\n\n" +
+			"**Note**: Once scheduled deletion is enabled, AWS security object can't be modified.\n\n" +
+			"**Deletion of a dsm_aws_sobject**: Unlike dsm_sobject, deletion of a dsm_aws_sobject is not normal.\n\n" +
+			"**Steps to delete a dsm_azure_sobject:**\n" +
+			"   * Enable `delete_key_material` as shown in the examples of `Guides/dsm_aws_sobject`.\n" +
+			"   * Enable `schedule_deletion` as shown in the examples of `Guides/dsm_aws_sobject`.\n" +
+			"   * A dsm_aws_sobject can be deleted completely only when its state is `destroyed`.\n" +
+			"   * A dsm_aws_sobject's state is destroyed when the key is deleted from AWS KMS.\n" +
+			"   * To know whether it is in a destroyed state or not, sync keys operation should be performed.\n" +
+			"   * Use `dsm_aws_group` data_source to sync the keys. Please refer `Data Sources/dsm_aws_group`.\n\n" +
+			"**Note**: `delete_key_material` can be skipped if `schedule_deletion` is enabled as it deletes the key material as well.",
 		Schema: map[string]*schema.Schema{
 			"name": {
-			    Description: "The security object name.",
-				Type:     schema.TypeString,
-				Required: true,
+				Description: "The security object name.",
+				Type:        schema.TypeString,
+				Required:    true,
 			},
 			"dsm_name": {
-			    Description: "The security object name from Fortanix DSM (matches the name provided during creation).",
-				Type:     schema.TypeString,
-				Computed: true,
+				Description: "The security object name from Fortanix DSM (matches the name provided during creation).",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 			"group_id": {
-			    Description: "The security object group assignment.",
-				Type:     schema.TypeString,
-				Required: true,
+				Description: "The security object group assignment.",
+				Type:        schema.TypeString,
+				Required:    true,
 			},
 			"key": {
-			    Description: "A local security object created/imported to Fortanix DSM(BYOK) and copied to AWS KMS.",
-				Type:     schema.TypeMap,
-				Required: true,
+				Description: "A local security object created/imported to Fortanix DSM(BYOK) and copied to AWS KMS.",
+				Type:        schema.TypeMap,
+				Required:    true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
 			},
 			"copied_to": {
-			    Description: "List of security objects copied by the current security object.",
-				Type:     schema.TypeList,
-				Computed: true,
+				Description: "List of security objects copied by the current security object.",
+				Type:        schema.TypeList,
+				Computed:    true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
 			},
 			"copied_from": {
-			    Description: "Security object that is copied from another security object.",
-				Type:     schema.TypeString,
-				Computed: true,
+				Description: "Security object that is copied from another security object.",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 			"replacement": {
-			    Description: "Replacement of a security object that was rotated.",
-				Type:     schema.TypeString,
-				Computed: true,
+				Description: "Replacement of a security object that was rotated.",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 			"replaced": {
-			    Description: "Replaced by a security object.",
-				Type:     schema.TypeString,
-				Computed: true,
+				Description: "Replaced by a security object.",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 			"kid": {
-			    Description: "The security object ID from Fortanix DSM.",
-				Type:     schema.TypeString,
-				Computed: true,
+				Description: "The security object ID from Fortanix DSM.",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 			"acct_id": {
-			    Description: "The account ID from Fortanix DSM.",
-				Type:     schema.TypeString,
-				Computed: true,
+				Description: "The account ID from Fortanix DSM.",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 			"creator": {
 				Description: "The creator of the group from Fortanix DSM.\n" +
-				"   * `user`: If the group was created by a user, the computed value will be the matching user id.\n" +
-				"   * `app`: If the group was created by an app, the computed value will be the matching app id.",
+					"   * `user`: If the group was created by a user, the computed value will be the matching user id.\n" +
+					"   * `app`: If the group was created by an app, the computed value will be the matching app id.",
 				Type:     schema.TypeMap,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -121,22 +121,22 @@ func resourceAWSSobject() *schema.Resource {
 			},
 			"rotation_policy": {
 				Description: "Policy to rotate a Security Object, configure the below parameters.\n" +
-				"   * `interval_days`: Rotate the key for every given number of days.\n" +
-				"   * `interval_months`: Rotate the key for every given number of months.\n" +
-				"   * `effective_at`: Start of the rotation policy time.\n" +
-				"   * **Note:** Either interval_days or interval_months should be given, but not both.\n" +
-				"   * **Note:** Please refer Guides/dsm_aws_sobject for an example.",
+					"   * `interval_days`: Rotate the key for every given number of days.\n" +
+					"   * `interval_months`: Rotate the key for every given number of months.\n" +
+					"   * `effective_at`: Start of the rotation policy time.\n" +
+					"   * **Note:** Either interval_days or interval_months should be given, but not both.\n" +
+					"   * **Note:** Please refer Guides/dsm_aws_sobject for an example.",
 				Type:     schema.TypeMap,
 				Optional: true,
 				Elem: &schema.Schema{
-					Type:     schema.TypeString,
+					Type: schema.TypeString,
 				},
 			},
 			"custom_metadata": {
-			    Description: "AWS KMS key level metadata information.\n" +
-			    "   * `aws-aliases`: Key name within AWS KMS.\n" +
-			    "   * `aws-policy`: JSON format of AWS policy that should be enforced for the key.\n" +
-			    "   * **Note:** Any other DSM custom metadata can be configured.",
+				Description: "AWS KMS key level metadata information.\n" +
+					"   * `aws-aliases`: Key name within AWS KMS.\n" +
+					"   * `aws-policy`: JSON format of AWS policy that should be enforced for the key.\n" +
+					"   * **Note:** Any other DSM custom metadata can be configured.",
 				Type:     schema.TypeMap,
 				Optional: true,
 				Computed: true,
@@ -145,9 +145,9 @@ func resourceAWSSobject() *schema.Resource {
 				},
 			},
 			"aws_tags": {
-			    Description: "Any other user-defined AWS metadata information.\n" +
-			    "   * e.g. test-key = test-value \n" +
-			    "   * The above key value pair will be added as `aws-tag-test-key = test-value` \n",
+				Description: "Any other user-defined AWS metadata information.\n" +
+					"   * e.g. test-key = test-value \n" +
+					"   * The above key value pair will be added as `aws-tag-test-key = test-value` \n",
 				Type:     schema.TypeMap,
 				Optional: true,
 				Elem: &schema.Schema{
@@ -155,12 +155,12 @@ func resourceAWSSobject() *schema.Resource {
 				},
 			},
 			"external": {
-			    Description: "AWS CMK level metadata:\n" +
-			    "   * `Key_arn`\n" +
-			    "   * `Key_id`\n" +
-			    "   * `Key_state`\n" +
-			    "   * `Key_aliases`\n" +
-			    "   * `Key_deletion_date`\n",
+				Description: "AWS CMK level metadata:\n" +
+					"   * `Key_arn`\n" +
+					"   * `Key_id`\n" +
+					"   * `Key_state`\n" +
+					"   * `Key_aliases`\n" +
+					"   * `Key_deletion_date`\n",
 				Type:     schema.TypeMap,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -168,22 +168,22 @@ func resourceAWSSobject() *schema.Resource {
 				},
 			},
 			"obj_type": {
-			    Description: "The type of security object.",
-				Type:     schema.TypeString,
-				Computed: true,
+				Description: "The type of security object.",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 			"key_size": {
-			    Description: "The size of the security object.",
-				Type:     schema.TypeInt,
-				Computed: true,
+				Description: "The size of the security object.",
+				Type:        schema.TypeInt,
+				Computed:    true,
 			},
 			"key_ops": {
-			    Description: "The security object operations permitted.\n\n" +
-				"| obj_type | key_size/curve | key_ops |\n" +
-				"| -------- | -------- |-------- |\n" +
-				"| `AES` | 256 | ENCRYPT, DECRYPT, WRAPKEY, UNWRAPKEY, DERIVEKEY, MACGENERATE, MACVERIFY, APPMANAGEABLE, EXPORT |\n" +
-				"| `RSA` | 2048, 3072, 4096 | APPMANAGEABLE, SIGN, VERIFY, ENCRYPT, DECRYPT |\n" +
-				"| `EC` | NistP256, NistP384, NistP521,SecP256K1 | APPMANAGEABLE, SIGN, VERIFY |",
+				Description: "The security object operations permitted.\n\n" +
+					"| obj_type | key_size/curve | key_ops |\n" +
+					"| -------- | -------- |-------- |\n" +
+					"| `AES` | 256 | ENCRYPT, DECRYPT, WRAPKEY, UNWRAPKEY, DERIVEKEY, MACGENERATE, MACVERIFY, APPMANAGEABLE, EXPORT |\n" +
+					"| `RSA` | 2048, 3072, 4096 | APPMANAGEABLE, SIGN, VERIFY, ENCRYPT, DECRYPT |\n" +
+					"| `EC` | NistP256, NistP384, NistP521,SecP256K1 | APPMANAGEABLE, SIGN, VERIFY |",
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
@@ -192,53 +192,53 @@ func resourceAWSSobject() *schema.Resource {
 				},
 			},
 			"description": {
-			    Description: "The security object description.",
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "",
+				Description: "The security object description.",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
 			},
 			"enabled": {
-			    Description: "Whether the security object will be enabled or disabled. The supported values are true/false.",
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default: true,
+				Description: "Whether the security object will be enabled or disabled. The supported values are true/false.",
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     true,
 			},
 			"state": {
-			    Description: "The key states of the AWS key. The supported values are PendingDeletion, Enabled, Disabled and PendingImport.",
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Description: "The key states of the AWS key. The supported values are PendingDeletion, Enabled, Disabled and PendingImport.",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
 			},
 			"expiry_date": {
-			    Description: "The security object expiry date in RFC format.",
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Description: "The security object expiry date in RFC format.",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
 			},
 			"rotate": {
-			    Description: "The security object rotation. Specify the method to use for key rotation:\n" +
-			    "   * `DSM`: To rotate from a DSM local key. The key material of new key will be stored in DSM.\n" +
-			    "   * `AWS`: To rotate from a AWS key. The key material of new key will be stored in AWS.\n",
+				Description: "The security object rotation. Specify the method to use for key rotation:\n" +
+					"   * `DSM`: To rotate from a DSM local key. The key material of new key will be stored in DSM.\n" +
+					"   * `AWS`: To rotate from a AWS key. The key material of new key will be stored in AWS.\n",
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice([]string{"DSM", "AWS"}, true),
 			},
 			"rotate_from": {
-			    Description: "Name of the security object to be rotated.",
-				Type:     schema.TypeString,
-				Optional: true,
+				Description: "Name of the security object to be rotated.",
+				Type:        schema.TypeString,
+				Optional:    true,
 			},
 			"schedule_deletion": {
 				Description: "Schedule key deletion in AWS KMS. Key is not usable for Sign/Verify, Wrap/Unwrap or Encrypt/Decrypt operations once it is deleted. Minimum value is 7 days.\n" +
-				"**Note:** This can enabled only after creation.",
-				Type:     schema.TypeInt,
-				Optional: true,
+					"**Note:** This can enabled only after creation.",
+				Type:         schema.TypeInt,
+				Optional:     true,
 				ValidateFunc: validation.IntAtLeast(7),
 			},
 			"delete_key_material": {
 				Description: "Delete key material in AWS KMS. Deleting key material makes all data encrypted under the customer master key (CMK) unrecoverable unless you later import the same key material from DSM into the CMK." +
-				"The DSM source key is not affected by this operation. The supported values are true/false.\n\n" +
-				"**Note:** This can enabled only after creation.",
+					"The DSM source key is not affected by this operation. The supported values are true/false.\n\n" +
+					"**Note:** This can enabled only after creation.",
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
@@ -253,7 +253,7 @@ func resourceAWSSobject() *schema.Resource {
 func resourceCreateAWSSobject(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	endpoint := "crypto/v1/keys/copy"
-	if d.Get("schedule_deletion").(int) > 0 || d.Get("delete_key_material").(bool){
+	if d.Get("schedule_deletion").(int) > 0 || d.Get("delete_key_material").(bool) {
 		return invokeErrorDiagsNoSummary("[E] schedule_deletion or delete_key_material should be enabled only after creation.")
 	}
 	if rotate := d.Get("rotate").(string); len(rotate) > 0 {
@@ -310,7 +310,7 @@ func resourceCreateAWSSobject(ctx context.Context, d *schema.ResourceData, m int
 
 	req, err := invokeAWSCreateAPI(m, security_object, endpoint)
 	if err != nil {
-	    return err
+		return err
 	}
 
 	d.SetId(req["kid"].(string))
@@ -370,7 +370,7 @@ func resourceReadAWSSobject(ctx context.Context, d *schema.ResourceData, m inter
 						return diag.FromErr(err)
 					}
 				} else {
-				    d.Set("copied_to", empty_array)
+					d.Set("copied_to", empty_array)
 				}
 				if _, copiedFromExists := req["links"].(map[string]interface{})["copiedFrom"]; copiedFromExists {
 					if err := d.Set("copied_from", req["links"].(map[string]interface{})["copiedFrom"].(string)); err != nil {
@@ -424,9 +424,9 @@ func resourceReadAWSSobject(ctx context.Context, d *schema.ResourceData, m inter
 			return diag.FromErr(err)
 		}
 		if key_ops_read, ok := req["key_ops"]; ok {
-		    if err := setKeyOpsTfState(d, key_ops_read); err != nil {
-                return err
-            }
+			if err := setKeyOpsTfState(d, key_ops_read); err != nil {
+				return err
+			}
 		}
 		if _, ok := req["description"]; ok {
 			if err := d.Set("description", req["description"].(string)); err != nil {
@@ -468,13 +468,13 @@ func resourceReadAWSSobject(ctx context.Context, d *schema.ResourceData, m inter
 
 // [U]: Update AWS Security Object
 func resourceUpdateAWSSobject(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-    var diags diag.Diagnostics
-    if d.HasChange("key") {
-        return undoTFstate("key", d)
-    }
-	if d.HasChange("delete_key_material") && d.Get("delete_key_material").(bool){
+	var diags diag.Diagnostics
+	if d.HasChange("key") {
+		return undoTFstate("key", d)
+	}
+	if d.HasChange("delete_key_material") && d.Get("delete_key_material").(bool) {
 		current_key_state := d.Get("external").(map[string]interface{})["Key_state"]
-		if current_key_state != "PendingDeletion" && current_key_state != "PendingImport"{
+		if current_key_state != "PendingDeletion" && current_key_state != "PendingImport" {
 			err := deleteKeyMateialBYOKSobject(d, m)
 			if err != nil {
 				d.Set("delete_key_material", nil)
@@ -506,7 +506,7 @@ func resourceUpdateAWSSobject(ctx context.Context, d *schema.ResourceData, m int
 				}
 				return resourceReadAWSSobject(ctx, d, m)
 			} else {
-			    // If the state is already in PendingDeletion, then no need to invoke schedule_deletion API and show a warning.
+				// If the state is already in PendingDeletion, then no need to invoke schedule_deletion API and show a warning.
 				return showWarning("The security object is already scheduled for the deletion.")
 			}
 		}
@@ -626,7 +626,6 @@ func resourceDeleteAWSSobject(ctx context.Context, d *schema.ResourceData, m int
 	resourceReadAWSSobject(ctx, d, m)
 	return deleteBYOKDestroyedSobject(d, m)
 }
-
 
 // This function is to call an DSM AWS BYOK copy API and to acquire the lock.
 // Lock is needed as AWS made changes in AWS API limit.

@@ -23,23 +23,23 @@ func resourceAppAssignGroups() *schema.Resource {
 		UpdateContext: resourceUpdateAppAssignGroups,
 		DeleteContext: resourceDeleteAppAssignGroups,
 		Description: "Assigns new DSM group(s) to an existing DSM App. It assigns the default permissions to the newly added groups.\n" +
-		"This resource is to only assign the groups to an App. Removing the groups from an App or modifying any other parameter is not possible.",
+			"This resource is to only assign the groups to an App. Removing the groups from an App or modifying any other parameter is not possible.",
 		Schema: map[string]*schema.Schema{
 			"app_name": {
 				Description: "The Fortanix DSM App name.",
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
 			},
 			"app_id": {
 				Description: "The unique ID of the app.",
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
 			},
 			"groups": {
 				Description: "List of new DSM group IDs to be assigned to an App.",
-				Type:     schema.TypeList,
-				Required: true,
+				Type:        schema.TypeList,
+				Required:    true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
@@ -83,7 +83,7 @@ func resourceCreateAppAssignGroups(ctx context.Context, d *schema.ResourceData, 
 			add_groups[group_ids[i].(string)] = default_permissions
 		}
 		app_object := map[string]interface{}{
-			"app_id": app_id,
+			"app_id":     app_id,
 			"add_groups": add_groups,
 		}
 		req, err := m.(*api_client).APICallBody("PATCH", endpoint, app_object)
@@ -118,7 +118,7 @@ func resourceUpdateAppAssignGroups(ctx context.Context, d *schema.ResourceData, 
 				add_groups[add_group_ids[i]] = default_permissions
 			}
 			app_object := map[string]interface{}{
-				"app_id": d.Id(),
+				"app_id":     d.Id(),
 				"add_groups": add_groups,
 			}
 			_, err := m.(*api_client).APICallBody("PATCH", endpoint, app_object)
@@ -138,4 +138,3 @@ func resourceDeleteAppAssignGroups(ctx context.Context, d *schema.ResourceData, 
 	d.SetId("")
 	return nil
 }
-

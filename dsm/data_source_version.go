@@ -23,17 +23,17 @@ func dataSourceVersion() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"version": {
 				Description: "The Fortanix DSM version.",
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 			"api_version": {
 				Description: "The Fortanix DSM API version.",
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 			"server_mode": {
 				Description: "The Fortanix DSM execution environment.\n" +
-			    "   * `SGX`: The Fortanix DSM running in Intel® SGX environment.",
+					"   * `SGX`: The Fortanix DSM running in Intel® SGX environment.",
 				Type:     schema.TypeString,
 				Computed: true,
 			},

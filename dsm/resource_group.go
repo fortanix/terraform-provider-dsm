@@ -1,4 +1,4 @@
- package dsm
+package dsm
 
 import (
 	"context"
@@ -18,56 +18,56 @@ func resourceGroup() *schema.Resource {
 		UpdateContext: resourceUpdateGroup,
 		DeleteContext: resourceDeleteGroup,
 		Description: "Creates a new DSM group. Such groups are act as containers for security objects, like keys or secrets. The returned resource object contains the UUID of the group for further references.\n" +
-		"Besides creating regular DSM groups, this resource may also be used to create DSM groups that are mapped to external resources, e.g. like an Azure Key Vault, an AWS KMS, a GCP Key Ring or a legacy HSM.",
+			"Besides creating regular DSM groups, this resource may also be used to create DSM groups that are mapped to external resources, e.g. like an Azure Key Vault, an AWS KMS, a GCP Key Ring or a legacy HSM.",
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Type:     schema.TypeString,
+				Type:        schema.TypeString,
 				Description: "The Fortanix DSM group object name.",
-				Required: true,
+				Required:    true,
 			},
 			"group_id": {
-			    Description: "Group object ID from Fortanix DSM.",
-				Type:     schema.TypeString,
-				Computed: true,
+				Description: "Group object ID from Fortanix DSM.",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 			"acct_id": {
-			    Description: "Account ID from Fortanix DSM.",
-				Type:     schema.TypeString,
-				Computed: true,
+				Description: "Account ID from Fortanix DSM.",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 			"creator": {
-			    Description: "Creator of the group object from Fortanix DSM.",
-				Type:     schema.TypeMap,
-				Computed: true,
+				Description: "Creator of the group object from Fortanix DSM.",
+				Type:        schema.TypeMap,
+				Computed:    true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
 			},
 			"description": {
-			    Description: "The Fortanix DSM group object description.",
-				Type:     schema.TypeString,
-				Optional: true,
+				Description: "The Fortanix DSM group object description.",
+				Type:        schema.TypeString,
+				Optional:    true,
 			},
 			"approval_policy": {
-			    Description: "The Fortanix DSM group object quorum approval policy definition as a JSON string.",
-				Type:     schema.TypeString,
-				Optional: true,
+				Description: "The Fortanix DSM group object quorum approval policy definition as a JSON string.",
+				Type:        schema.TypeString,
+				Optional:    true,
 			},
 			"hmg": {
-			    Description: "The Fortanix DSM group object HMS/KMS definition as a JSON string. It is only required, " +
-			    "if group is pointing to an external KMS or HSM. For more examples refer Guides/create_BYOK_groups",
-				Type:     schema.TypeString,
-				Optional: true,
+				Description: "The Fortanix DSM group object HMS/KMS definition as a JSON string. It is only required, " +
+					"if group is pointing to an external KMS or HSM. For more examples refer Guides/create_BYOK_groups",
+				Type:      schema.TypeString,
+				Optional:  true,
 				Sensitive: true,
 			},
 			"hmg_id": {
-			    Description: "HSM/KMS ID from Fortanix/DSM.",
-				Type:     schema.TypeString,
-				Computed: true,
+				Description: "HSM/KMS ID from Fortanix/DSM.",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 			"key_undo_policy_window_time": {
-			    Description: "The Fortanix DSM group object key undo policy window time as an Integer(Number of seconds)." +
-			    "Key undo policy is not applicable for External KMS groups.",
+				Description: "The Fortanix DSM group object key undo policy window time as an Integer(Number of seconds)." +
+					"Key undo policy is not applicable for External KMS groups.",
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
@@ -141,7 +141,7 @@ func resourceUpdateGroup(ctx context.Context, d *schema.ResourceData, m interfac
 	hmg_present := false
 
 	if d.HasChange("description") || d.HasChange("name") || d.HasChange("approval_policy") || d.HasChange("hmg") ||
-	                                d.HasChange("key_undo_policy_window_time") {
+		d.HasChange("key_undo_policy_window_time") {
 		if debug_output {
 			tflog.Warn(ctx, "Group object has changed, calling API")
 		}
@@ -151,7 +151,7 @@ func resourceUpdateGroup(ctx context.Context, d *schema.ResourceData, m interfac
 				tflog.Warn(ctx, fmt.Sprintf("HMG id: %s", hmg_id))
 			}
 			if d.Get("hmg_id") == nil {
-			    resourceReadGroup(ctx, d, m)
+				resourceReadGroup(ctx, d, m)
 			}
 			hmg_object[d.Get("hmg_id").(string)] = json.RawMessage(hmg.(string))
 			hmg_present = true
@@ -177,7 +177,7 @@ func resourceUpdateGroup(ctx context.Context, d *schema.ResourceData, m interfac
 				// Handle delete quorum policy.
 				// when approval_policy is removed from terraform body, the above 'if' condition fails.
 				// Hence user, will not be able to remove the quorum policy.
-				if (d.HasChange("approval_policy")) {
+				if d.HasChange("approval_policy") {
 					body_object["approval_policy"] = make(map[string]interface{})
 				}
 			}
@@ -343,31 +343,32 @@ func isSetApprovalPolicy(d *schema.ResourceData, m interface{}) bool {
 	}
 	return false
 }
+
 // handle the key undo policy for both create and update
 func set_key_undo_policy(d *schema.ResourceData, obj map[string]interface{}) {
-    if key_undo_policy_window_time, ok := d.GetOk("key_undo_policy_window_time"); ok {
-        key_history_policy := make(map[string]interface{})
-        key_history_policy["undo_time_window"] = key_undo_policy_window_time.(int)
-        obj["key_history_policy"] = key_history_policy
-    } else if (!d.IsNewResource()) {
+	if key_undo_policy_window_time, ok := d.GetOk("key_undo_policy_window_time"); ok {
+		key_history_policy := make(map[string]interface{})
+		key_history_policy["undo_time_window"] = key_undo_policy_window_time.(int)
+		obj["key_history_policy"] = key_history_policy
+	} else if !d.IsNewResource() {
 		// Handle when undo policy is removed from terraform
 		// The below condition checks whether undo policy is defined or not.
-		if (d.HasChange("key_undo_policy_window_time")) {
+		if d.HasChange("key_undo_policy_window_time") {
 			obj["key_history_policy"] = "remove"
 		}
 	}
 }
 
 func set_hmg_id(d *schema.ResourceData, resp map[string]interface{}) diag.Diagnostics {
-    // set the hmg_id to update the cdc/byok attributes
-    if _, ok := resp["hmg"]; ok {
-        if hmg := resp["hmg"].(map[string]interface{}); len(hmg) > 0 {
-            for k := range hmg {
-                if err := d.Set("hmg_id", k); err != nil {
-                    return diag.FromErr(err)
-                }
-            }
-        }
-    }
-    return nil
+	// set the hmg_id to update the cdc/byok attributes
+	if _, ok := resp["hmg"]; ok {
+		if hmg := resp["hmg"].(map[string]interface{}); len(hmg) > 0 {
+			for k := range hmg {
+				if err := d.Set("hmg_id", k); err != nil {
+					return diag.FromErr(err)
+				}
+			}
+		}
+	}
+	return nil
 }

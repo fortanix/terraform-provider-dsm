@@ -23,23 +23,23 @@ func dataSourceAWSGroup() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Description: "The AWS KMS group object name in Fortanix DSM.",
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
 			},
 			"group_id": {
 				Description: "The AWS KMS group object ID from Fortanix DSM.",
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 			"acct_id": {
 				Description: "The Account ID from Fortanix DSM.",
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 			"creator": {
 				Description: "The creator of the security object from Fortanix DSM.\n" +
-				"   * `user`: If the security object was created by a user, the computed value will be the matching user id.\n" +
-				"   * `app`: If the security object was created by a app, the computed value will be the matching app id.",
+					"   * `user`: If the security object was created by a user, the computed value will be the matching user id.\n" +
+					"   * `app`: If the security object was created by a app, the computed value will be the matching app id.",
 				Type:     schema.TypeMap,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -48,25 +48,25 @@ func dataSourceAWSGroup() *schema.Resource {
 			},
 			"region": {
 				Description: "The AWS region mapped to the group from which keys are imported.",
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 			"description": {
 				Description: "The AWS KMS group object description.",
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 			"access_key": {
 				Description: "The Access Key ID used to communicate with AWS KMS.",
-				Type:     schema.TypeString,
-				Computed: true,
-				Sensitive: true,
+				Type:        schema.TypeString,
+				Computed:    true,
+				Sensitive:   true,
 			},
 			"scan": {
 				Description: "Syncs keys from AWS KMS to the AWS KMS group in DSM. Value is either true/false.",
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
 			},
 		},
 	}
@@ -88,7 +88,7 @@ func dataSourceAWSGroupRead(ctx context.Context, d *schema.ResourceData, m inter
 		return diags
 	}
 
-	// First, check for the group name as provided. 
+	// First, check for the group name as provided.
 	// If not found, fallback to checking the group name in the "name-aws-region" format used prior to v0.5.33.
 	for _, data := range req {
 		group_name := data.(map[string]interface{})["name"].(string)

@@ -98,21 +98,20 @@ type AzureSobject struct {
 }
 
 type AzureSobjectCustomMetadata struct {
-	Azure_key_state     string `json:"azure-key-state"`
-	Azure_key_name      string `json:"azure-key-name"`
-	Azure_backup        string `json:"azure-backup"`
+	Azure_key_state string `json:"azure-key-state"`
+	Azure_key_name  string `json:"azure-key-name"`
+	Azure_backup    string `json:"azure-backup"`
 }
 
 type AzureSobjectExternal struct {
-	Id              AzureSobjectExternalId
-	Hsm_group_id    string
+	Id           AzureSobjectExternalId
+	Hsm_group_id string
 }
 
 type AzureSobjectExternalId struct {
-	Version     string
-	Label       string
+	Version string
+	Label   string
 }
-
 
 // [-] Structs to define DSM GCP Security Object
 type GCPSobject struct {

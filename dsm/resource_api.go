@@ -9,8 +9,8 @@ package dsm
 
 import (
 	"context"
-	"fmt"
 	"encoding/json"
+	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -25,47 +25,47 @@ func resourceAPI() *schema.Resource {
 		UpdateContext: resourceUpdateAPI,
 		DeleteContext: resourceDeleteAPI,
 		Description: "Triggers the DSM API using the details provided in the request.\n\n" +
-		"## Note\n" +
-		"Never DELETE terraform-managed resources using dsm_api resource, this can corrupt state and cause drift.\n",
+			"## Note\n" +
+			"Never DELETE terraform-managed resources using dsm_api resource, this can corrupt state and cause drift.\n",
 		Schema: map[string]*schema.Schema{
 			"method": {
 				Description: "HTTP method. Configure one of the parameters below. \n" +
-				"   * POST, GET, PATCH, DELETE",
-				Type:     schema.TypeString,
-				Required: true,
+					"   * POST, GET, PATCH, DELETE",
+				Type:         schema.TypeString,
+				Required:     true,
 				ValidateFunc: validation.StringInSlice([]string{"POST", "PATCH", "GET", "DELETE"}, true),
 			},
 			"resource_type": {
 				Description: "Dsm resource type. Configure one of the parameters below.\n" +
-				"   * key, plugin, app, group, user, user_invite",
+					"   * key, plugin, app, group, user, user_invite",
 				Type:     schema.TypeString,
 				Required: true,
 			},
 			"resource_uuid": {
 				Description: "DSM resource UUID.",
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
 			},
 			"payload": {
 				Description: "JSON body to invoke the request.",
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
 			},
 			"api_id_attribute": {
 				Description: "Name of the response field to be used as the resource's unique identifier.",
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
 			},
 			"api_response": {
 				Description: "Response of the given request.",
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 			"recall": {
 				Description: "Trigger the API for the same request.",
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
 			},
 		},
 		Importer: &schema.ResourceImporter{
@@ -83,7 +83,7 @@ func resourceCreateAPI(ctx context.Context, d *schema.ResourceData, m interface{
 	// Set the ID for resource
 	if api_id_attribute := d.Get("api_id_attribute").(string); len(api_id_attribute) > 0 {
 		if api_id, ok := req[api_id_attribute]; ok {
-			d.SetId(api_id.(string));
+			d.SetId(api_id.(string))
 			return nil
 		}
 	}
