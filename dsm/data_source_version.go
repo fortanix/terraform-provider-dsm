@@ -1,7 +1,6 @@
 // **********
 // Terraform Provider - DSM: data source: cluster version
 // **********
-//       - Author:    fyoo at fortanix dot com
 //       - Version:   0.3.7
 //       - Date:      27/11/2020
 // **********
@@ -24,17 +23,17 @@ func dataSourceVersion() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"version": {
 				Description: "The Fortanix DSM version.",
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 			"api_version": {
 				Description: "The Fortanix DSM API version.",
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 			"server_mode": {
 				Description: "The Fortanix DSM execution environment.\n" +
-			    "   * `SGX`: The Fortanix DSM running in Intel® SGX environment.",
+					"   * `SGX`: The Fortanix DSM running in Intel® SGX environment.",
 				Type:     schema.TypeString,
 				Computed: true,
 			},
