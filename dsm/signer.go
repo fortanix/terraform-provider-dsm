@@ -1,7 +1,6 @@
 // **********
 // Terraform Provider - DSM: signer client
 // **********
-//       - Author:    fyoo at fortanix dot com
 //       - Version:   0.5.15
 //       - Date:      14/06/2022
 // **********
@@ -119,7 +118,7 @@ func (dsmsigner *dsmsigner) generate_csr() (string, diag.Diagnostics) {
 	rawSubj := subj.ToRDNSequence()
 
 	asn1Subj, _ := asn1.Marshal(rawSubj)
-	// FYOO: SAN support
+	// SAN support
 	template := x509.CertificateRequest{
 		RawSubject:         asn1Subj,
 		DNSNames:           dsmsigner.Dnsnames,

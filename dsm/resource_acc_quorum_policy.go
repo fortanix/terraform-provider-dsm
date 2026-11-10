@@ -16,17 +16,17 @@ func resourceAccountQuorumPolicy() *schema.Resource {
 		ReadContext:   resourceReadAccountQuorumPolicy,
 		UpdateContext: resourceUpdateAccountQuorumPolicy,
 		DeleteContext: resourceDeleteAccountQuorumPolicy,
-		Description: "Adds cryptographic policy to a Fortanix DSM account. Quorum approval policy adds an extra level of protection to sensitive account operations.",
+		Description:   "Adds cryptographic policy to a Fortanix DSM account. Quorum approval policy adds an extra level of protection to sensitive account operations.",
 		Schema: map[string]*schema.Schema{
 			"acct_id": {
-			    Description: "The Fortanix DSM account object id.",
-				Type:     schema.TypeString,
-				Required: true,
+				Description: "The Fortanix DSM account object id.",
+				Type:        schema.TypeString,
+				Required:    true,
 			},
 			"approval_policy": {
-			    Description: "The Fortanix DSM account object quorum approval policy definition as a JSON string.",
-				Type:     schema.TypeString,
-				Required: true,
+				Description: "The Fortanix DSM account object quorum approval policy definition as a JSON string.",
+				Type:        schema.TypeString,
+				Required:    true,
 			},
 		},
 		Importer: &schema.ResourceImporter{

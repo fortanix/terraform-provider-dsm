@@ -32,7 +32,7 @@ data "dsm_aws_group" "sample_aws_group" {
 
 ### Read-Only
 
-- `access_key` (String) The Access Key ID used to communicate with AWS KMS.
+- `access_key` (String, Sensitive) The Access Key ID used to communicate with AWS KMS.
 - `acct_id` (String) The Account ID from Fortanix DSM.
 - `creator` (Map of String) The creator of the security object from Fortanix DSM.
    * `user`: If the security object was created by a user, the computed value will be the matching user id.

@@ -1,7 +1,6 @@
 // **********
 // Terraform Provider - SDKMS: resource: security object
 // **********
-//       - Author:    Ravi Gopal at fortanix dot com
 //       - Version:   0.5.36
 //       - Date:      24/07/2025
 // **********
@@ -10,8 +9,8 @@ package dsm
 
 import (
 	"context"
-	"fmt"
 	"encoding/json"
+	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -24,71 +23,71 @@ func resourceUser() *schema.Resource {
 		ReadContext:   resourceReadUser,
 		UpdateContext: resourceUpdateUser,
 		DeleteContext: resourceDeleteUser,
-		Description: "Creates a Fortanix DSM user. The returned resource object contains the UUID of the user for further references.",
+		Description:   "Creates a Fortanix DSM user. The returned resource object contains the UUID of the user for further references.",
 		Schema: map[string]*schema.Schema{
 			"user_email": {
 				Description: "User's Email Id.",
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
 			},
 			"description": {
 				Description: "Description of a user.",
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
 			},
 			"user_id": {
 				Description: "User's Id.",
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 			"role": {
 				Description: "Role of an account. Possible values are: \n" +
-				 "   * `ACCOUNTADMINISTRATOR`\n" +
-				 "   * `ACCOUNTMEMBER`\n" +
-				 "   * `ACCOUNTAUDITOR` ",
+					"   * `ACCOUNTADMINISTRATOR`\n" +
+					"   * `ACCOUNTMEMBER`\n" +
+					"   * `ACCOUNTAUDITOR` ",
 				Type:     schema.TypeString,
 				Required: true,
 			},
 			"account_role": {
 				Description: "Role of an account. It also defines the state of a user.",
-				Type:     schema.TypeList,
-				Computed: true,
+				Type:        schema.TypeList,
+				Computed:    true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
 			},
 			"first_name": {
 				Description: "User's first name",
-				Type:     schema.TypeString,
-				Optional: true,
-				Default: nil,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     nil,
 			},
 			"last_name": {
 				Description: "User's last name",
-				Type:     schema.TypeString,
-				Optional: true,
-				Default: nil,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     nil,
 			},
 			"groups": {
 				Description: "Add user to specific groups.\n\n" +
-				"   * **Note:**  This parameter is essentially only for ACCOUNTMEMBER.\n",
+					"   * **Note:**  This parameter is essentially only for ACCOUNTMEMBER.\n",
 				Type:     schema.TypeString,
 				Optional: true,
 			},
 			"email_verified": {
 				Description: "If an email is verified.",
-				Type:     schema.TypeBool,
-				Computed: true,
+				Type:        schema.TypeBool,
+				Computed:    true,
 			},
 			"has_password": {
 				Description: "If the user has password.",
-				Type:     schema.TypeBool,
-				Computed: true,
+				Type:        schema.TypeBool,
+				Computed:    true,
 			},
 			"self_provisioned": {
 				Description: "Is the user self self provisioned.",
-				Type:     schema.TypeBool,
-				Computed: true,
+				Type:        schema.TypeBool,
+				Computed:    true,
 			},
 		},
 		Importer: &schema.ResourceImporter{
@@ -206,12 +205,12 @@ func resourceUpdateUser(ctx context.Context, d *schema.ResourceData, m interface
 		old_groups_json := make(map[string][]string)
 		old_groups_json, o_err := ConvertStringToJSONGeneric[map[string][]string](old_groups.(string))
 		if o_err != nil {
-		    return invokeErrorDiagsWithSummary(fmt.Sprintf("[E]: API: PATCH %s: %v", dsm_endpoints["user"], o_err), error_summary)
+			return invokeErrorDiagsWithSummary(fmt.Sprintf("[E]: API: PATCH %s: %v", dsm_endpoints["user"], o_err), error_summary)
 		}
 		new_groups_json := make(map[string][]string)
 		new_groups_json, n_err := ConvertStringToJSONGeneric[map[string][]string](new_groups.(string))
 		if n_err != nil {
-		    return invokeErrorDiagsWithSummary(fmt.Sprintf("[E]: API: PATCH %s: %v", dsm_endpoints["user"], n_err), error_summary)
+			return invokeErrorDiagsWithSummary(fmt.Sprintf("[E]: API: PATCH %s: %v", dsm_endpoints["user"], n_err), error_summary)
 		}
 		var old_group_ids []interface{}
 		for k, _ := range old_groups_json {
@@ -277,7 +276,7 @@ func resourceDeleteUser(ctx context.Context, d *schema.ResourceData, m interface
 			return invokeErrorDiagsWithSummary(fmt.Sprintf("[E]: API: PATCH %s: %v", dsm_endpoints["user"], p_err), error_summary)
 		}
 	}
-	_, _, err := m.(*api_client).APICall("DELETE", fmt.Sprintf(dsm_endpoints["user"] + "/%s" + "/accounts", d.Id()))
+	_, _, err := m.(*api_client).APICall("DELETE", fmt.Sprintf(dsm_endpoints["user"]+"/%s"+"/accounts", d.Id()))
 	if err != nil {
 		return invokeErrorDiagsWithSummary(fmt.Sprintf("[E]: API: DELETE %s: %v", dsm_endpoints["user"], err), error_summary)
 	}

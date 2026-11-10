@@ -1,7 +1,6 @@
 // **********
 // Terraform Provider - SDKMS: resource: secret
 // **********
-//       - Author:    fyoo at fortanix dot com
 //       - Version:   0.3.7
 //       - Date:      27/11/2020
 // **********
@@ -26,37 +25,37 @@ func resourceSecret() *schema.Resource {
 		UpdateContext: resourceUpdateSecret,
 		DeleteContext: resourceDeleteSecret,
 		Description: "Imports a security object of type Secret. The returned resource object contains the UUID of the security object for further references.\n" +
-		"A secret value format should be in a base64 format. Secret can also be rotated.",
+			"A secret value format should be in a base64 format. Secret can also be rotated.",
 		Schema: map[string]*schema.Schema{
 			"name": {
-			    Description: "The Fortanix DSM secret security object name",
-				Type:     schema.TypeString,
-				Required: true,
+				Description: "The Fortanix DSM secret security object name",
+				Type:        schema.TypeString,
+				Required:    true,
 			},
 			"group_id": {
-			    Description: "The Fortanix DSM security object group assignment.",
-				Type:     schema.TypeString,
-				Required: true,
+				Description: "The Fortanix DSM security object group assignment.",
+				Type:        schema.TypeString,
+				Required:    true,
 			},
 			"obj_type": {
-			    Description: "The security object key type from Fortanix DSM.",
-				Type:     schema.TypeString,
-				Computed: true,
+				Description: "The security object key type from Fortanix DSM.",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 			"kid": {
 				Description: "Security object ID from Fortanix DSM.",
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 			"acct_id": {
-			    Description: "Account ID from Fortanix DSM.",
-				Type:     schema.TypeString,
-				Computed: true,
+				Description: "Account ID from Fortanix DSM.",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 			"creator": {
 				Description: "The creator of the security object from Fortanix DSM.\n" +
-				"   * `user`: If the security object was created by a user, the computed value will be the matching user id.\n" +
-				"   * `app`: If the security object was created by a app, the computed value will be the matching app id.",
+					"   * `user`: If the security object was created by a user, the computed value will be the matching user id.\n" +
+					"   * `app`: If the security object was created by a app, the computed value will be the matching app id.",
 				Type:     schema.TypeMap,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -64,16 +63,16 @@ func resourceSecret() *schema.Resource {
 				},
 			},
 			"custom_metadata": {
-			    Description: "The user defined security object attributes added to the key’s metadata.",
-				Type:     schema.TypeMap,
-				Optional: true,
+				Description: "The user defined security object attributes added to the key’s metadata.",
+				Type:        schema.TypeMap,
+				Optional:    true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
 			},
 			"key_ops": {
 				Description: "The security object key permission from Fortanix DSM.\n" +
-				"   * Default is to allow all permissions.",
+					"   * Default is to allow all permissions.",
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -81,80 +80,80 @@ func resourceSecret() *schema.Resource {
 				},
 			},
 			"description": {
-			    Description: "The Fortanix DSM security object description.",
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "",
+				Description: "The Fortanix DSM security object description.",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
 			},
 			"enabled": {
-			    Description: "Whether the security object is Enabled or Disabled. The values are true/false.",
-				Type:     schema.TypeBool,
-				Optional: true,
+				Description: "Whether the security object is Enabled or Disabled. The values are true/false.",
+				Type:        schema.TypeBool,
+				Optional:    true,
 			},
 			"value": {
-			    Description: "The value of the secret security object Base64 encoded.",
-				Type:      schema.TypeString,
-				Required:  true,
-				Sensitive: true,
+				Description: "The value of the secret security object Base64 encoded.",
+				Type:        schema.TypeString,
+				Required:    true,
+				Sensitive:   true,
 			},
 			"state": {
 				Description: "The state of the secret security object.\n" +
-				"   * Allowed states are: None, PreActive, Active, Deactivated, Compromised, Destroyed, Deleted.",
+					"   * Allowed states are: None, PreActive, Active, Deactivated, Compromised, Destroyed, Deleted.",
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
 			"expiry_date": {
-			    Description: " The security object expiry date in RFC format.",
-				Type:     schema.TypeString,
-				Optional: true,
+				Description: " The security object expiry date in RFC format.",
+				Type:        schema.TypeString,
+				Optional:    true,
 			},
 			"rotate": {
-			    Description: "boolean value true/false to enable/disable rotation.",
-				Type:     schema.TypeBool,
-				Optional: true,
+				Description: "boolean value true/false to enable/disable rotation.",
+				Type:        schema.TypeBool,
+				Optional:    true,
 			},
 			"rotate_from": {
-			    Description: "Name of the security object to be rotated from.",
-				Type:     schema.TypeString,
-				Optional: true,
+				Description: "Name of the security object to be rotated from.",
+				Type:        schema.TypeString,
+				Optional:    true,
 			},
 			"copied_to": {
-			    Description: "List of security objects copied by the current security object.",
-				Type:     schema.TypeList,
-				Computed: true,
+				Description: "List of security objects copied by the current security object.",
+				Type:        schema.TypeList,
+				Computed:    true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
 			},
 			"copied_from": {
-			    Description: "Security object that is copied to the current security object.",
-				Type:     schema.TypeString,
-				Computed: true,
+				Description: "Security object that is copied to the current security object.",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 			"replacement": {
-			    Description: "Replacement of a security object.",
-				Type:     schema.TypeString,
-				Computed: true,
+				Description: "Replacement of a security object.",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 			"replaced": {
-			    Description: "Replaced by a security object.",
-				Type:     schema.TypeString,
-				Computed: true,
+				Description: "Replaced by a security object.",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 			"allowed_key_justifications_policy": {
-			    Description: "The security object key justification policies for GCP External Key Manager. The allowed permissions are:\n" +
-			    "   * CUSTOMER_INITIATED_SUPPORT\n" +
-			    "   * CUSTOMER_INITIATED_ACCESS\n" +
-			    "   * GOOGLE_INITIATED_SERVICE\n" +
-			    "   * GOOGLE_INITIATED_REVIEW\n" +
-			    "   * GOOGLE_INITIATED_SYSTEM_OPERATION\n" +
-			    "   * THIRD_PARTY_DATA_REQUEST\n" +
-			    "   * REASON_NOT_EXPECTED\n" +
-			    "   * REASON_UNSPECIFIED\n" +
-			    "   * MODIFIED_CUSTOMER_INITIATED_ACCESS\n" +
-			    "   * MODIFIED_GOOGLE_INITIATED_SYSTEM_OPERATION\n" +
-			    "   * GOOGLE_RESPONSE_TO_PRODUCTION_ALERT\n",
+				Description: "The security object key justification policies for GCP External Key Manager. The allowed permissions are:\n" +
+					"   * CUSTOMER_INITIATED_SUPPORT\n" +
+					"   * CUSTOMER_INITIATED_ACCESS\n" +
+					"   * GOOGLE_INITIATED_SERVICE\n" +
+					"   * GOOGLE_INITIATED_REVIEW\n" +
+					"   * GOOGLE_INITIATED_SYSTEM_OPERATION\n" +
+					"   * THIRD_PARTY_DATA_REQUEST\n" +
+					"   * REASON_NOT_EXPECTED\n" +
+					"   * REASON_UNSPECIFIED\n" +
+					"   * MODIFIED_CUSTOMER_INITIATED_ACCESS\n" +
+					"   * MODIFIED_GOOGLE_INITIATED_SYSTEM_OPERATION\n" +
+					"   * GOOGLE_RESPONSE_TO_PRODUCTION_ALERT\n",
 				Type: schema.TypeList,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
@@ -162,9 +161,9 @@ func resourceSecret() *schema.Resource {
 				Optional: true,
 			},
 			"allowed_missing_justifications": {
-			    Description: "Boolean value which allows missing justifications even if not provided to the secret. The values are True / False.",
-				Type:     schema.TypeBool,
-				Optional: true,
+				Description: "Boolean value which allows missing justifications even if not provided to the secret. The values are True / False.",
+				Type:        schema.TypeBool,
+				Optional:    true,
 			},
 		},
 		Importer: &schema.ResourceImporter{
@@ -213,20 +212,20 @@ func resourceCreateSecret(ctx context.Context, d *schema.ResourceData, m interfa
 	}
 	allowed_key_justifications_policy, allow_exists := d.GetOk("allowed_key_justifications_policy")
 	allowed_missing_justifications, allow_missing_justifications_exists := d.GetOk("allowed_missing_justifications")
-	
+
 	policy_data := map[string]interface{}{}
-	
+
 	if allow_exists && allowed_key_justifications_policy != nil {
 		policy_data["allow"] = allowed_key_justifications_policy
 	}
-	
+
 	if allow_missing_justifications_exists && allowed_missing_justifications != nil {
 		policy_data["allow_missing_reason"] = allowed_missing_justifications
 	}
-	
+
 	// Only update if there are entries
 	if len(policy_data) > 0 {
-		plugin_object["google_access_reason_policy" ] = policy_data
+		plugin_object["google_access_reason_policy"] = policy_data
 	}
 
 	req, err := m.(*api_client).APICallBody(operation, endpoint, plugin_object)
@@ -281,7 +280,7 @@ func resourceReadSecret(ctx context.Context, d *schema.ResourceData, m interface
 		}
 		if _, ok := res["google_access_reason_policy"]; ok {
 			google_access_reason_policy := res["google_access_reason_policy"].(map[string]interface{})
-			tf_state_garp, is_tf_state_garp  := d.GetOk("allowed_key_justifications_policy")
+			tf_state_garp, is_tf_state_garp := d.GetOk("allowed_key_justifications_policy")
 			var is_same_garp bool
 			if is_tf_state_garp {
 				is_same_garp = compTwoArrays(tf_state_garp, google_access_reason_policy["allow"])
@@ -296,17 +295,17 @@ func resourceReadSecret(ctx context.Context, d *schema.ResourceData, m interface
 			if err := d.Set("allowed_missing_justifications", google_access_reason_policy["allow_missing_reason"]); err != nil {
 				return diag.FromErr(err)
 			}
-		} else{
-		    /*
-		        allowed_key_justifications_policy is either Optional or Computed.
-		        It is being made as Computed, because when a key is copied, KAJ will also get copied.
-		        In this case, it will become a computed value.
+		} else {
+			/*
+			   allowed_key_justifications_policy is either Optional or Computed.
+			   It is being made as Computed, because when a key is copied, KAJ will also get copied.
+			   In this case, it will become a computed value.
 
-		        If allowed_key_justifications_policy is not set, while updating it shows a difference as it will set to null value.
-		        Hence, it needs to be set as an empty value.
-		    */
-		    empty_array := []string{}
-		    d.Set("allowed_key_justifications_policy", empty_array)
+			   If allowed_key_justifications_policy is not set, while updating it shows a difference as it will set to null value.
+			   Hence, it needs to be set as an empty value.
+			*/
+			empty_array := []string{}
+			d.Set("allowed_key_justifications_policy", empty_array)
 		}
 		if err := d.Set("enabled", res["enabled"].(bool)); err != nil {
 			return diag.FromErr(err)
@@ -315,7 +314,7 @@ func resourceReadSecret(ctx context.Context, d *schema.ResourceData, m interface
 			return diag.FromErr(err)
 		}
 		if rfcdate, ok := res["deactivation_date"].(string); ok {
-			// FYOO: once it's set, you can't remove deactivation date
+			// once it's set, you can't remove deactivation date
 			layoutRFC := "2006-01-02T15:04:05Z"
 			layoutDSM := "20060102T150405Z"
 			ddate, newerr := time.Parse(layoutDSM, rfcdate)

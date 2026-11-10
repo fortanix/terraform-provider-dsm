@@ -1,7 +1,6 @@
 // **********
 // Terraform Provider - DSM: resource: gcp security object
 // **********
-//       - Author:    shashidhar naraparaju at fortanix dot com
 //       - Version:   0.5.29
 //       - Date:      05/04/2024
 // **********
@@ -26,48 +25,48 @@ func resourceGCPSobject() *schema.Resource {
 		ReadContext:   resourceReadGCPSobject,
 		UpdateContext: resourceUpdateGCPSobject,
 		DeleteContext: resourceDeleteGCPSobject,
-		Description: "Creates a new security object in GCP CDC Group. This is a Bring-Your-Own-Key (BYOK) method and copies an existing DSM local security object to GCP KMS as a Customer Managed Key (CMK).",
+		Description:   "Creates a new security object in GCP CDC Group. This is a Bring-Your-Own-Key (BYOK) method and copies an existing DSM local security object to GCP KMS as a Customer Managed Key (CMK).",
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Description: "The security object name.",
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
 			},
 			"group_id": {
 				Description: "The GCP group ID in Fortanix DSM where the key will be generated.",
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
 			},
 			"key": {
 				Description: "A local security object imported to Fortanix DSM (BYOK) and copied to GCP KMS.",
-				Type:     schema.TypeMap,
-				Required: true,
+				Type:        schema.TypeMap,
+				Required:    true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
 			},
 			"links": {
 				Description: "Link between the local security object and the GCP KMS security object.",
-				Type:     schema.TypeMap,
-				Computed: true,
+				Type:        schema.TypeMap,
+				Computed:    true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
 			},
 			"kid": {
 				Description: "The security object ID from Fortanix DSM.",
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 			"acct_id": {
 				Description: "The account ID from Fortanix DSM.",
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 			"creator": {
 				Description: "The creator of the security object from Fortanix DSM.\n" +
-				"   * `user`: If the security object was created by a user, the computed value will be the matching user ID.\n" +
-				"   * `app`: If the security object was created by an app, the computed value will be the matching app ID.",
+					"   * `user`: If the security object was created by a user, the computed value will be the matching user ID.\n" +
+					"   * `app`: If the security object was created by an app, the computed value will be the matching app ID.",
 				Type:     schema.TypeMap,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -76,10 +75,10 @@ func resourceGCPSobject() *schema.Resource {
 			},
 			"rotation_policy": {
 				Description: "Policy to rotate a security object. Configure the parameters below:\n" +
-				"   * `interval_days`: Rotate the key every given number of days.\n" +
-				"   * `interval_months`: Rotate the key every given number of months.\n" +
-				"   * `effective_at`: Start time of the rotation policy.\n" +
-				"   * **Note:** Either `interval_days` or `interval_months` should be given, but not both.",
+					"   * `interval_days`: Rotate the key every given number of days.\n" +
+					"   * `interval_months`: Rotate the key every given number of months.\n" +
+					"   * `effective_at`: Start time of the rotation policy.\n" +
+					"   * **Note:** Either `interval_days` or `interval_months` should be given, but not both.",
 				Type:     schema.TypeMap,
 				Optional: true,
 				Elem: &schema.Schema{
@@ -88,7 +87,7 @@ func resourceGCPSobject() *schema.Resource {
 			},
 			"custom_metadata": {
 				Description: "GCP KMS key metadata information:\n" +
-				"   * `gcp-key-id`: Key name within GCP KMS.",
+					"   * `gcp-key-id`: Key name within GCP KMS.",
 				Type:     schema.TypeMap,
 				Required: true,
 				Elem: &schema.Schema{
@@ -97,27 +96,27 @@ func resourceGCPSobject() *schema.Resource {
 			},
 			"external": {
 				Description: "External metadata.",
-				Type:     schema.TypeMap,
-				Computed: true,
+				Type:        schema.TypeMap,
+				Computed:    true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
 			},
 			"obj_type": {
 				Description: "The type of security object.",
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
 			},
 			"key_size": {
 				Description: "The size of the security object.",
-				Type:     schema.TypeInt,
-				Optional: true,
+				Type:        schema.TypeInt,
+				Optional:    true,
 			},
 			"key_ops": {
-			    Description: "The security object operations permitted.\n\n" +
-				"| obj_type | key_size/curve | key_ops |\n" +
-				"| -------- | -------- |-------- |\n" +
-				"| `AES` | 256 | ENCRYPT, DECRYPT, WRAPKEY, UNWRAPKEY, DERIVEKEY, MACGENERATE, MACVERIFY, APPMANAGEABLE, EXPORT",
+				Description: "The security object operations permitted.\n\n" +
+					"| obj_type | key_size/curve | key_ops |\n" +
+					"| -------- | -------- |-------- |\n" +
+					"| `AES` | 256 | ENCRYPT, DECRYPT, WRAPKEY, UNWRAPKEY, DERIVEKEY, MACGENERATE, MACVERIFY, APPMANAGEABLE, EXPORT",
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
@@ -127,26 +126,26 @@ func resourceGCPSobject() *schema.Resource {
 			},
 			"description": {
 				Description: "The description of the security object.",
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
 			},
 			"enabled": {
 				Description: "Indicates whether the security object is enabled or disabled. Values are true/false.",
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default: true,
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     true,
 			},
 			"state": {
 				Description: "The state of the GCP KMS key. Values are Created, Deleted, Purged.",
-				Type:     schema.TypeString,
-				Optional: true,
-				Default: "Active",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "Active",
 			},
 			"expiry_date": {
 				Description: "The expiry date of the security object in RFC format.",
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
 			},
 		},
 		Importer: &schema.ResourceImporter{
@@ -245,10 +244,10 @@ func resourceReadGCPSobject(ctx context.Context, d *schema.ResourceData, m inter
 		external_data := make(map[string]interface{})
 		response_external, ok := req["external"].(map[string]interface{})
 		if ok {
-			for key, value := range(response_external) {
+			for key, value := range response_external {
 				if key == "id" {
 					id := value.(map[string]interface{})
-					for id_key, id_value := range(id){
+					for id_key, id_value := range id {
 						if id_key == "version" {
 							external_data[id_key] = strconv.FormatFloat(id_value.(float64), 'f', -1, 64)
 						} else {
@@ -262,7 +261,7 @@ func resourceReadGCPSobject(ctx context.Context, d *schema.ResourceData, m inter
 		}
 		if err := d.Set("external", external_data); err != nil {
 			return diag.FromErr(err)
-		}		
+		}
 		if err := d.Set("kid", req["kid"].(string)); err != nil {
 			return diag.FromErr(err)
 		}
@@ -290,7 +289,7 @@ func resourceReadGCPSobject(ctx context.Context, d *schema.ResourceData, m inter
 			return diag.FromErr(err)
 		}
 		if rfcdate, ok := req["deactivation_date"]; ok {
-			// FYOO: once it's set, you can't remove deactivation date
+			// once it's set, you can't remove deactivation date
 			layoutRFC := "2006-01-02T15:04:05Z"
 			layoutDSM := "20060102T150405Z"
 			ddate, newerr := time.Parse(layoutDSM, rfcdate.(string))

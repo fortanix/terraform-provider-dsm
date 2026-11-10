@@ -1,7 +1,6 @@
 // **********
 // Terraform Provider - DSM: resource: app
 // **********
-//       - Author:    fyoo at fortanix dot com
 //       - Version:   0.5.3
 //       - Date:      27/11/2020
 // **********
@@ -25,40 +24,40 @@ func resourceApp() *schema.Resource {
 		UpdateContext: resourceUpdateApp,
 		DeleteContext: resourceDeleteApp,
 		Description: "Creates a new DSM App of type API key.The returned resource object contains the UUID of the app for further references.\n" +
-		"This resource can also rotate/regenerate an API key. Default permissions of any group can be modified.",
+			"This resource can also rotate/regenerate an API key. Default permissions of any group can be modified.",
 		Schema: map[string]*schema.Schema{
 			"name": {
-			    Description: "The Fortanix DSM App name.",
-				Type:     schema.TypeString,
-				Required: true,
+				Description: "The Fortanix DSM App name.",
+				Type:        schema.TypeString,
+				Required:    true,
 			},
 			"app_id": {
-			    Description: "The unique ID of the app from Terraform.",
-				Type:     schema.TypeString,
-				Computed: true,
+				Description: "The unique ID of the app from Terraform.",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 			"default_group": {
-			    Description: "The Fortanix DSM group object id to be mapped to the app by default.",
-				Type:     schema.TypeString,
-				Required: true,
+				Description: "The Fortanix DSM group object id to be mapped to the app by default.",
+				Type:        schema.TypeString,
+				Required:    true,
 			},
 			"other_group": {
-			    Description: "The Fortanix DSM group object id the app needs to be assigned to. If you want to delete the existing groups from an app, remove the ids during update.",
-				Type:     schema.TypeList,
-				Optional: true,
+				Description: "The Fortanix DSM group object id the app needs to be assigned to. If you want to delete the existing groups from an app, remove the ids during update.",
+				Type:        schema.TypeList,
+				Optional:    true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
 			},
 			"acct_id": {
-			    Description: "The account ID from Fortanix DSM.",
-				Type:     schema.TypeString,
-				Computed: true,
+				Description: "The account ID from Fortanix DSM.",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 			"creator": {
 				Description: "The creator of the app from Fortanix DSM.\n" +
-				"   * `user`: If the app was created by a user, the computed value will be the matching user id.\n" +
-				"   * `app`: If the app was created by a app, the computed value will be the matching app id.",
+					"   * `user`: If the app was created by a user, the computed value will be the matching user id.\n" +
+					"   * `app`: If the app was created by a app, the computed value will be the matching app id.",
 				Type:     schema.TypeMap,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -66,35 +65,35 @@ func resourceApp() *schema.Resource {
 				},
 			},
 			"description": {
-			    Description: "The description of the app.",
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "",
+				Description: "The description of the app.",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
 			},
 			"credential": {
-			    Description: "The Fortanix DSM App API key.",
-				Type:      schema.TypeString,
-				Computed:  true,
-				Sensitive: true,
+				Description: "The Fortanix DSM App API key.",
+				Type:        schema.TypeString,
+				Computed:    true,
+				Sensitive:   true,
 			},
 			"new_credential": {
-			    Description: "Set this if you want to rotate/regenerate the API key. The values can be set as true/false.",
-				Type:     schema.TypeBool,
-				Optional: true,
+				Description: "Set this if you want to rotate/regenerate the API key. The values can be set as true/false.",
+				Type:        schema.TypeBool,
+				Optional:    true,
 			},
 			"other_group_permissions": {
-			    Description: "Incase if you want to change the default permissions of a new group that includes default group. Please refer the example.",
-				Type:     schema.TypeMap,
-				Optional: true,
+				Description: "Incase if you want to change the default permissions of a new group that includes default group. Please refer the example.",
+				Type:        schema.TypeMap,
+				Optional:    true,
 				Elem: &schema.Schema{
 					Type:     schema.TypeString,
 					Optional: true,
 				},
 			},
 			"mod_group_permissions": {
-			    Description: "To modify the permissions of any existing group that includes default group. Please refer the example.",
-				Type:     schema.TypeMap,
-				Optional: true,
+				Description: "To modify the permissions of any existing group that includes default group. Please refer the example.",
+				Type:        schema.TypeMap,
+				Optional:    true,
 				Elem: &schema.Schema{
 					Type:     schema.TypeString,
 					Optional: true,
@@ -212,7 +211,6 @@ func resourceUpdateApp(ctx context.Context, d *schema.ResourceData, m interface{
 			return diags
 		}
 	}
-	//Modified by Ravi Gopal
 	app_object := make(map[string]interface{})
 	app_object["description"] = d.Get("description")
 	app_object["name"] = d.Get("name")

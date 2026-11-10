@@ -1,7 +1,6 @@
 // **********
 // Terraform Provider - DSM: data source: secret
 // **********
-//       - Author:    sanjeev at fortanix dot com
 //       - Version:   0.3.7
 //       - Date:     07/07/2022
 // **********
@@ -20,33 +19,33 @@ import (
 func dataSourceSobject() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceSobjectRead,
-		Description: "Returns the DSM security object from the cluster as a Data Source.\n\n" + 
-		"`Note`: This data source supports only security objects with EXPORT permission set in DSM.",
+		Description: "Returns the DSM security object from the cluster as a Data Source.\n\n" +
+			"`Note`: This data source supports only security objects with EXPORT permission set in DSM.",
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Description: "Security object name.",
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
 			},
 			"kid": {
 				Description: "Security object ID from DSM.",
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 			"pub_key": {
 				Description: "Public key from DSM (If applicable).",
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 			"acct_id": {
 				Description: "Account ID from DSM.",
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 			"creator": {
 				Description: "The creator of the security object from Fortanix DSM.\n" +
-				"   * `user`: If the security object was created by a user, the computed value will be the matching user id.\n" +
-				"   * `app`: If the security object was created by a app, the computed value will be the matching app id.",
+					"   * `user`: If the security object was created by a user, the computed value will be the matching user id.\n" +
+					"   * `app`: If the security object was created by a app, the computed value will be the matching app id.",
 				Type:     schema.TypeMap,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -55,24 +54,24 @@ func dataSourceSobject() *schema.Resource {
 			},
 			"description": {
 				Description: "Security object description.",
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 			"export": {
 				Description: "If set to true, value of the security object in base64 format will be stored in the data source.",
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
 			},
 			"value": {
 				Description: "Value of key material (only if export is allowed).",
-				Type:      schema.TypeString,
-				Computed:  true,
-				Sensitive: true,
+				Type:        schema.TypeString,
+				Computed:    true,
+				Sensitive:   true,
 			},
 			"key_ops": {
 				Description: "The security object key permission from Fortanix DSM.\n" +
-				"   * Default is to allow all permissions except EXPORT.",
+					"   * Default is to allow all permissions except EXPORT.",
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -81,18 +80,18 @@ func dataSourceSobject() *schema.Resource {
 			},
 			"key_size": {
 				Description: "The size of the security object.",
-				Type:     schema.TypeInt,
-				Computed: true,
+				Type:        schema.TypeInt,
+				Computed:    true,
 			},
 			"obj_type": {
 				Description: "Security object key type from DSM.",
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 			"enabled": {
 				Description: "Whether the security object will be Enabled or Disabled. The values are true/false.",
-				Type:     schema.TypeBool,
-				Computed: true,
+				Type:        schema.TypeBool,
+				Computed:    true,
 			},
 		},
 	}
@@ -120,7 +119,7 @@ func dataSourceSobjectRead(ctx context.Context, d *schema.ResourceData, m interf
 	} else {
 		var reqList []interface{}
 		encodedName := url.QueryEscape(d.Get("name").(string))
-		reqList, reqErr = m.(*api_client).APICallList("GET", "crypto/v1/keys?name=" + encodedName) 
+		reqList, reqErr = m.(*api_client).APICallList("GET", "crypto/v1/keys?name="+encodedName)
 		if reqErr == nil && len(reqList) > 0 {
 			req = reqList[0].(map[string]interface{})
 		} else {

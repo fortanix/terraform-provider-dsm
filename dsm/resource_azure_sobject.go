@@ -1,7 +1,6 @@
 // **********
 // Terraform Provider - DSM: resource: azure security object
 // **********
-//       - Author:    fyoo at fortanix dot com
 //       - Version:   0.5.0
 //       - Date:      27/11/2020
 // **********
@@ -21,10 +20,10 @@ import (
 
 // [-] Structs to define Terraform AWS Security Object
 type TFAzureSobjectExternal struct {
-	Version           string
-	Azure_key_name    string
-	Azure_key_state   string
-	Azure_backup      string
+	Version         string
+	Azure_key_name  string
+	Azure_key_state string
+	Azure_backup    string
 }
 
 // [-] Define Azure Security Object in Terraform
@@ -35,62 +34,62 @@ func resourceAzureSobject() *schema.Resource {
 		UpdateContext: resourceUpdateAzureSobject,
 		DeleteContext: resourceDeleteAzureSobject,
 		Description: "Creates a new security object in Azure key vault. This is a Bring-Your-Own-Key (BYOK) method and copies an existing DSM local security object to Azure KV as a Customer Managed Key (CMK).\n\n" +
-		"Azure sobject can also rotate, enable soft deletion and purge the key. For examples of rotate and soft deletion, refer Guides/dsm_azure_sobject.\n\n" +
-		"**Note**: Once soft deletion is enabled, Azure sobject can't be modified.\n\n" +
-		"**Deletion of a dsm_azure_sobject:** Unlike dsm_sobject, deletion of a dsm_azure_sobject is not normal.\n\n" +
-		"**Steps to delete a dsm_azure_sobject**:\n\n" +
-		"   * Enable soft_deletion as shown in the examples of `Guides/dsm_azure_sobject`.\n" +
-		"   * Enable purge_deleted_key after soft_deletion as shown in the examples of `Guides/dsm_azure_sobject`.\n" +
-		"   * A dsm_azure_sobject can be deleted completely only when its state is `destroyed`.\n" +
-		"   * A dsm_azure_sobject comes to destroyed state when the key is deleted from Azure key vault.\n" +
-		"   * To know whether it is in a destroyed state or not, sync keys operation should be performed.\n" +
-		"   * Use `dsm_azure_group` data_source to sync the keys. Please refer Data `Sources/dsm_azure_group`.",
+			"Azure sobject can also rotate, enable soft deletion and purge the key. For examples of rotate and soft deletion, refer Guides/dsm_azure_sobject.\n\n" +
+			"**Note**: Once soft deletion is enabled, Azure sobject can't be modified.\n\n" +
+			"**Deletion of a dsm_azure_sobject:** Unlike dsm_sobject, deletion of a dsm_azure_sobject is not normal.\n\n" +
+			"**Steps to delete a dsm_azure_sobject**:\n\n" +
+			"   * Enable soft_deletion as shown in the examples of `Guides/dsm_azure_sobject`.\n" +
+			"   * Enable purge_deleted_key after soft_deletion as shown in the examples of `Guides/dsm_azure_sobject`.\n" +
+			"   * A dsm_azure_sobject can be deleted completely only when its state is `destroyed`.\n" +
+			"   * A dsm_azure_sobject comes to destroyed state when the key is deleted from Azure key vault.\n" +
+			"   * To know whether it is in a destroyed state or not, sync keys operation should be performed.\n" +
+			"   * Use `dsm_azure_group` data_source to sync the keys. Please refer Data `Sources/dsm_azure_group`.",
 		Schema: map[string]*schema.Schema{
 			"name": {
-			    Description: "The security object name.",
-				Type:     schema.TypeString,
-				Required: true,
+				Description: "The security object name.",
+				Type:        schema.TypeString,
+				Required:    true,
 			},
 			"dsm_name": {
 				Description: "The security object name from Fortanix DSM (matches the name provided during creation).",
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 			"group_id": {
-			    Description: "The Azure group ID in Fortanix DSM into which the key will be generated.",
-				Type:     schema.TypeString,
-				Required: true,
+				Description: "The Azure group ID in Fortanix DSM into which the key will be generated.",
+				Type:        schema.TypeString,
+				Required:    true,
 			},
 			"key": {
-			    Description: "A local security object imported to Fortanix DSM(BYOK) and copied to Azure KV.",
-				Type:     schema.TypeMap,
-				Required: true,
+				Description: "A local security object imported to Fortanix DSM(BYOK) and copied to Azure KV.",
+				Type:        schema.TypeMap,
+				Required:    true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
 			},
 			"links": {
-			    Description: "Link between local security object and Azure KV security object.",
-				Type:     schema.TypeMap,
-				Computed: true,
+				Description: "Link between local security object and Azure KV security object.",
+				Type:        schema.TypeMap,
+				Computed:    true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
 			},
 			"kid": {
-			    Description: "The security object ID from Fortanix DSM.",
-				Type:     schema.TypeString,
-				Computed: true,
+				Description: "The security object ID from Fortanix DSM.",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 			"acct_id": {
-			    Description: "The account ID from Fortanix DSM.",
-				Type:     schema.TypeString,
-				Computed: true,
+				Description: "The account ID from Fortanix DSM.",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 			"creator": {
 				Description: "The creator of the security object from Fortanix DSM.\n" +
-				"   * `user`: If the security object was created by a user, the computed value will be the matching user id.\n" +
-				"   * `app`: If the security object was created by a app, the computed value will be the matching app id.",
+					"   * `user`: If the security object was created by a user, the computed value will be the matching user id.\n" +
+					"   * `app`: If the security object was created by a app, the computed value will be the matching app id.",
 				Type:     schema.TypeMap,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -99,22 +98,22 @@ func resourceAzureSobject() *schema.Resource {
 			},
 			"rotation_policy": {
 				Description: "Policy to rotate a Security Object, configure the below parameters.\n" +
-				"   * `interval_days`: Rotate the key for every given number of days.\n" +
-				"   * `interval_months`: Rotate the key for every given number of months.\n" +
-				"   * `effective_at`: Start of the rotation policy time.\n" +
-				"   * `deactivate_rotated_key`: Deactivate original key after rotation true/false.\n" +
-				"   * **Note:** Either interval_days or interval_months should be given, but not both.",
+					"   * `interval_days`: Rotate the key for every given number of days.\n" +
+					"   * `interval_months`: Rotate the key for every given number of months.\n" +
+					"   * `effective_at`: Start of the rotation policy time.\n" +
+					"   * `deactivate_rotated_key`: Deactivate original key after rotation true/false.\n" +
+					"   * **Note:** Either interval_days or interval_months should be given, but not both.",
 				Type:     schema.TypeMap,
 				Optional: true,
 				Elem: &schema.Schema{
-					Type:     schema.TypeString,
+					Type: schema.TypeString,
 				},
 			},
 			"custom_metadata": {
-			    Description: "Azure CMK level metadata information.\n" +
-			    "   * `azure-key-name`: Key name within Azure KV.\n" +
-			    "   * **Note:** By default dsm_azure_sobject creates the key as a software protected key. For a hardware protected key use the below parameter.\n" +
-			    "   * `azure-key-type`: Type of a key. It can be used in `PREMIUM` key vault. Value is hardware.",
+				Description: "Azure CMK level metadata information.\n" +
+					"   * `azure-key-name`: Key name within Azure KV.\n" +
+					"   * **Note:** By default dsm_azure_sobject creates the key as a software protected key. For a hardware protected key use the below parameter.\n" +
+					"   * `azure-key-type`: Type of a key. It can be used in `PREMIUM` key vault. Value is hardware.",
 				Type:     schema.TypeMap,
 				Required: true,
 				Elem: &schema.Schema{
@@ -122,21 +121,21 @@ func resourceAzureSobject() *schema.Resource {
 				},
 			},
 			"obj_type": {
-			    Description: "The type of security object.",
-				Type:     schema.TypeString,
-				Computed: true,
+				Description: "The type of security object.",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 			"key_size": {
-			    Description: "The size of the security object.",
-				Type:     schema.TypeInt,
-				Computed: true,
+				Description: "The size of the security object.",
+				Type:        schema.TypeInt,
+				Computed:    true,
 			},
 			"key_ops": {
-			    Description: "The security object operations permitted.\n\n" +
-				"| obj_type | key_size/curve | key_ops |\n" +
-				"| -------- | -------- |-------- |\n" +
-				"| `RSA` | 2048, 3072, 4096 | APPMANAGEABLE, SIGN, VERIFY, ENCRYPT, DECRYPT, WRAPKEY, UNWRAPKEY, EXPORT |\n" +
-				"| `EC` | NistP256, NistP384, NistP521,SecP256K1 | APPMANAGEABLE, SIGN, VERIFY, AGREEKEY, EXPORT",
+				Description: "The security object operations permitted.\n\n" +
+					"| obj_type | key_size/curve | key_ops |\n" +
+					"| -------- | -------- |-------- |\n" +
+					"| `RSA` | 2048, 3072, 4096 | APPMANAGEABLE, SIGN, VERIFY, ENCRYPT, DECRYPT, WRAPKEY, UNWRAPKEY, EXPORT |\n" +
+					"| `EC` | NistP256, NistP384, NistP521,SecP256K1 | APPMANAGEABLE, SIGN, VERIFY, AGREEKEY, EXPORT",
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
@@ -145,60 +144,60 @@ func resourceAzureSobject() *schema.Resource {
 				},
 			},
 			"description": {
-			    Description: "The security object description.",
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "",
+				Description: "The security object description.",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
 			},
 			"enabled": {
-			    Description: "Whether the security object will be Enabled or Disabled. The values are true/false.",
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default: true,
+				Description: "Whether the security object will be Enabled or Disabled. The values are true/false.",
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     true,
 			},
 			"state": {
-			    Description: "The key states of the Azure KV key. The values are Created, Deleted, Purged.",
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Description: "The key states of the Azure KV key. The values are Created, Deleted, Purged.",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
 			},
 			"expiry_date": {
-			    Description: "The security object expiry date in RFC format.",
-				Type:     schema.TypeString,
-				Optional: true,
+				Description: "The security object expiry date in RFC format.",
+				Type:        schema.TypeString,
+				Optional:    true,
 			},
 			"rotate": {
 				Description: "The security object rotation. Specify the method to use for key rotation:\n" +
-				"   * `DSM`: To use the same key material.\n" +
-				"   * `AZURE`: To rotate from a AZURE key. The key material of new key will be stored in AZURE.\n",
+					"   * `DSM`: To use the same key material.\n" +
+					"   * `AZURE`: To rotate from a AZURE key. The key material of new key will be stored in AZURE.\n",
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice([]string{"DSM", "AZURE"}, true),
 			},
 			"rotate_from": {
 				Description: "Name of the security object to be rotated.",
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
 			},
 			"soft_deletion": {
 				Description: "Enable soft key deletion in Azure key vault. Key is not usable for Sign/Verify, Wrap/Unwrap or Encrypt/Decrypt operations once it is deleted. The supported values are true/false.\n" +
-				" **Note:**  This should be enabled only after the creation.",
+					" **Note:**  This should be enabled only after the creation.",
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
 			"purge_deleted_key": {
 				Description: "Purge deleted key in Azure key vault. Purging the key makes all data encrypted with it unrecoverable unless you later import the same key material from Fortanix DSM into the Azure key vault." +
-				"The DSM source key is not affected by this operation. The supported values are true/false.\n" +
-				" **Note:**  This should be enabled only after the creation.",
+					"The DSM source key is not affected by this operation. The supported values are true/false.\n" +
+					" **Note:**  This should be enabled only after the creation.",
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
 			"external": {
 				Description: "AWS CMK level metadata:\n" +
-				"   * `Version`\n" +
-				"   * `Azure_key_name`\n" +
-				"   * `Azure_key_state`\n" +
-				"   * `Azure_backup`\n",
+					"   * `Version`\n" +
+					"   * `Azure_key_name`\n" +
+					"   * `Azure_key_state`\n" +
+					"   * `Azure_backup`\n",
 				Type:     schema.TypeMap,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -215,9 +214,9 @@ func resourceAzureSobject() *schema.Resource {
 // [C]: Create Azure Security Object
 func resourceCreateAzureSobject(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	if d.Get("soft_deletion").(bool) || d.Get("purge_deleted_key").(bool){
-        return invokeErrorDiagsNoSummary("[E] soft_deletion or purge_deleted_key should be enabled only after creation.")
-    }
+	if d.Get("soft_deletion").(bool) || d.Get("purge_deleted_key").(bool) {
+		return invokeErrorDiagsNoSummary("[E] soft_deletion or purge_deleted_key should be enabled only after creation.")
+	}
 	endpoint := "crypto/v1/keys/copy"
 	if rotate := d.Get("rotate").(string); len(rotate) > 0 {
 		if rotate_from := d.Get("rotate_from").(string); len(rotate_from) <= 0 {
@@ -234,7 +233,7 @@ func resourceCreateAzureSobject(ctx context.Context, d *schema.ResourceData, m i
 		"group_id":    d.Get("group_id").(string),
 		"key":         d.Get("key"),
 		"description": d.Get("description").(string),
-		"enabled": d.Get("enabled").(bool),
+		"enabled":     d.Get("enabled").(bool),
 	}
 
 	if err := d.Get("expiry_date").(string); len(err) > 0 {
@@ -342,10 +341,10 @@ func resourceReadAzureSobject(ctx context.Context, d *schema.ResourceData, m int
 			}
 		}
 		external := &TFAzureSobjectExternal{
-			Version:           azuresobject.External.Id.Version,
-			Azure_key_name:    azuresobject.External.Id.Label,
-			Azure_key_state:   azuresobject.Custom_metadata.Azure_key_state,
-			Azure_backup:      azuresobject.Custom_metadata.Azure_backup,
+			Version:         azuresobject.External.Id.Version,
+			Azure_key_name:  azuresobject.External.Id.Label,
+			Azure_key_state: azuresobject.Custom_metadata.Azure_key_state,
+			Azure_backup:    azuresobject.Custom_metadata.Azure_backup,
 		}
 		var externalInt map[string]interface{}
 		externalRec, _ := json.Marshal(external)
@@ -365,7 +364,7 @@ func resourceReadAzureSobject(ctx context.Context, d *schema.ResourceData, m int
 			return diag.FromErr(err)
 		}
 		if rfcdate, ok := req["deactivation_date"]; ok {
-			// FYOO: once it's set, you can't remove deactivation date
+			// once it's set, you can't remove deactivation date
 			layoutRFC := "2006-01-02T15:04:05Z"
 			layoutDSM := "20060102T150405Z"
 			ddate, newerr := time.Parse(layoutDSM, rfcdate.(string))
@@ -389,7 +388,7 @@ func resourceReadAzureSobject(ctx context.Context, d *schema.ResourceData, m int
 
 // [U]: Update Azure Security Object
 func resourceUpdateAzureSobject(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-    var diags diag.Diagnostics
+	var diags diag.Diagnostics
 	if d.HasChange("key") {
 		return undoTFstate("key", d)
 	}
@@ -399,7 +398,7 @@ func resourceUpdateAzureSobject(ctx context.Context, d *schema.ResourceData, m i
 			_, err := m.(*api_client).APICallBody("POST", fmt.Sprintf("crypto/v1/keys/%s/schedule_deletion", d.Id()), soft_deletion)
 			if err != nil {
 				d.Set("soft_deletion", nil)
-				if d.Get("purge_deleted_key").(bool){
+				if d.Get("purge_deleted_key").(bool) {
 					// When soft_deletion fails, if purge_deleted_key is enabled as true, then it should revert to nil.
 					// If we don't set to nil, user will never be able to purge the key as tf detects no changes.
 					d.Set("purge_deleted_key", nil)
@@ -409,7 +408,7 @@ func resourceUpdateAzureSobject(ctx context.Context, d *schema.ResourceData, m i
 		} else {
 			return showWarning("The security object is already scheduled for the deletion.")
 		}
-		if !d.Get("purge_deleted_key").(bool){
+		if !d.Get("purge_deleted_key").(bool) {
 			return resourceReadAzureSobject(ctx, d, m)
 		} else {
 			// This is when purge_deleted_key is enabled along with soft_deletion.
@@ -459,9 +458,9 @@ func resourceUpdateAzureSobject(ctx context.Context, d *schema.ResourceData, m i
 	}
 	if d.HasChange("enabled") {
 		/*
-		When the key is in destroyed state, then enabled will be set to false.
-		In this case terraform plan/apply will detect the changes for enabled.
-		Then terraform apply fails, in this scenario we should show a warning to the user.
+			When the key is in destroyed state, then enabled will be set to false.
+			In this case terraform plan/apply will detect the changes for enabled.
+			Then terraform apply fails, in this scenario we should show a warning to the user.
 		*/
 		resourceReadAzureSobject(ctx, d, m)
 		if d.Get("state").(string) == "Destroyed" {

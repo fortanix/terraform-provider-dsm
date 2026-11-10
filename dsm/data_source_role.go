@@ -15,13 +15,13 @@ func dataSourceRole() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"role_id": {
 				Description: "Role object ID from Fortanix DSM.",
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 			"name": {
 				Description: "Role name in Fortanix DSM.",
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
 			},
 		},
 	}
